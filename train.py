@@ -17,6 +17,8 @@ import io
 import os
 import math
 import argparse
+import pdb
+
 
 import torch.distributed as dist
 from glob import glob
@@ -194,6 +196,7 @@ def main(args):
 
     for epoch in range(first_epoch, num_train_epochs):
         sampler.set_epoch(epoch)
+        pdb.set_trace()
         for step, video_data in enumerate(loader):
             # Skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
@@ -276,6 +279,7 @@ def main(args):
 if __name__ == "__main__":
     # Default args here will train Latte with the hyperparameters we used in our paper (except training iters).
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="./configs/train.yaml")
+    parser.add_argument("--config", type=str, default="./configs/reaction/reaction_video.yaml")
+    # parser.add_argument("--config", type=str, default="./configs/train.yaml")
     args = parser.parse_args()
     main(OmegaConf.load(args.config))
