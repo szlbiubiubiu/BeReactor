@@ -34,7 +34,7 @@ def react_parse_arg():
     parser.add_argument('--img-size', default=256, type=int, help="size of train/test image data")
     parser.add_argument('--crop-size', default=224, type=int, help="crop size of train/test image data")
     parser.add_argument('-max-seq-len', default=751, type=int, help="max length of clip")
-    parser.add_argument('--clip-length', default=16, type=int, help="len of video clip")# equal to batch size
+    parser.add_argument('--clip-length', default=8, type=int, help="len of video clip")# equal to batch size
     parser.add_argument('--window-size', default=8, type=int, help="prediction window-size for online mode")
     parser.add_argument('--feature-dim', default=128, type=int, help="feature dim of model")
     parser.add_argument('--audio-dim', default=78, type=int, help="feature dim of audio")
@@ -119,7 +119,7 @@ def get_dataset(args):
     elif args.dataset == 'reaction':
         #.get_dataset
         args=react_parse_arg()
-        pdb.set_trace()
+        # pdb.set_trace()
         # if kwargs['split']=='train':
         return  DA_RE.get_dataset(args, "train", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
         # elif kwargs['split']=='val':
