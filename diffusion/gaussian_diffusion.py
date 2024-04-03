@@ -750,7 +750,7 @@ class GaussianDiffusion:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
             model_output = model(x_t, t, **model_kwargs)
-            pdb.set_trace()
+            # pdb.set_trace()
             # try:
             #     model_output = model(x_t, t, **model_kwargs).sample # for tav unet
             # except:

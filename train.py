@@ -208,7 +208,7 @@ def main(args):
                 # Map input images to latent space + normalize latents:
                 b, _, _, _, _ = x.shape
                 x = rearrange(x, 'b f c h w -> (b f) c h w').contiguous()
-                pdb.set_trace()
+                # pdb.set_trace()
                 x = vae.encode(x).latent_dist.sample().mul_(0.18215)
                 x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()
 
@@ -220,7 +220,7 @@ def main(args):
                 model_kwargs = dict(y=None)
 
             t = torch.randint(0, diffusion.num_timesteps, (x.shape[0],), device=device)
-            pdb.set_trace()
+            # pdb.set_trace()
             loss_dict = diffusion.training_losses(model, x, t, model_kwargs)
             loss = loss_dict["loss"].mean()
             loss.backward()
