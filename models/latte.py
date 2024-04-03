@@ -351,7 +351,7 @@ class Latte(nn.Module):
                 c = timestep_spatial + text_embedding_spatial
             else:
                 c = timestep_spatial
-            pdb.set_trace()
+            # pdb.set_trace()
             x  = spatial_block(x, c)
 
             x = rearrange(x, '(b f) t d -> (b t) f d', b=batches)

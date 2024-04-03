@@ -9,6 +9,7 @@ import math
 import numpy as np
 import torch as th
 import enum
+import pdb
 
 from .diffusion_utils import discretized_gaussian_log_likelihood, normal_kl
 
@@ -749,6 +750,7 @@ class GaussianDiffusion:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
             model_output = model(x_t, t, **model_kwargs)
+            pdb.set_trace()
             # try:
             #     model_output = model(x_t, t, **model_kwargs).sample # for tav unet
             # except:
