@@ -121,7 +121,7 @@ def get_dataset(args):
         args=react_parse_arg()
         pdb.set_trace()
         # if kwargs['split']=='train':
-        dataset = DA_RE.get_dataset(args, "train", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
+        return dataset = DA_RE.get_dataset(args, "train", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
         # elif kwargs['split']=='val':
         #     dataset = DA_RE.get_dataset(args, "val", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
         # elif kwargs['split']=='test':
