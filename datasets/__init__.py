@@ -9,7 +9,7 @@ from .sky_image_datasets import SkyImages
 from .ucf101_image_datasets import UCF101Images
 from .taichi_image_datasets import TaichiImages
 # from .reaction_dataset import get_dataset
-import reaction_dataset
+import datasets.reaction_dataset
 import pdb
 import argparse
 import platform
