@@ -8,6 +8,8 @@ from .ffs_image_datasets import FaceForensicsImages
 from .sky_image_datasets import SkyImages
 from .ucf101_image_datasets import UCF101Images
 from .taichi_image_datasets import TaichiImages
+from .reaction_dataset import get_dataset
+
 
 import argparse
 import platform
@@ -115,7 +117,7 @@ def get_dataset(args):
             ])
         return SkyImages(args, transform=transform_sky, temporal_sample=temporal_sample)
     elif args.dataset == 'reaction':
-        from reaction_dataset import get_dataset
+        
         args=react_parse_arg()
         pdb.set_trace()
         if kwargs['split']=='train':
