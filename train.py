@@ -196,7 +196,7 @@ def main(args):
 
     for epoch in range(first_epoch, num_train_epochs):
         sampler.set_epoch(epoch)
-        pdb.set_trace()
+        # pdb.set_trace()
         for step, video_data in enumerate(loader):
             # Skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
@@ -213,12 +213,13 @@ def main(args):
 
             if args.extras == 78: # text-to-video
                 raise 'T2V training are Not supported at this moment!'
-            elif args.extras == 2:
-                model_kwargs = dict(y=video_name)
+            # elif args.extras == 2:
+            #     model_kwargs = dict(y=video_name)
             else:
                 model_kwargs = dict(y=None)
 
             t = torch.randint(0, diffusion.num_timesteps, (x.shape[0],), device=device)
+            pdb.set_trace()
             loss_dict = diffusion.training_losses(model, x, t, model_kwargs)
             loss = loss_dict["loss"].mean()
             loss.backward()
