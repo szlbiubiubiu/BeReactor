@@ -2,7 +2,7 @@
 dataset: "reaction"
 
 data_path: "/path/to/datasets/preprocess_ffs/train/videos/" # s
-pretrained_model_path: "/path/to/pretrained/Latte/"
+pretrained_model_path: "/homes/zs003/paper_face/face_react/latte/latte_reaction/pretrain/diffusion_pytorch_model.bin"
 
 # save and load
 results_dir: "./results"
