@@ -202,8 +202,8 @@ def main(args):
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
                 continue
 
-            x = video_data['video'].to(device, non_blocking=True)
-            video_name = video_data['video_name']
+            x = video_data['img'].to(device, non_blocking=True)
+            # video_name = video_data['video_name']
             with torch.no_grad():
                 # Map input images to latent space + normalize latents:
                 b, _, _, _, _ = x.shape
