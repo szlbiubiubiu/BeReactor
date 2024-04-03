@@ -15,7 +15,7 @@ import numpy as np
 from einops import rearrange, repeat
 from timm.models.vision_transformer import Mlp, PatchEmbed
 
-
+import pdb
 # for i in sys.path:
 #     print(i)
 
@@ -350,6 +350,7 @@ class Latte(nn.Module):
                 c = timestep_spatial + text_embedding_spatial
             else:
                 c = timestep_spatial
+            pdb.set_trace()
             x  = spatial_block(x, c)
 
             x = rearrange(x, '(b f) t d -> (b t) f d', b=batches)
