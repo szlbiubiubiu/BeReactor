@@ -11,7 +11,7 @@ from .taichi_image_datasets import TaichiImages
 
 import argparse
 import platform
-def parse_arg():
+def react_parse_arg():
     parser = argparse.ArgumentParser(description='PyTorch Training')
     # Param
     if 'sbg'  in platform.node() or 'rdg' in platform.node():
@@ -115,9 +115,9 @@ def get_dataset(args):
             ])
         return SkyImages(args, transform=transform_sky, temporal_sample=temporal_sample)
     elif args.dataset == 'reaction':
-        from datasets.reaction_dataset import get_dataset
+        from reaction_dataset import get_dataset
         args=react_parse_arg()
-        # pdb.set_trace()
+        pdb.set_trace()
         if kwargs['split']=='train':
             dataset = DA_RE.get_dataset(args, "train", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
         elif kwargs['split']=='val':
