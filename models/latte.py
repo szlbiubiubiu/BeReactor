@@ -16,6 +16,12 @@ from einops import rearrange, repeat
 from timm.models.vision_transformer import Mlp, PatchEmbed
 
 import pdb
+from models.emo_fr_net.model_irse import IDnet
+from models.emo_fr_net.basenet import LNDnet
+from models.emo_fr_net.seg_model_2 import BGnet
+from models.emo_fr_net.emo_net import EmoNet
+
+from models.emo_fr_net.au_model import MEFL
 # for i in sys.path:
 #     print(i)
 
@@ -236,6 +242,12 @@ class Latte(nn.Module):
 
         if self.extras == 2:
             self.y_embedder = LabelEmbedder(num_classes, hidden_size, class_dropout_prob)
+        elif self.extras==3 :# facial condition
+            # self.facial_condition=DiffusionVideoAutoencoder()
+            pdb.set_trace()
+            self.facial_condition = DiffusionVideoAutoencoder("./pretrained_models/model_ir_se50.pth", "./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "./pretrained_models/79999_iter.pth"
+                    ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
+        
         if self.extras == 78: # timestep + text_embedding
             self.text_embedding_projection = nn.Sequential(
             nn.SiLU(),
@@ -316,6 +328,7 @@ class Latte(nn.Module):
                 x, 
                 t, 
                 y=None, 
+                x_orginal=None,
                 text_embedding=None, 
                 use_fp16=False):
         """
@@ -338,6 +351,10 @@ class Latte(nn.Module):
             y = self.y_embedder(y, self.training)
             y_spatial = repeat(y, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
+        elif self.extras == 3:
+            facial_cond=self.facial_condition(x_orginal)
+            facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
+            facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 78:
             text_embedding = self.text_embedding_projection(text_embedding.reshape(batches, -1))
             text_embedding_spatial = repeat(text_embedding, 'n d -> (n c) d', c=self.temp_embed.shape[1])
@@ -347,6 +364,8 @@ class Latte(nn.Module):
             spatial_block, temp_block = self.blocks[i:i+2]
             if self.extras == 2:
                 c = timestep_spatial + y_spatial
+            elif self.extras == 2:
+                c = timestep_spatial + facial_spatial
             elif self.extras == 78:
                 c = timestep_spatial + text_embedding_spatial
             else:
@@ -361,6 +380,8 @@ class Latte(nn.Module):
 
             if self.extras == 2:
                 c = timestep_temp + y_temp
+            elif self.extras == 3:
+                c= timestep_temp + facial_temp
             elif self.extras == 78:
                 c = timestep_temp + text_embedding_temp
             else:
@@ -371,6 +392,8 @@ class Latte(nn.Module):
 
         if self.extras == 2:
             c = timestep_spatial + y_spatial
+        elif self.extras == 3:
+            c = timestep_spatial + facial_spatial
         else:
             c = timestep_spatial
         x = self.final_layer(x, c)               
@@ -405,6 +428,201 @@ class Latte(nn.Module):
 #################################################################################
 # https://github.com/facebookresearch/mae/blob/main/util/pos_embed.py
 
+class DiffusionVideoAutoencoder(nn.Module):
+    def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,au_file_path_bp4d=None,emotion_file_path=None):
+        super(DiffusionVideoAutoencoder, self).__init__()
+        self.idnet = IDnet(id_file_path).requires_grad_(False)#don't have to modify resolution
+        # self.idnet.eval()
+        # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
+        self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
+        self.linear = nn.Linear(1024, 512)
+        # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
+        self.emo_proj=nn.Sequential(nn.Linear(25,512),
+                                    nn.Dropout(p=0.5)
+                                    )
+        self.emo_cond_linear=nn.Linear(512*2,512)
+        if au_file_path_disfa is not None:
+            # pdb.set_trace()
+            self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
+            # self.au_net_DISFA.load_state_dict(torch.load(au_file_path_disfa, map_location='cuda')['state_dict'])
+            # self.au_net_DISFA.eval()
+            self.au_net_BP4D=MEFL.MEFARG(num_classes=12,backbone='resnet18').requires_grad_(False) #num_classes: 12   neighbor_num: 4
+            # self.au_net_BP4D.load_state_dict(torch.load(au_file_path_bp4d, map_location='cuda')['state_dict'])
+            # self.au_net_BP4D.eval()
+        if emotion_file_path is not None:
+            #input resolution is 256
+            self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
+            self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
+            # self.emo_net.eval()
+    def forward(self, id, lnd=None, emo_cond=None, return_id_feats=False,return_emo=False,expression=False):
+        # pdb.set_trace()
+        if emo_cond is not None:
+            listener_ref=emo_cond['listener_ref']
+        else:
+            listener_ref=None
+        hidden_stats=emo_cond['hidden_stats']
+        past_emo=None#emo_cond['past_emo']
+        if len(id.shape)==4:
+            if lnd is None:
+                lnd = id
+
+            id_feats = self.idnet(id)  # [B, 512]
+            # lnd_feats = self.lndnet(lnd) # [B, 102]
+            feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
+            
+            if return_id_feats:
+                return feats, id_feats
+            return feats
+        else:  #video process
+            
+            
+            if lnd is None:
+                lnd = id
+            b,v,c,w,h=id.shape
+            b,v,c_l,w_l,h_l=lnd.shape
+
+            id=id.reshape(b*v,c,w,h)
+            lnd=lnd.reshape(b*v,c_l,w_l,h_l)
+
+            # pdb.set_trace()
+            self.idnet.eval()
+            id_feats = self.idnet(id)  # [B, 512]
+
+            # lnd_feats = self.lndnet(lnd) # [B, 102]
+            feats = self.linear(torch.cat([id_feats, id_feats], dim=1))   # [B, 512]
+            feats = feats.reshape(b,v,-1)
+            id_feats=id_feats.reshape(b,v,-1)
+
+
+            
+
+            if len(feats.shape)==3:
+                feats=torch.nn.functional.avg_pool2d(feats, (feats.shape[1], 1), stride=(feats.shape[1], 1)).squeeze()
+                if id_feats is not None:
+                    id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1))#.squeeze()
+            # if return_emo:
+            #     # pdb.set_trace()
+            #     # self.emo_net.eval()
+            #     emo_fea=self.emo_net(id)
+            #     # emo_fea
+            #     # self.au_net_DISFA.eval()
+            #     # self.au_net_BP4D.eval()
+            #     au_disfa=self.au_net_DISFA(id)[0]
+            #     au_bp4d=self.au_net_BP4D(id)[0]
+
+            #     return feats,emo_fea,au_disfa,au_bp4d,hidden_stats
+            listener_id_feats = self.idnet(listener_ref) 
+            if listener_ref != None and past_emo!=None:
+                #1 get listener id
+                listener_id_feats = self.idnet(listener_ref) 
+                # speaker_feat=torch.cat([id_feats,au_disfa,au_bp4d,])
+                # pdb.set_trace()
+                #2 past emotion with lstm
+                past_emo=torch.nn.functional.avg_pool2d(past_emo, (past_emo.shape[1], 1), stride=(past_emo.shape[1], 1))#.squeeze()
+                # pdb.set_trace()
+                listener_temporal_emo, hidden_stats = self.lstm(self.emo_proj(past_emo),hidden_stats)# (hidden_stats, hidden_stats))
+                # feats=self.emo_cond_linear(
+                #     torch.cat([listener_id_feats,listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
+                # listener_temporal_emo, hidden_stats = self.lstm(self.emo_proj(id_feats),hidden_stats)# (hidden_stats, hidden_stats))
+                feats=self.emo_cond_linear(
+                    torch.cat([listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
+                id_feats=id_feats.squeeze()
+            return feats,hidden_stats,id_feats,listener_id_feats
+            if return_id_feats:
+                return feats, id_feats
+            return feats
+    def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
+        # pdb.set_trace()
+        id=generated_listener
+        b,v,c,w,h=id.shape
+        # b,v,c_l,w_l,h_l=lnd.shape
+
+        id=id.view(b*v,c,w,h)
+        # lnd=lnd.view(b*v,c_l,w_l,h_l)
+
+        # pdb.set_trace()
+        id_feats = self.idnet(id)  # [B, 512]
+        # lnd_feats = self.lndnet(id) # [B, 102]
+        # fea
+        # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
+        # feats = feats.view(b,v,-1)
+        id_feats=id_feats.view(b,v,-1)
+
+
+        
+
+        # if len(feats.shape)==3:
+        #     feats=torch.nn.functional.avg_pool2d(feats, (feats.shape[1], 1), stride=(feats.shape[1], 1)).squeeze()
+        if id_feats is not None:
+            id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1)).squeeze()
+        # if return_emo:
+        # pdb.set_trace()
+        # self.emo_net.eval()
+        pdb.set_trace()
+        self.emo_net.eval()
+        self.au_net_DISFA.eval()
+        self.au_net_BP4D.eval()
+        emo_fea=self.emo_net(id)
+        
+        # expression_soft=F.softmax(emo_fea,dim=1)
+        # emo_fea
+        # self.au_net_DISFA.eval()
+        # self.au_net_BP4D.eval()
+        au_disfa=self.au_net_DISFA(id)[0]
+        au_bp4d=self.au_net_BP4D(id)[0]
+
+
+
+        # if listener_ref != None and past_emo!=None:
+        #     #1 get listener id
+        #     listener_id_feats = self.idnet(listener_ref) 
+        #     speaker_feat=torch.cat([id_feats,au_disfa,au_bp4d,])
+
+        #     #2 past emotion with lstm
+        #     listener_temporal_emo, hidden_status = self.lstm(self.emo_proj(past_emo[:,-1]), hidden_status, 
+        #                             hidden_status)
+        #     feats=torch.cat([listener_id_feats,listener_temporal_emo,feats])#fuse speaker+ listener condition
+        #     # au_bp4d=model_forward.au_bp4d
+        #     # au_disfa=model_forward.au_disfa
+
+        #     # # pdb.set_trace()
+        #     # #
+        #     # au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        #     # au=torch.reshape(au,[len(generated_listener),-1,15])
+
+        #     # #
+        #     # emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        #     # emo=torch.reshape(emo,[len(generated_listener),-1,10])
+        #     # #au loss
+        #     # au_loss= mean_flat((au-emo_label[:,:,:15])**2)
+        #     # emo_loss= mean_flat((emo-emo_label[:,:,15:])**2)
+        return id_feats,emo_fea,au_disfa,au_bp4d
+        # if return_id_feats:
+        #     return feats, id_feats
+        # return feats
+    
+    def id_forward(self, id):
+        return self.idnet(id)  # [B, 512]
+        
+    def forward_with_id(self, id_feats, lnd):
+        lnd_feats = self.lndnet(lnd) # [B, 102]
+        feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
+        return feats
+    # def forward_emo(self,input_img):
+
+    def face_mask(self, bg, for_video=False):
+        fg_mask = self.bgnet(bg, for_video=for_video) # [B, 1, 256, 256]
+        return fg_mask
+# class facial_conclass(nn.Module):
+#     """
+#     Diffusion model with a Transformer backbone.
+#     """
+#     def __init__():
+#         a=1
+#     def forward(original_x):
+#         a=1
+
+#         return facial_condition
 def get_1d_sincos_temp_embed(embed_dim, length):
     pos = torch.arange(0, length).unsqueeze(1)
     return get_1d_sincos_pos_embed_from_grid(embed_dim, pos)
