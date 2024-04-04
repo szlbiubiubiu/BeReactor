@@ -1,5 +1,5 @@
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, Dropout, Sequential, Module
-from model.helpers import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE, l2_norm
+from models.emo_fr_net.helpers import get_blocks, Flatten, bottleneck_IR, bottleneck_IR_SE, l2_norm
 import torch
 
 """
