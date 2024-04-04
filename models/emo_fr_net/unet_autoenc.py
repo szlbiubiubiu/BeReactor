@@ -8,7 +8,7 @@ from torchvision import transforms
 
 from .latentnet import *
 from .unet import *
-from choices import *
+# from choices import *
 from model.model_irse import IDnet
 from model.basenet import LNDnet
 from model.seg_model_2 import BGnet
