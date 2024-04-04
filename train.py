@@ -221,7 +221,7 @@ def main(args):
 
             t = torch.randint(0, diffusion.num_timesteps, (x.shape[0],), device=device)
             # pdb.set_trace()
-            loss_dict = diffusion.training_losses(model, x, t, model_kwargs)
+            loss_dict = diffusion.training_losses(model, x, t, model_kwargs,original_x=video_data['img'].to(device, non_blocking=True))
             loss = loss_dict["loss"].mean()
             loss.backward()
 
