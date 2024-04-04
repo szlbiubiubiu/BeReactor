@@ -203,6 +203,7 @@ def main(args):
                 continue
 
             x = video_data['img'].to(device, non_blocking=True)
+            listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)
             # video_name = video_data['video_name']
             with torch.no_grad():
                 # Map input images to latent space + normalize latents:
@@ -221,7 +222,7 @@ def main(args):
 
             t = torch.randint(0, diffusion.num_timesteps, (x.shape[0],), device=device)
             # pdb.set_trace()
-            loss_dict = diffusion.training_losses(model, x, t, model_kwargs,original_x=video_data['img'].to(device, non_blocking=True))
+            loss_dict = diffusion.training_losses(model, x, t, model_kwargs,original_x=video_data['img'].to(device, non_blocking=True),listener_ref=listener_ref)
             loss = loss_dict["loss"].mean()
             loss.backward()
 

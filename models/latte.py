@@ -329,6 +329,7 @@ class Latte(nn.Module):
                 t, 
                 y=None, 
                 original_x=None,
+                listener_ref=None,
                 text_embedding=None, 
                 use_fp16=False):
         """
@@ -353,7 +354,7 @@ class Latte(nn.Module):
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
             pdb.set_trace()
-            facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x)
+            facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 78:
@@ -455,12 +456,12 @@ class DiffusionVideoAutoencoder(nn.Module):
             self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
             self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
             # self.emo_net.eval()
-    def forward(self, id, lnd=None, emo_cond=None, return_id_feats=False,return_emo=False,expression=False):
+    def forward(self, id,listener_ref=None, lnd=None, emo_cond=None, return_id_feats=False,return_emo=False,expression=False):
         # pdb.set_trace()
-        if emo_cond is not None:
-            listener_ref=emo_cond['listener_ref']
-        else:
-            listener_ref=None
+        # if emo_cond is not None:
+        #     listener_ref=emo_cond['listener_ref']
+        # else:
+        #     listener_ref=None
         # hidden_stats=emo_cond['hidden_stats']
         # past_emo=None#emo_cond['past_emo']
         pdb.set_trace()
