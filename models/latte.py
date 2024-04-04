@@ -437,7 +437,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # self.idnet.eval()
         # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
         self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
-        self.linear = nn.Linear(1024, 512)
+        self.linear = nn.Linear(1024, 384)
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
         self.emo_proj=nn.Sequential(nn.Linear(25,512),
                                     nn.Dropout(p=0.5)
