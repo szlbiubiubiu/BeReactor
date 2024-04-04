@@ -9,7 +9,7 @@ from torch import nn
 import torch.nn.functional as F
 # from choices import *
 # from config_base import BaseConfig
-from .blocks import *
+# from .blocks import *
 
 from .nn import (conv_nd, linear, normalization, timestep_embedding,
                  torch_checkpoint, zero_module)
