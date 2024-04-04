@@ -7,7 +7,7 @@ import numpy as np
 import torch as th
 from torch import nn
 import torch.nn.functional as F
-from choices import *
+# from choices import *
 from config_base import BaseConfig
 from .blocks import *
 
