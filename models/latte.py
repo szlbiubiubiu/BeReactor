@@ -391,7 +391,7 @@ class Latte(nn.Module):
 
             x = temp_block(x, c)
             x = rearrange(x, '(b t) f d -> (b f) t d', b=batches)
-        pdb.set_trace()
+        # pdb.set_trace()
         if self.extras == 2:
             c = timestep_spatial + y_spatial
         elif self.extras == 3:
@@ -531,7 +531,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     feats=self.emo_cond_linear(
         #         torch.cat([listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
         #     id_feats=id_feats.squeeze()
-        pdb.set_trace()
+        # pdb.set_trace()
         return feats,hidden_stats,id_feats,listener_id_feats
         if return_id_feats:
             return feats, id_feats
