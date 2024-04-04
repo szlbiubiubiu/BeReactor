@@ -353,7 +353,7 @@ class Latte(nn.Module):
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
             pdb.set_trace()
-            facial_cond=self.facial_condition(x_orginal)
+            facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(x_orginal)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 78:
@@ -461,8 +461,8 @@ class DiffusionVideoAutoencoder(nn.Module):
             listener_ref=emo_cond['listener_ref']
         else:
             listener_ref=None
-        hidden_stats=emo_cond['hidden_stats']
-        past_emo=None#emo_cond['past_emo']
+        # hidden_stats=emo_cond['hidden_stats']
+        # past_emo=None#emo_cond['past_emo']
         if len(id.shape)==4:
             if lnd is None:
                 lnd = id
@@ -513,21 +513,23 @@ class DiffusionVideoAutoencoder(nn.Module):
 
             #     return feats,emo_fea,au_disfa,au_bp4d,hidden_stats
             listener_id_feats = self.idnet(listener_ref) 
-            if listener_ref != None and past_emo!=None:
-                #1 get listener id
-                listener_id_feats = self.idnet(listener_ref) 
-                # speaker_feat=torch.cat([id_feats,au_disfa,au_bp4d,])
-                # pdb.set_trace()
-                #2 past emotion with lstm
-                past_emo=torch.nn.functional.avg_pool2d(past_emo, (past_emo.shape[1], 1), stride=(past_emo.shape[1], 1))#.squeeze()
-                # pdb.set_trace()
-                listener_temporal_emo, hidden_stats = self.lstm(self.emo_proj(past_emo),hidden_stats)# (hidden_stats, hidden_stats))
-                # feats=self.emo_cond_linear(
-                #     torch.cat([listener_id_feats,listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
-                # listener_temporal_emo, hidden_stats = self.lstm(self.emo_proj(id_feats),hidden_stats)# (hidden_stats, hidden_stats))
-                feats=self.emo_cond_linear(
-                    torch.cat([listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
-                id_feats=id_feats.squeeze()
+            hidden_stats=None
+            # if listener_ref != None and past_emo!=None:
+            #     #1 get listener id
+            #     listener_id_feats = self.idnet(listener_ref) 
+            #     # speaker_feat=torch.cat([id_feats,au_disfa,au_bp4d,])
+            #     # pdb.set_trace()
+            #     #2 past emotion with lstm
+            #     past_emo=torch.nn.functional.avg_pool2d(past_emo, (past_emo.shape[1], 1), stride=(past_emo.shape[1], 1))#.squeeze()
+            #     # pdb.set_trace()
+            #     listener_temporal_emo, hidden_stats = self.lstm(self.emo_proj(past_emo),hidden_stats)# (hidden_stats, hidden_stats))
+            #     # feats=self.emo_cond_linear(
+            #     #     torch.cat([listener_id_feats,listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
+            #     # listener_temporal_emo, hidden_stats = self.lstm(self.emo_proj(id_feats),hidden_stats)# (hidden_stats, hidden_stats))
+            #     feats=self.emo_cond_linear(
+            #         torch.cat([listener_temporal_emo.squeeze(),feats],dim=-1))#fuse speaker+ listener condition
+            #     id_feats=id_feats.squeeze()
+            pdb.set_trace()
             return feats,hidden_stats,id_feats,listener_id_feats
             if return_id_feats:
                 return feats, id_feats
