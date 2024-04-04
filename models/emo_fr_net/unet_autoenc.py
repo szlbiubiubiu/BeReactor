@@ -7,7 +7,7 @@ from torch.nn.functional import silu
 from torchvision import transforms
 
 from .latentnet import *
-from .unet import *
+# from .unet import *
 # from choices import *
 from model.model_irse import IDnet
 from model.basenet import LNDnet
