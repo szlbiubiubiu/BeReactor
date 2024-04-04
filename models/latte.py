@@ -353,7 +353,7 @@ class Latte(nn.Module):
             y_spatial = repeat(y, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
-            pdb.set_trace()
+            # pdb.set_trace()
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
@@ -366,7 +366,7 @@ class Latte(nn.Module):
             spatial_block, temp_block = self.blocks[i:i+2]
             if self.extras == 2:
                 c = timestep_spatial + y_spatial
-            elif self.extras == 2:
+            elif self.extras == 3:
                 c = timestep_spatial + facial_spatial
             elif self.extras == 78:
                 c = timestep_spatial + text_embedding_spatial
@@ -391,7 +391,7 @@ class Latte(nn.Module):
 
             x = temp_block(x, c)
             x = rearrange(x, '(b t) f d -> (b f) t d', b=batches)
-
+        pdb.set_trace()
         if self.extras == 2:
             c = timestep_spatial + y_spatial
         elif self.extras == 3:
@@ -464,7 +464,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     listener_ref=None
         # hidden_stats=emo_cond['hidden_stats']
         # past_emo=None#emo_cond['past_emo']
-        pdb.set_trace()
+        # pdb.set_trace()
         # if len(id.shape)==4:
         #     if lnd is None:
         #         lnd = id
