@@ -244,7 +244,7 @@ class Latte(nn.Module):
             self.y_embedder = LabelEmbedder(num_classes, hidden_size, class_dropout_prob)
         elif self.extras==3 :# facial condition
             # self.facial_condition=DiffusionVideoAutoencoder()
-            pdb.set_trace()
+            # pdb.set_trace()
             self.facial_condition = DiffusionVideoAutoencoder("./pretrained_models/model_ir_se50.pth", "./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "./pretrained_models/79999_iter.pth"
                     ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
         
@@ -514,7 +514,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     au_bp4d=self.au_net_BP4D(id)[0]
 
         #     return feats,emo_fea,au_disfa,au_bp4d,hidden_stats
-        listener_id_feats = self.idnet(listener_ref) 
+        listener_id_feats = self.idnet(listener_ref[:,0,:,:,:]) 
         hidden_stats=None
         # if listener_ref != None and past_emo!=None:
         #     #1 get listener id
