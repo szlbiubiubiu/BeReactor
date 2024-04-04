@@ -122,7 +122,7 @@ def main(args):
         model = torch.compile(model)
 
     # set distributed training
-    model = DDP(model.to(device), device_ids=[local_rank])
+    model = DDP(model.to(device), device_ids=[local_rank],find_unused_parameters=True)
 
     logger.info(f"Model Parameters: {sum(p.numel() for p in model.parameters()):,}")
     opt = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0)
