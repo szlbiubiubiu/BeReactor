@@ -429,7 +429,52 @@ class Latte(nn.Module):
 #                   Sine/Cosine Positional Embedding Functions                  #
 #################################################################################
 # https://github.com/facebookresearch/mae/blob/main/util/pos_embed.py
+class ConvBlock(nn.Module):
+    def __init__(self, in_planes=3, planes=128):
+        super(ConvBlock, self).__init__()
+        self.planes = planes
+        self.conv1 = nn.Conv3d(in_planes, planes // 4, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3),
+                               bias=False)
+        self.in1 = nn.InstanceNorm3d(planes // 4)
+        self.maxpool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 0, 0))
 
+        self.conv2 = nn.Conv3d(planes // 4, planes, kernel_size=(1, 7, 7), stride=(1, 2, 2), padding=(0, 3, 3),
+                               bias=False)
+        self.in2 = nn.InstanceNorm3d(planes)
+        self.relu = nn.ReLU(inplace=True)
+
+        # self.conv3 = nn.Conv3d(planes, planes, kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1), bias=False)
+        # self.in3 = nn.InstanceNorm3d(planes)
+        # self.relu = nn.ReLU(inplace=True)
+
+        # self.conv4 = nn.Conv3d(planes, planes, kernel_size=(1, 3, 3), stride=(1, 1, 1), padding=(0, 1, 1), bias=False)
+        # self.in4 = nn.InstanceNorm3d(planes)
+        # self.relu = nn.ReLU(inplace=True)
+
+
+        # self.conv5 = nn.Conv3d(planes, planes, kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1), bias=False)
+        # self.in5 = nn.InstanceNorm3d(planes)
+        # self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        """
+        input:
+        speaker_video_frames x: (batch_size, 3, seq_len, img_size, img_size)
+
+        output:
+        speaker_temporal_tokens y: (batch_size, token_dim, seq_len)
+
+        """
+
+        x = self.relu(self.in1(self.conv1(x)))
+        x = self.maxpool(x)
+        x = self.relu(self.in2(self.conv2(x)))
+        # x = self.relu(self.in3(self.conv3(x)))
+        # x = x + self.relu(self.in4(self.conv4(x)))
+        # x = self.relu(self.in5(self.conv5(x)))
+
+        y = x.mean(dim=-1).mean(dim=-1)
+        return y
 class DiffusionVideoAutoencoder(nn.Module):
     def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,au_file_path_bp4d=None,emotion_file_path=None):
         super(DiffusionVideoAutoencoder, self).__init__()
@@ -443,6 +488,7 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
+        self.encode_video=ConvBlock()
         if au_file_path_disfa is not None:
             # pdb.set_trace()
             self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
@@ -483,13 +529,20 @@ class DiffusionVideoAutoencoder(nn.Module):
             lnd = id
         b,v,c,w,h=id.shape
         b,v,c_l,w_l,h_l=lnd.shape
+        pdb.set_trace()
+        encode_fea=self.encode_video(id)
 
         id=id.reshape(b*v,c,w,h)
         lnd=lnd.reshape(b*v,c_l,w_l,h_l)
 
-        # pdb.set_trace()
-        self.idnet.eval()
-        id_feats = self.idnet(id)  # [B, 512]
+        # # pdb.set_trace()
+        # self.idnet.eval()
+        # id_feats = self.idnet(id)  # [B, 512]
+
+        #emo_feature
+        id_feats,emo_fea,au_disfa,au_bp4d=self.forward_listener(id)
+
+
 
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         feats = self.linear(torch.cat([id_feats, id_feats], dim=1))   # [B, 512]
@@ -533,9 +586,9 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     id_feats=id_feats.squeeze()
         # pdb.set_trace()
         return feats,hidden_stats,id_feats,listener_id_feats
-        if return_id_feats:
-            return feats, id_feats
-        return feats
+        # if return_id_feats:
+        #     return feats, id_feats
+        # return feats
     def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
         # pdb.set_trace()
         id=generated_listener
