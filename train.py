@@ -95,7 +95,7 @@ def main(args):
     requires_grad(ema, False)
     diffusion = create_diffusion(timestep_respacing="")  # default: 1000 steps, linear noise schedule
     # vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-ema").to(device)
-    vae= AutoencoderTiny.from_pretrained("madebyollin/taesdxl", torch_dtype=torch.float16).to(device)
+    vae= AutoencoderTiny.from_pretrained("madebyollin/taesdxl").to(device)
     # vae = AutoencoderKL.from_pretrained(args.pretrained_model_path).to(device)
 
     # # use pretrained model?
