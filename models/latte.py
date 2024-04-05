@@ -563,7 +563,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # if return_emo:
         # pdb.set_trace()
         # self.emo_net.eval()
-        pdb.set_trace()
+        # pdb.set_trace()
         self.emo_net.eval()
         self.au_net_DISFA.eval()
         self.au_net_BP4D.eval()

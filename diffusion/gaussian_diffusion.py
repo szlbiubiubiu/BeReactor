@@ -795,7 +795,7 @@ class GaussianDiffusion:
                 terms["loss"] = terms["mse"] + terms["vb"]
             else:
                 terms["loss"] = terms["mse"]
-            pdb.set_trace()
+            # pdb.set_trace()
             if model.model.module.extras==3: #trace to x0, and decode
                 estimated_x0=self._predict_xstart_from_eps(x_start,t,model_output)
                 b, f, c, h, w = estimated_x0.shape
@@ -804,7 +804,7 @@ class GaussianDiffusion:
                 estimated_x0 = rearrange(estimated_x0, '(b f) c h w -> b f c h w', b=b)
                 id_feats,emo_fea,au_disfa,au_bp4d=model.model.module.facial_condition.forward_listener(estimated_x0)
                  # id_feats,emo_fea,au_disfa,au_bp4d=model.encoder.forward_listener(X0_pred)
-                pdb.set_trace()
+                # pdb.set_trace()
                 # #
                 au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
                 au=torch.reshape(au,[len(emo_label),-1,15])
