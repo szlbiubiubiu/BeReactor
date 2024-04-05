@@ -796,7 +796,7 @@ class GaussianDiffusion:
             else:
                 terms["loss"] = terms["mse"]
             pdb.set_trace()
-            if model.model.module.extrast==3: #trace to x0, and decode
+            if model.model.module.extras==3: #trace to x0, and decode
                 estimated_x0=self._predict_xstart_from_eps(x_start,t,model_output)
                 b, f, c, h, w = estimated_x0.shape
                 estimated_x0 = rearrange(estimated_x0, 'b f c h w -> (b f) c h w')
