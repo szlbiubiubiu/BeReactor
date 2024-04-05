@@ -486,7 +486,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
         self.linear = nn.Linear(1024, 384)
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
-        self.emo_proj=nn.Sequential(nn.Linear(25,512),
+        self.emo_proj=nn.Sequential(nn.Linear(25,128),
                                     nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
@@ -558,9 +558,10 @@ class DiffusionVideoAutoencoder(nn.Module):
         emo=torch.reshape(emo,[b,-1,10])
         current_emo=torch.cat([au,emo],dim=-1)
 
-
+        lisenter_ref_id= self.idnet(listener_ref[:,0,:,:,:])
         # lnd_feats = self.lndnet(lnd) # [B, 102]
-        feats = self.linear(torch.cat([id_feats, current_emo,encode_fea], dim=1))   # [B, 512]
+        pdb.set_trace()
+        feats = self.linear(torch.cat([id_feats, self.emo_proj(current_emo).mean(-2),encode_fea,lisenter_ref_id], dim=1))   # [B, 512]
         feats = feats.reshape(b,v,-1)
         id_feats=id_feats.reshape(b,v,-1)
 
