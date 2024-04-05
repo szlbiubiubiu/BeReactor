@@ -8,8 +8,11 @@ import math
 
 import numpy as np
 import torch as th
+import torch
 import enum
 import pdb
+from einops import rearrange
+
 
 from .diffusion_utils import discretized_gaussian_log_likelihood, normal_kl
 
@@ -717,7 +720,8 @@ class GaussianDiffusion:
         output = th.where((t == 0), decoder_nll, kl)
         return {"output": output, "pred_xstart": out["pred_xstart"]}
 
-    def training_losses(self, model, x_start, t, model_kwargs=None, original_x=None,listener_ref=None,noise=None):
+    def training_losses(self, model, x_start, t, model_kwargs=None, 
+            original_x=None,listener_ref=None,vae=None,emo_label=None, noise=None):
         """
         Compute training losses for a single timestep.
         :param model: the model to evaluate loss on.
@@ -791,6 +795,31 @@ class GaussianDiffusion:
                 terms["loss"] = terms["mse"] + terms["vb"]
             else:
                 terms["loss"] = terms["mse"]
+            if model.extras==3: #trace to x0, and decode
+                estimated_x0=self._predict_xstart_from_eps(x_start,t,model_output)
+                b, f, c, h, w = estimated_x0.shape
+                estimated_x0 = rearrange(estimated_x0, 'b f c h w -> (b f) c h w')
+                estimated_x0 = vae.decode(estimated_x0 / 0.18215).sample
+                estimated_x0 = rearrange(estimated_x0, '(b f) c h w -> b f c h w', b=b)
+                id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(estimated_x0)
+                 # id_feats,emo_fea,au_disfa,au_bp4d=model.encoder.forward_listener(X0_pred)
+                pdb.set_trace()
+                # #
+                au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+                au=torch.reshape(au,[len(emo_label),-1,15])
+
+                #
+                expression=emo_fea['expression']
+                expression_soft=F.softmax(expression,dim=1)
+                valence=emo_fea['valence']
+                arousal=emo_fea['arousal']
+                emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+                emo=torch.reshape(emo,[len(emo_label),-1,10])
+                current_emo=torch.cat([au,emo],dim=-1)
+                # pred_emo_withau[:,i*window_size:(i+1)*window_size,:15]=au
+                # pred_emo_withau[:,i*window_size:(i+1)*window_size,:]=current_emo
+
+
         else:
             raise NotImplementedError(self.loss_type)
 
