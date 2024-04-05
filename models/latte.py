@@ -534,7 +534,7 @@ class DiffusionVideoAutoencoder(nn.Module):
             lnd = id
         b,v,c,w,h=id.shape
         b,v,c_l,w_l,h_l=lnd.shape
-        pdb.set_trace()
+        # pdb.set_trace()
         
         video_input=id.permute(0,2,1,3,4)
         encode_fea=self.encode_video(video_input) #[b,128]
@@ -548,7 +548,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # id_feats = self.idnet(id)  # [B, 512]
 
         #emo_feature
-        pdb.set_trace()
+        # pdb.set_trace()
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
         au=torch.reshape(au,[b,-1,15])
 
@@ -563,7 +563,7 @@ class DiffusionVideoAutoencoder(nn.Module):
 
         lisenter_ref_id= self.idnet(listener_ref[:,0,:,:,:])
         # lnd_feats = self.lndnet(lnd) # [B, 102]
-        pdb.set_trace()
+        # pdb.set_trace()
         feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
                 encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 512]
         # feats = feats.reshape(b,v,-1)
