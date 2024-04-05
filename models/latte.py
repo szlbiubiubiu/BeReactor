@@ -473,7 +473,7 @@ class ConvBlock(nn.Module):
         # x = x + self.relu(self.in4(self.conv4(x)))
         # x = self.relu(self.in5(self.conv5(x)))
 
-        y = x.mean(dim=-1).mean(dim=-1)
+        y = x.mean(dim=-1).mean(dim=-1).mean(dim=-1)
         return y
 class DiffusionVideoAutoencoder(nn.Module):
     def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,au_file_path_bp4d=None,emotion_file_path=None):
@@ -532,8 +532,9 @@ class DiffusionVideoAutoencoder(nn.Module):
         pdb.set_trace()
         
         video_input=id.permute(0,2,1,3,4)
-        encode_fea=self.encode_video(video_input)
+        encode_fea=self.encode_video(video_input) #[b,128]
 
+        id_feats,emo_fea,au_disfa,au_bp4d=self.forward_listener(id)
         id=id.reshape(b*v,c,w,h)
         lnd=lnd.reshape(b*v,c_l,w_l,h_l)
         
@@ -542,7 +543,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # id_feats = self.idnet(id)  # [B, 512]
 
         #emo_feature
-        id_feats,emo_fea,au_disfa,au_bp4d=self.forward_listener(id)
+        
 
 
 
