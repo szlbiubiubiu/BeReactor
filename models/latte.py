@@ -530,11 +530,13 @@ class DiffusionVideoAutoencoder(nn.Module):
         b,v,c,w,h=id.shape
         b,v,c_l,w_l,h_l=lnd.shape
         pdb.set_trace()
-        encode_fea=self.encode_video(id)
+        
+        video_input=id.permute(0,2,1,3,4)
+        encode_fea=self.encode_video(video_input)
 
         id=id.reshape(b*v,c,w,h)
         lnd=lnd.reshape(b*v,c_l,w_l,h_l)
-
+        
         # # pdb.set_trace()
         # self.idnet.eval()
         # id_feats = self.idnet(id)  # [B, 512]
