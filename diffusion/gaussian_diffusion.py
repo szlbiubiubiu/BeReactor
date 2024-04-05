@@ -12,7 +12,7 @@ import torch
 import enum
 import pdb
 from einops import rearrange
-
+import torch.nn.functional as Func
 
 from .diffusion_utils import discretized_gaussian_log_likelihood, normal_kl
 
@@ -811,7 +811,7 @@ class GaussianDiffusion:
 
                 #
                 expression=emo_fea['expression']
-                expression_soft=F.softmax(expression,dim=1)
+                expression_soft=Func.softmax(expression,dim=1)
                 valence=emo_fea['valence']
                 arousal=emo_fea['arousal']
                 emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
