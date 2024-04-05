@@ -31,7 +31,7 @@ from models.clip import TextEmbedder
 from diffusion import create_diffusion
 from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
-from diffusers.models import AutoencoderKL
+from diffusers.models import AutoencoderKL,AutoencoderTiny
 from diffusers.optimization import get_scheduler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
@@ -95,6 +95,7 @@ def main(args):
     requires_grad(ema, False)
     diffusion = create_diffusion(timestep_respacing="")  # default: 1000 steps, linear noise schedule
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-ema").to(device)
+    vae= AutoencoderTiny.from_pretrained("madebyollin/taesdxl", torch_dtype=torch.float16)
     # vae = AutoencoderKL.from_pretrained(args.pretrained_model_path).to(device)
 
     # # use pretrained model?
