@@ -14,6 +14,8 @@ import numpy as np
 
 from einops import rearrange, repeat
 from timm.models.vision_transformer import Mlp, PatchEmbed
+import torch.nn.functional as Func
+
 
 import pdb
 from models.emo_fr_net.model_irse import IDnet
@@ -543,12 +545,22 @@ class DiffusionVideoAutoencoder(nn.Module):
         # id_feats = self.idnet(id)  # [B, 512]
 
         #emo_feature
-        
+        pdb.set_trace()
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
 
+        #
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        current_emo=torch.cat([au,emo],dim=-1)
 
 
         # lnd_feats = self.lndnet(lnd) # [B, 102]
-        feats = self.linear(torch.cat([id_feats, id_feats], dim=1))   # [B, 512]
+        feats = self.linear(torch.cat([id_feats, current_emo,encode_fea], dim=1))   # [B, 512]
         feats = feats.reshape(b,v,-1)
         id_feats=id_feats.reshape(b,v,-1)
 
