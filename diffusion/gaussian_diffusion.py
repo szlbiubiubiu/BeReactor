@@ -820,7 +820,7 @@ class GaussianDiffusion:
                 # pred_emo_withau[:,i*window_size:(i+1)*window_size,:15]=au
                 # pred_emo_withau[:,i*window_size:(i+1)*window_size,:]=current_emo
                 terms["emo_loss"]=mean_flat((current_emo - emo_label) ** 2)
-                terms["loss"]+=terms["emo_loss"]
+                terms["loss"]=terms["emo_loss"]
         else:
             raise NotImplementedError(self.loss_type)
 
