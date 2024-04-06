@@ -637,9 +637,9 @@ class DiffusionVideoAutoencoder(nn.Module):
         # pdb.set_trace()
         # self.emo_net.eval()
         # pdb.set_trace()
-        self.emo_net.eval()
-        self.au_net_DISFA.eval()
-        self.au_net_BP4D.eval()
+        # self.emo_net.eval()
+        # self.au_net_DISFA.eval()
+        # self.au_net_BP4D.eval()
         emo_fea=self.emo_net(id)
         
         # expression_soft=F.softmax(emo_fea,dim=1)
