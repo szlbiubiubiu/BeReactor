@@ -799,9 +799,10 @@ class GaussianDiffusion:
             if model.model.module.extras==3: #trace to x0, and decode
                 estimated_x0=self._predict_xstart_from_eps(x_start,t,model_output)
                 b, f, c, h, w = estimated_x0.shape
-                pdb.set_trace()
+                # pdb.set_trace()
                 estimated_x0 = rearrange(estimated_x0, 'b f c h w -> (b f) c h w')
-                estimated_x0 = vae(estimated_x0 / 0.18215).sample
+                # estimated_x0 = vae.decode(estimated_x0 / 0.18215).sample
+                estimated_x0 = vae(estimated_x0)
                 estimated_x0 = rearrange(estimated_x0, '(b f) c h w -> b f c h w', b=b)
                 id_feats,emo_fea,au_disfa,au_bp4d=model.model.module.facial_condition.forward_listener(estimated_x0)
                  # id_feats,emo_fea,au_disfa,au_bp4d=model.encoder.forward_listener(X0_pred)
