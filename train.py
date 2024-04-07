@@ -129,7 +129,7 @@ def main(args):
     opt = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0)
 
     # Freeze vae and text_encoder
-    vae.requires_grad_(False)
+    # vae.requires_grad_(False)
 
     # Setup data:
     dataset = get_dataset(args)
