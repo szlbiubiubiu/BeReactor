@@ -51,6 +51,12 @@ from models.autoencoder.vqgan import VQEncoderInterface, VQDecoderInterface
 #         super().__init__()
 #         self.encoder=encoder
 #         self.decode
+
+def count_model_parameters(model: torch.nn.Module):
+    trainable_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    rest_count = sum(p.numel() for p in model.parameters() if not p.requires_grad)
+    return trainable_count, rest_count, trainable_count + rest_count
+
 def main(args):
 
     assert torch.cuda.is_available(), "Training currently requires at least one GPU."
@@ -115,7 +121,13 @@ def main(args):
         ).to(device).requires_grad_(False)
         latent_encoder.eval()
         latent_decoder.eval()
-        vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
+        # display their number of parameters
+        trainable_params, _, total_params = count_model_parameters(latent_encoder)
+        print(f"#Params Latent Encoder Model: {trainable_params} (Total: {total_params})")
+        trainable_params, _, total_params = count_model_parameters(latent_decoder)
+        print(f"#Params Latent Decoder Model: {trainable_params} (Total: {total_params})")
+        pdb.set_trace()
+        # vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
 
 
     # # use pretrained model?
