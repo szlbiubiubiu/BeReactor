@@ -250,7 +250,7 @@ def main(args):
             # pdb.set_trace()
             loss_dict = diffusion.training_losses(model, x, t, model_kwargs,
                 original_x=video_data['img'].to(device, non_blocking=True),listener_ref=listener_ref,
-                vae=vae,emo_label=emo_label)
+                vae=latent_decoder,emo_label=emo_label)
             
             
             
