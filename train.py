@@ -35,6 +35,7 @@ from diffusers.models import AutoencoderKL,AutoencoderTiny
 from diffusers.optimization import get_scheduler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
+import torch.nn as nn
 from utils import (clip_grad_norm_, create_logger, update_ema, 
                    requires_grad, cleanup, create_tensorboard, 
                    write_tensorboard, setup_distributed,
@@ -45,7 +46,11 @@ from models.autoencoder.vqgan import VQEncoderInterface, VQDecoderInterface
 #################################################################################
 #                                  Training Loop                                #
 #################################################################################
-
+# class warp_vegan(nn.Module):
+#     def __init__(self, encoder,decoder):
+#         super().__init__()
+#         self.encoder=encoder
+#         self.decode
 def main(args):
 
     assert torch.cuda.is_available(), "Training currently requires at least one GPU."
@@ -99,14 +104,18 @@ def main(args):
         # vae= AutoencoderTiny.from_pretrained("madebyollin/taesdxl").to(device)
         vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
     else:
+        pdb.set_trace()
         latent_encoder = VQEncoderInterface(
                 first_stage_config_path=os.path.join("./models", "autoencoder", "first_stage_config.yaml"),
                 encoder_state_dict_path=os.path.join("./models", "models", "autoencoder", "first_stage_encoder_state_dict.pt")
-            )
+            ).to(device).requires_grad_(False)
         latent_decoder = VQDecoderInterface(
             first_stage_config_path=os.path.join( "./models", "autoencoder", "first_stage_config.yaml"),
             decoder_state_dict_path=os.path.join( "./models", "autoencoder", "first_stage_decoder_state_dict.pt")
-        )
+        ).to(device).requires_grad_(False)
+        latent_encoder.eval()
+        latent_decoder.eval()
+        vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
 
 
     # # use pretrained model?
@@ -140,7 +149,8 @@ def main(args):
     opt = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0)
 
     # Freeze vae and text_encoder
-    vae.requires_grad_(False)
+    if not vqgan_en_dec:
+        vae.requires_grad_(False)
 
     # Setup data:
     dataset = get_dataset(args)
@@ -222,10 +232,12 @@ def main(args):
                 # Map input images to latent space + normalize latents:
                 b, _, _, _, _ = x.shape
                 x = rearrange(x, 'b f c h w -> (b f) c h w').contiguous()
-                # pdb.set_trace()
-                x = vae.encode(x).latent_dist.sample().mul_(0.18215)
-                x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()
-
+                pdb.set_trace()
+                if not vqgan_en_dec:
+                    x = vae.encode(x).latent_dist.sample().mul_(0.18215)
+                    x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()
+                else:
+                    x = latent_encoder(x)
             if args.extras == 78: # text-to-video
                 raise 'T2V training are Not supported at this moment!'
             # elif args.extras == 2:
