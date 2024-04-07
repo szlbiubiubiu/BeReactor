@@ -237,7 +237,7 @@ def main(args):
                     x = vae.encode(x).latent_dist.sample().mul_(0.18215)
                     x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()
                 else:
-                    x = latent_encoder(x)
+                    x_encoded = latent_encoder(x)
             if args.extras == 78: # text-to-video
                 raise 'T2V training are Not supported at this moment!'
             # elif args.extras == 2:
