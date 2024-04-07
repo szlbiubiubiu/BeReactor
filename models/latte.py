@@ -218,7 +218,7 @@ class Latte(nn.Module):
         self,
         input_size=32,
         patch_size=2,
-        in_channels=4,
+        in_channels=3,
         hidden_size=1152,
         depth=28,
         num_heads=16,
