@@ -107,7 +107,7 @@ def main(args):
         pdb.set_trace()
         latent_encoder = VQEncoderInterface(
                 first_stage_config_path=os.path.join("./models", "autoencoder", "first_stage_config.yaml"),
-                encoder_state_dict_path=os.path.join("./models", "models", "autoencoder", "first_stage_encoder_state_dict.pt")
+                encoder_state_dict_path=os.path.join("./models", "autoencoder", "first_stage_encoder_state_dict.pt")
             ).to(device).requires_grad_(False)
         latent_decoder = VQDecoderInterface(
             first_stage_config_path=os.path.join( "./models", "autoencoder", "first_stage_config.yaml"),
