@@ -92,7 +92,7 @@ def main(args):
 
     # Create model:
     assert args.image_size % 8 == 0, "Image size must be divisible by 8 (for the VAE encoder)."
-    sample_size = args.image_size // 8
+    sample_size = args.image_size // 4
     args.latent_size = sample_size
     model = get_models(args)
     # Note that parameter initialization is done within the Latte constructor
