@@ -251,7 +251,7 @@ class Latte(nn.Module):
         self.num_heads = num_heads
         self.extras = extras
         self.num_frames = num_frames
-
+        pdb.set_trace()
         self.x_embedder = PatchEmbed(input_size, patch_size, in_channels, hidden_size, bias=True)
         self.t_embedder = TimestepEmbedder(hidden_size)
 
@@ -360,7 +360,7 @@ class Latte(nn.Module):
 
         batches, frames, channels, high, weight = x.shape 
         x = rearrange(x, 'b f c h w -> (b f) c h w')
-        # pdb.set_trace()
+        pdb.set_trace()
         x = self.x_embedder(x) + self.pos_embed  
         t = self.t_embedder(t, use_fp16=use_fp16)                  
         timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
