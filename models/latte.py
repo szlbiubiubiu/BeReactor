@@ -161,7 +161,7 @@ class LabelEmbedder(nn.Module):
         return embeddings
 
 class image_drop_emb(nn.Module):
-    def __init__(self,  dropout_prob):
+    def __init__(self,  dropout_prob=0.0):
         super().__init__()
         self.dropout_prob=dropout_prob
 
