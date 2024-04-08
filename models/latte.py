@@ -169,7 +169,7 @@ class image_drop_emb(nn.Module):
         use_dropout = self.dropout_prob > 0
         if (training and use_dropout):
             pdb.set_trace()
-            drop_ids = torch.rand(image.shape[0], device=image.device) < self.dropout_prob
+            drop_ids = torch.rand((image.shape[0],1,1,1,1), device=image.device) < self.dropout_prob
             image = torch.where(drop_ids, torch.zeros_like(image), image)
             # zero_image=torch.zeros_like(image)
             # image=zero_image
@@ -263,8 +263,8 @@ class Latte(nn.Module):
             # pdb.set_trace()
             self.facial_condition = DiffusionVideoAutoencoder("./pretrained_models/model_ir_se50.pth", "./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "./pretrained_models/79999_iter.pth"
                     ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
-            self.sp_drop_operation=image_drop_emb(0.9)
-            self.lis_drop_operation=image_drop_emb(0.9)
+            self.sp_drop_operation=image_drop_emb(0.5)
+            self.lis_drop_operation=image_drop_emb(0.5)
         if self.extras == 78: # timestep + text_embedding
             self.text_embedding_projection = nn.Sequential(
             nn.SiLU(),
