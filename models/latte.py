@@ -360,7 +360,7 @@ class Latte(nn.Module):
 
         batches, frames, channels, high, weight = x.shape 
         x = rearrange(x, 'b f c h w -> (b f) c h w')
-        pdb.set_trace()
+        # pdb.set_trace()
         x = self.x_embedder(x) + self.pos_embed  
         t = self.t_embedder(t, use_fp16=use_fp16)                  
         timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
