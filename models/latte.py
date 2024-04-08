@@ -165,7 +165,7 @@ class image_drop_emb(nn.Module):
         super().__init__()
         self.dropout_prob=dropout_prob
 
-    def forward(self,image,train):
+    def forward(self,image,train=False):
         use_dropout = self.dropout_prob > 0
         if (train and use_dropout):
             zero_image=torch.zeros_like(image)
@@ -369,8 +369,8 @@ class Latte(nn.Module):
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
             pdb.set_trace()
-            original_x=self.sp_drop_operation(original_x)
-            listener_ref=self.lis_drop_operation(listener_ref)
+            original_x=self.sp_drop_operation(original_x,training=True)
+            listener_ref=self.lis_drop_operation(listener_ref,training=True)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
