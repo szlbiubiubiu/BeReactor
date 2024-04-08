@@ -15,7 +15,7 @@ import numpy as np
 from einops import rearrange, repeat
 from timm.models.vision_transformer import Mlp, PatchEmbed
 import torch.nn.functional as Func
-
+from timm.layers import  DropPath
 
 import pdb
 from models.emo_fr_net.model_irse import IDnet
@@ -160,7 +160,17 @@ class LabelEmbedder(nn.Module):
         embeddings = self.embedding_table(labels)
         return embeddings
 
+class image_drop_emb(nn.Module):
+    def __init__(self,  dropout_prob):
+        super().__init__()
+        self.dropout_prob=dropout_prob
 
+    def forward(self,image,train):
+        use_dropout = self.dropout_prob > 0
+        if (train and use_dropout):
+            zero_image=torch.zeros_like(image)
+            image=zero_image
+        return image
 #################################################################################
 #                                 Core Latte Model                                #
 #################################################################################
@@ -244,6 +254,8 @@ class Latte(nn.Module):
 
         if self.extras == 2:
             self.y_embedder = LabelEmbedder(num_classes, hidden_size, class_dropout_prob)
+            self.sp_drop_operation=image_drop_emb(0.2)
+            self.lis_drop_operation=image_drop_emb(0.2)
         elif self.extras==3 :# facial condition
             # self.facial_condition=DiffusionVideoAutoencoder()
             # pdb.set_trace()
@@ -345,7 +357,7 @@ class Latte(nn.Module):
 
         batches, frames, channels, high, weight = x.shape 
         x = rearrange(x, 'b f c h w -> (b f) c h w')
-        pdb.set_trace()
+        # pdb.set_trace()
         x = self.x_embedder(x) + self.pos_embed  
         t = self.t_embedder(t, use_fp16=use_fp16)                  
         timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
@@ -356,7 +368,9 @@ class Latte(nn.Module):
             y_spatial = repeat(y, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
-            # pdb.set_trace()
+            pdb.set_trace()
+            original_x=self.sp_drop_operation(original_x)
+            listener_ref=self.lis_drop_operation(listener_ref)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
@@ -495,6 +509,8 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()
+        self.sp_drop=DropPath(0.5)
+        self.lis_drop=DropPath(0.5)
         if au_file_path_disfa is not None:
             # pdb.set_trace()
             self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
@@ -565,6 +581,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         lisenter_ref_id= self.idnet(listener_ref[:,0,:,:,:])
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         # pdb.set_trace()
+        # lis_drop
         feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
                 encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 512]
         # feats = feats.reshape(b,v,-1)

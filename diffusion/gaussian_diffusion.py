@@ -799,7 +799,7 @@ class GaussianDiffusion:
             if model.model.module.extras==3: #trace to x0, and decode
                 estimated_x0=self._predict_xstart_from_eps(x_start,t,model_output)
                 b, f, c, h, w = estimated_x0.shape
-                pdb.set_trace()
+                # pdb.set_trace()
                 estimated_x0 = rearrange(estimated_x0, 'b f c h w -> (b f) c h w')
                 # estimated_x0 = vae.decode(estimated_x0 / 0.18215).sample
                 estimated_x0 = vae(estimated_x0)
@@ -822,7 +822,7 @@ class GaussianDiffusion:
                 # pred_emo_withau[:,i*window_size:(i+1)*window_size,:15]=au
                 # pred_emo_withau[:,i*window_size:(i+1)*window_size,:]=current_emo
                 terms["emo_loss"]=mean_flat((current_emo - emo_label) ** 2)
-                terms["loss"]=terms["emo_loss"]
+                # terms["loss"]=terms["emo_loss"]
         else:
             raise NotImplementedError(self.loss_type)
 
