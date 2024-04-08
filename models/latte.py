@@ -229,9 +229,9 @@ class Latte(nn.Module):
     """
     def __init__(
         self,
-        input_size=32,
+        input_size=64,
         patch_size=2,
-        in_channels=3,
+        in_channels=4,
         hidden_size=1152,
         depth=28,
         num_heads=16,

@@ -60,7 +60,7 @@ def count_model_parameters(model: torch.nn.Module):
 def main(args):
 
     assert torch.cuda.is_available(), "Training currently requires at least one GPU."
-    vqgan_en_dec=True
+    vqgan_en_dec=False
     # Setup DDP:
     setup_distributed()
     # dist.init_process_group("nccl")
