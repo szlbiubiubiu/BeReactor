@@ -165,9 +165,9 @@ class image_drop_emb(nn.Module):
         super().__init__()
         self.dropout_prob=dropout_prob
 
-    def forward(self,image,train=False):
+    def forward(self,image,training=False):
         use_dropout = self.dropout_prob > 0
-        if (train and use_dropout):
+        if (training and use_dropout):
             zero_image=torch.zeros_like(image)
             image=zero_image
         return image
