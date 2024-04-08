@@ -251,7 +251,7 @@ class Latte(nn.Module):
         self.num_heads = num_heads
         self.extras = extras
         self.num_frames = num_frames
-        pdb.set_trace()
+        
         self.x_embedder = PatchEmbed(input_size, patch_size, in_channels, hidden_size, bias=True)
         self.t_embedder = TimestepEmbedder(hidden_size)
 
