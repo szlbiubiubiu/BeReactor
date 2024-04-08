@@ -168,8 +168,11 @@ class image_drop_emb(nn.Module):
     def forward(self,image,training=False):
         use_dropout = self.dropout_prob > 0
         if (training and use_dropout):
-            zero_image=torch.zeros_like(image)
-            image=zero_image
+            pdb.set_trace()
+            drop_ids = torch.rand(image.shape[0], device=image.device) < self.dropout_prob
+            image = torch.where(drop_ids, torch.zeros_like(image), image)
+            # zero_image=torch.zeros_like(image)
+            # image=zero_image
         return image
 #################################################################################
 #                                 Core Latte Model                                #
