@@ -229,7 +229,7 @@ class Latte(nn.Module):
     """
     def __init__(
         self,
-        input_size=64,
+        input_size=32,
         patch_size=2,
         in_channels=4,
         hidden_size=1152,

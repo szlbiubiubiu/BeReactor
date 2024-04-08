@@ -250,7 +250,7 @@ def main(args):
                     x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()
                 else:
                     x = latent_encoder(x)   
-                    x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()                        #[bc,3,64,64]
+                    x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()        #[bc,3,64,64]
             if args.extras == 78: # text-to-video
                 raise 'T2V training are Not supported at this moment!'
             # elif args.extras == 2:
