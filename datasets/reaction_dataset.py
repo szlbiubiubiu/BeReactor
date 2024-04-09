@@ -314,7 +314,7 @@ class ReactionDataset_readvideo(data.Dataset):
     def __init__(self,root_path, real_dataset_path, split, img_size=256, crop_size=224, clip_length=4, fps=25,
                  load_audio=True, load_video_s=True, load_video_l=True, load_emotion_s=False, load_emotion_l=False,
                  load_3dmm_s=False, load_3dmm_l=False, load_ref=True,
-                 repeat_mirrored=True,interval=1):
+                 repeat_mirrored=True,interval=5):
         """
         Args:
             root_path: (str) Path to the data folder.
