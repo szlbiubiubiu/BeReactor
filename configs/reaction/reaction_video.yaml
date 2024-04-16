@@ -41,3 +41,16 @@ use_compile: False
 mixed_precision: True
 enable_xformers_memory_efficient_attention: False
 gradient_checkpointing: False
+
+use_fp16: True
+
+# sample config:
+# seed:
+sample_method: 'ddim'
+num_sampling_steps: 20
+cfg_scale: 1.0
+negative_name:
+
+# ddp sample config
+per_proc_batch_size: 2
+num_fvd_samples: 2048
