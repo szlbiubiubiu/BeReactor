@@ -164,7 +164,8 @@ def main(args):
             )
         elif args.sample_method == 'ddpm':
             samples = diffusion.p_sample_loop(
-                sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device
+                sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                original_x=x,listener_ref=listener_ref,
             )
 
         print(samples.shape)
