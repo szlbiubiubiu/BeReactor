@@ -558,7 +558,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         
         video_input=id.permute(0,2,1,3,4)
         encode_fea=self.encode_video(video_input) #[b,128]
-
+        pdb.set_trace()
         id_feats,emo_fea,au_disfa,au_bp4d=self.forward_listener(id)
         id=id.reshape(b*v,c,w,h)
         lnd=lnd.reshape(b*v,c_l,w_l,h_l)
