@@ -133,8 +133,8 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
 
-        x = video_data['img'].to(device, non_blocking=True)
-        listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)
+        x = video_data['img'].to(device, non_blocking=True).half()
+        listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True).half()
         emo_label=video_data['speaker_emotion'].to(device, non_blocking=True)
         original_x=x,listener_ref=listener_ref
         # Create sampling noise:
@@ -167,7 +167,7 @@ def main(args):
                 sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
                 original_x=x,listener_ref=listener_ref,
             )
-
+        pdb.set_trace()
         print(samples.shape)
         if args.use_fp16:
             samples = samples.to(dtype=torch.float16)
