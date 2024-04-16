@@ -42,7 +42,7 @@ mixed_precision: True
 enable_xformers_memory_efficient_attention: False
 gradient_checkpointing: False
 
-use_fp16: True
+use_fp16: False
 
 # sample config:
 # seed:
