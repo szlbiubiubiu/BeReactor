@@ -49,6 +49,8 @@ def react_parse_arg():
     parser.add_argument('--kl-p', default=0.00001, type=float, help="hyperparameter for kl-loss")
     parser.add_argument('--div-p', default=10, type=float, help="hyperparameter for div-loss")
 
+    parser.add_argument('--save_video_path', default='./test', type=str, help="save_video path")
+
     args = parser.parse_args()
     return args
 def get_dataset(args, train_mode='train'):
