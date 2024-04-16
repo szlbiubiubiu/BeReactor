@@ -118,9 +118,10 @@ def main(args):
     shuffle=True,
     seed=args.global_seed
     )
+    batch_size=int(args.local_batch_size)
     loader = DataLoader(
         dataset,
-        batch_size=int(args.local_batch_size),
+        batch_size=batch_size,
         shuffle=False,
         sampler=sampler,
         num_workers=args.num_workers,
@@ -141,9 +142,9 @@ def main(args):
         # listener_ref=listener_ref
         # Create sampling noise:
         if args.use_fp16:
-            z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
         else:
-            z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, device=device)
+            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
 
         # Setup classifier-free guidance:
         # z = torch.cat([z, z], 0)
