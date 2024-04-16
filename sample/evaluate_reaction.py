@@ -127,6 +127,7 @@ def main(args):
         pin_memory=True,
         drop_last=True
     )
+    pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     for step, video_data in enumerate(loader):
         # Skip steps until we reach the resumed step
