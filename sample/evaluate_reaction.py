@@ -33,6 +33,17 @@ from models.clip import TextEmbedder
 import imageio
 from omegaconf import OmegaConf
 
+
+from datasets import get_dataset
+from torch.utils.data import DataLoader
+# from diffusers.models import AutoencoderKL,AutoencoderTiny
+from diffusers.optimization import get_scheduler
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data.distributed import DistributedSampler
+import torch.nn as nn
+import torch.distributed as dist
+
+import pdb
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
@@ -75,56 +86,82 @@ def main(args):
         vae.to(dtype=torch.float16)
         model.to(dtype=torch.float16)
         # text_encoder.to(dtype=torch.float16)
+    dataset = get_dataset(args,train_mode='test')
 
+    sampler = DistributedSampler(
+    dataset,
+    num_replicas=dist.get_world_size(),
+    rank=0,
+    shuffle=True,
+    seed=args.global_seed
+    )
+    loader = DataLoader(
+        dataset,
+        batch_size=int(args.local_batch_size),
+        shuffle=False,
+        sampler=sampler,
+        num_workers=args.num_workers,
+        pin_memory=True,
+        drop_last=True
+    )
     # Labels to condition the model with (feel free to change):
+    for step, video_data in enumerate(loader):
+        # Skip steps until we reach the resumed step
+        # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
+        #     continue
 
-    # Create sampling noise:
-    if args.use_fp16:
-        z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-    else:
-        z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, device=device)
+        x = video_data['img'].to(device, non_blocking=True)
+        listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)
+        emo_label=video_data['speaker_emotion'].to(device, non_blocking=True)
+        original_x=x,listener_ref=listener_ref
+        # Create sampling noise:
+        if args.use_fp16:
+            z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+        else:
+            z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, device=device)
 
-    # Setup classifier-free guidance:
-    # z = torch.cat([z, z], 0)
-    if using_cfg:
-        z = torch.cat([z, z], 0)
-        y = torch.randint(0, args.num_classes, (1,), device=device)
-        y_null = torch.tensor([101] * 1, device=device)
-        y = torch.cat([y, y_null], dim=0)
-        model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-        sample_fn = model.forward_with_cfg
-    else:
-        sample_fn = model.forward
-        model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+        # Setup classifier-free guidance:
+        # z = torch.cat([z, z], 0)
+        if using_cfg:
+            z = torch.cat([z, z], 0)
+            y = torch.randint(0, args.num_classes, (1,), device=device)
+            y_null = torch.tensor([101] * 1, device=device)
+            y = torch.cat([y, y_null], dim=0)
+            model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            sample_fn = model.forward_with_cfg
+        else:
+            sample_fn = model.forward
+            model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+        pdb.set_trace()
+        # Sample images:
+        if args.sample_method == 'ddim':
+            samples = diffusion.ddim_sample_loop(
+                sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                original_x=x,listener_ref=listener_ref,
+            )
+        elif args.sample_method == 'ddpm':
+            samples = diffusion.p_sample_loop(
+                sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device
+            )
 
-    # Sample images:
-    if args.sample_method == 'ddim':
-        samples = diffusion.ddim_sample_loop(
-            sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device
-        )
-    elif args.sample_method == 'ddpm':
-        samples = diffusion.p_sample_loop(
-            sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device
-        )
-
-    print(samples.shape)
-    if args.use_fp16:
-        samples = samples.to(dtype=torch.float16)
-    b, f, c, h, w = samples.shape
-    samples = rearrange(samples, 'b f c h w -> (b f) c h w')
-    samples = vae.decode(samples / 0.18215).sample
-    samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
-    # Save and display images:
-    pdb.set_trace()
-    if not os.path.exists(args.save_video_path):
-        os.makedirs(args.save_video_path)
+        print(samples.shape)
+        if args.use_fp16:
+            samples = samples.to(dtype=torch.float16)
+        b, f, c, h, w = samples.shape
+        samples = rearrange(samples, 'b f c h w -> (b f) c h w')
+        samples = vae.decode(samples / 0.18215).sample
+        samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+        # Save and display images:
+        pdb.set_trace()
+    # if not os.path.exists(args.save_video_path):
+    #     os.makedirs(args.save_video_path)
 
 
-    video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
-    print(video_save_path)
-    imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    print('save path {}'.format(args.save_video_path))
+    # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    # video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
+    # print(video_save_path)
+    # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+    # print('save path {}'.format(args.save_video_path))
 
 
 if __name__ == "__main__":
