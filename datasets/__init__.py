@@ -51,7 +51,7 @@ def react_parse_arg():
 
     args = parser.parse_args()
     return args
-def get_dataset(args):
+def get_dataset(args, train_mode='train'):
     temporal_sample = video_transforms.TemporalRandomCrop(args.num_frames * args.frame_interval) # 16 1
 
     if args.dataset == 'ffs':
@@ -118,10 +118,23 @@ def get_dataset(args):
         return SkyImages(args, transform=transform_sky, temporal_sample=temporal_sample)
     elif args.dataset == 'reaction':
         #.get_dataset
-        args=react_parse_arg()
-        # pdb.set_trace()
-        # if kwargs['split']=='train':
-        return  DA_RE.get_dataset(args, "train", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
+        pdb.set_trace()
+        if train_mode=='train':
+            args=react_parse_arg()
+            # pdb.set_trace()
+            # if kwargs['split']=='train':
+            return  DA_RE.get_dataset(args, "train", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
+        elif train_mode=='val':
+            args=react_parse_arg()
+            # pdb.set_trace()
+            # if kwargs['split']=='train':
+            return  DA_RE.get_dataset(args, "val", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
+        else:
+            args=react_parse_arg()
+            pdb.set_trace()
+            # if kwargs['split']=='train':
+            return  DA_RE.get_dataset(args, "test", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
+        
         # elif kwargs['split']=='val':
         #     dataset = DA_RE.get_dataset(args, "val", load_audio=True, load_video_s=True, load_emotion_s=True, load_video_l=True,load_emotion_l=True,  load_3dmm_l=True)
         # elif kwargs['split']=='test':
