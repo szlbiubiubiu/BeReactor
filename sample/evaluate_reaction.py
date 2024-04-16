@@ -42,7 +42,11 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torch.nn as nn
 import torch.distributed as dist
-
+from utils import (clip_grad_norm_, create_logger, update_ema, 
+                   requires_grad, cleanup, create_tensorboard, 
+                   write_tensorboard, setup_distributed,
+                   get_experiment_dir, text_preprocessing)
+                   
 import pdb
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -87,6 +91,23 @@ def main(args):
         model.to(dtype=torch.float16)
         # text_encoder.to(dtype=torch.float16)
     dataset = get_dataset(args,train_mode='test')
+
+
+    setup_distributed()
+    # dist.init_process_group("nccl")
+    # assert args.global_batch_size % dist.get_world_size() == 0, f"Batch size must be divisible by world size."
+    # rank = dist.get_rank()
+    # device = rank % torch.cuda.device_count()
+    # local_rank = rank
+
+    rank = int(os.environ["RANK"])
+    local_rank = int(os.environ["LOCAL_RANK"])
+    device = torch.device("cuda", local_rank)
+
+    seed = args.global_seed + rank
+    torch.manual_seed(seed)
+    torch.cuda.set_device(device)
+    print(f"Starting rank={rank}, local rank={local_rank}, seed={seed}, world_size={dist.get_world_size()}.")
 
     sampler = DistributedSampler(
     dataset,
