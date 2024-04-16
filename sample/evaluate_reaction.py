@@ -67,6 +67,7 @@ def main(args):
     diffusion = create_diffusion(str(args.num_sampling_steps))
     # vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
+    # vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
     # text_encoder = TextEmbedder().to(device)
 
     if args.use_fp16:
