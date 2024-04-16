@@ -137,7 +137,8 @@ def main(args):
         x = video_data['img'].to(device, non_blocking=True).half()
         listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True).half()
         emo_label=video_data['speaker_emotion'].to(device, non_blocking=True)
-        original_x=x,listener_ref=listener_ref
+        original_x=x
+        # listener_ref=listener_ref
         # Create sampling noise:
         if args.use_fp16:
             z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
