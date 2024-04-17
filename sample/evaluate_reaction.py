@@ -47,6 +47,8 @@ from utils import (clip_grad_norm_, create_logger, update_ema,
                    write_tensorboard, setup_distributed,
                    get_experiment_dir, text_preprocessing)
 
+import torch.nn.functional as Func
+from metric import *   #import evaluation metric
 import pdb
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -128,6 +130,10 @@ def main(args):
         pin_memory=True,
         drop_last=True
     )
+    listener_emotion_pred_list=[]
+    listener_emotion_gt_list=[]
+    speaker_emotion_gt_list=[]
+    all_listener_emotion_pred_list=[]
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     for step, video_data in enumerate(loader):
@@ -137,7 +143,8 @@ def main(args):
 
         x = video_data['img'].to(device, non_blocking=True)#.half()
         listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)#.half()
-        emo_label=video_data['speaker_emotion'].to(device, non_blocking=True)
+        emo_label=video_data['listener_emotion'].to(device, non_blocking=True)
+        speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)
         original_x=x
         # listener_ref=listener_ref
         # Create sampling noise:
@@ -178,17 +185,75 @@ def main(args):
         samples = rearrange(samples, 'b f c h w -> (b f) c h w')
         samples = vae.decode(samples / 0.18215).sample
         samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
-        # Save and display images:
-        pdb.set_trace()
-    # if not os.path.exists(args.save_video_path):
-    #     os.makedirs(args.save_video_path)
 
-
+        #visualize 
         video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
         video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
         print(video_save_path)
         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         print('save path {}'.format(args.save_video_path))
+
+        # Save and display images:
+        pdb.set_trace()
+
+        #get emo feature
+        id_feats,emo_fea,au_disfa,au_bp4d=model.forward_listener(samples)
+        # id=id.reshape(b*v,c,w,h)
+        # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
+        
+        # # pdb.set_trace()
+        # self.idnet.eval()
+        # id_feats = self.idnet(id)  # [B, 512]
+
+        #emo_feature
+        # pdb.set_trace()
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
+
+        #
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        current_emo=torch.cat([emo,au],dim=-1)
+
+        #
+        pdb.set_trace()
+        listener_emotion_pred_list.append(current_emo.cpu())
+        listener_emotion_gt_list.append(emo_label.cpu())
+        speaker_emotion_gt_list.append(speaker_emo)
+        
+
+    pdb.set_trace()
+    listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
+    listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
+
+    speaker_emotion_gt=torch.cat(speaker_emotion_gt_list, dim = 0)
+
+    all_listener_emotion_pred_list.append(listener_emotion_pred.unsqueeze(1))
+    all_listener_emotion_pred = torch.cat(all_listener_emotion_pred_list, dim=1)
+    # if not os.path.exists(args.save_video_path):
+    #     os.makedirs(args.save_video_path)
+
+    print("-----------------Evaluating Metric-----------------")
+
+    p = args.threads
+    
+    # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
+    TLCC = compute_TLCC(all_listener_emotion_pred, speaker_emotion_gt)
+    
+    # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
+    FRC = compute_FRC(args, all_listener_emotion_pred, listener_emotion_gt, val_test=args.split)
+
+    # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
+    FRD = compute_FRD(args, all_listener_emotion_pred, listener_emotion_gt, val_test=args.split)
+
+    FRDvs = compute_FRDvs(all_listener_emotion_pred)
+    FRVar  = compute_FRVar(all_listener_emotion_pred)
+    smse  = compute_s_mse(all_listener_emotion_pred)
+        
 
 
 if __name__ == "__main__":
