@@ -22,3 +22,4 @@ dependencies:
     - omegaconf
     - soundfile
     - opencv-python
+    - tslearn
