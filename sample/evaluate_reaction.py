@@ -177,7 +177,7 @@ def main(args):
                 sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
                 original_x=x,listener_ref=listener_ref,
             )
-        pdb.set_trace()
+        # pdb.set_trace()
         print(samples.shape)
         if args.use_fp16:
             samples = samples.to(dtype=torch.float16)
@@ -194,7 +194,7 @@ def main(args):
         # print('save path {}'.format(args.save_video_path))
 
         # Save and display images:
-        pdb.set_trace()
+        # pdb.set_trace()
 
         #get emo feature
         id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
@@ -220,7 +220,7 @@ def main(args):
         current_emo=torch.cat([emo,au],dim=-1)
 
         #
-        pdb.set_trace()
+        # pdb.set_trace()
         listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(emo_label.cpu())
         speaker_emotion_gt_list.append(speaker_emo)
