@@ -363,15 +363,20 @@ class ReactionDataset_readvideo(data.Dataset):
         # self._video_path = os.path.join(self._data_path, 'Video_files')
         # self._emotion_path = os.path.join(self._data_path, 'Emotion')
         # self._3dmm_path = os.path.join(self._data_path, '3D_FV_files')
+        # self.reaction_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
         if 'sbg'  in platform.node() or 'rdg' in platform.node():
             self._audio_path = '/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             self._video_path = os.path.join(self.real_dataset_path, 'aligned_faces')
             self._emotion_path = '/data/scratch/acw569/face_react/New_Emotion'
             self._3dmm_path = '/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
         else:
+            self.emo_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
+        
             self._audio_path = '/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together'#os.path.join(self.real_dataset_path, 'Audio_files')
             self._video_path = os.path.join(self.real_dataset_path, 'Video_files')
-            self._emotion_path = '/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
+            # self._emotion_path = '/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
+            self._emotion_path = os.path.join(self.realreaction_filepath24_dataset_path+'/train', self.split+'/Emotion')#'/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
+        
         # self._emotion_path=os.path.join(self.real_dataset_path, 'Emotion')
             self._3dmm_path = os.path.join(self.real_dataset_path, '3D_FV_files')
 

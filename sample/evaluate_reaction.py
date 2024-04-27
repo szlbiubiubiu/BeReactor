@@ -186,12 +186,12 @@ def main(args):
         samples = vae.decode(samples / 0.18215).sample
         samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
 
-        # #visualize 
-        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
+        #visualize 
+        video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        video_save_path = os.path.join(args.save_video_path, 'sample' + str(step)+'.mp4')
+        print(video_save_path)
+        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        print('save path {}'.format(args.save_video_path))
 
         # Save and display images:
         # pdb.set_trace()
@@ -242,17 +242,17 @@ def main(args):
     p = args.threads
     
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-    TLCC = compute_TLCC(all_listener_emotion_pred, speaker_emotion_gt)
+    TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-    FRC = compute_FRC(args, all_listener_emotion_pred, listener_emotion_gt, val_test=args.split)
+    FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-    FRD = compute_FRD(args, all_listener_emotion_pred, listener_emotion_gt, val_test=args.split)
+    FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='val')
 
-    FRDvs = compute_FRDvs(all_listener_emotion_pred)
-    FRVar  = compute_FRVar(all_listener_emotion_pred)
-    smse  = compute_s_mse(all_listener_emotion_pred)
+    FRDvs = compute_FRDvs(all_listener_emotion_pred.cpu())
+    FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
+    smse  = compute_s_mse(all_listener_emotion_pred.cpu())
         
 
 
