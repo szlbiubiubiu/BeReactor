@@ -50,6 +50,7 @@ from utils import (clip_grad_norm_, create_logger, update_ema,
 import torch.nn.functional as Func
 from metric import *   #import evaluation metric
 import pdb
+import numpy as np
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
@@ -66,6 +67,14 @@ def main(args):
     rank = int(os.environ["RANK"])
     local_rank = int(os.environ["LOCAL_RANK"])
     device = torch.device("cuda", local_rank)
+
+    #
+    pdb.set_trace()
+    print('check test/val matrix..')
+    # if val_test == 'val':
+    speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_val.npy'))
+    # else:
+    speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_test.npy'))
 
     seed = args.global_seed + rank
     torch.manual_seed(seed)
