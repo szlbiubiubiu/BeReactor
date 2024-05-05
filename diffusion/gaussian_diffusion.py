@@ -281,7 +281,7 @@ class GaussianDiffusion:
         B, F, C = x.shape[:3]
         assert t.shape == (B,)
         # model_output = model(x, t, **model_kwargs)
-        pdb.set_trace()
+        # pdb.set_trace()
         try:
             model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
         except:
@@ -789,7 +789,7 @@ class GaussianDiffusion:
                 model_output, model_var_values = th.split(model_output, C, dim=2)
                 # Learn the variance using the variational bound, but don't let
                 # it affect our mean prediction.
-                pdb.set_trace()
+                # pdb.set_trace()
                 frozen_out = th.cat([model_output.detach(), model_var_values], dim=2)
                 terms["vb"] = self._vb_terms_bpd(
                     model=lambda *args, r=frozen_out: r,
