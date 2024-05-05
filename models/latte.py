@@ -240,7 +240,7 @@ class Latte(nn.Module):
         class_dropout_prob=0.1,
         num_classes=1000,
         learn_sigma=True,
-        extras=1,
+        extras=3,
         attention_mode='math',
     ):
         super().__init__()

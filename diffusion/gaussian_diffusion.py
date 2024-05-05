@@ -717,7 +717,7 @@ class GaussianDiffusion:
             x_start=x_start, x_t=x_t, t=t
         )
         out = self.p_mean_variance(
-            model, x_t, t, clip_denoised=clip_denoised, #original_x=original_x,listener_ref=listener_ref,
+            model, x_t, t, clip_denoised=clip_denoised, original_x=original_x,listener_ref=listener_ref,
             model_kwargs=model_kwargs
         )
         kl = normal_kl(
