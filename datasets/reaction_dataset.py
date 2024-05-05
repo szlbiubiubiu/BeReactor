@@ -565,17 +565,17 @@ class ReactionDataset_readvideo(data.Dataset):
         if self.load_emotion_l:
             listener_emotion_path = data[f'{listener_prefix}_emotion_path']
             listener_emotion = pd.read_csv(listener_emotion_path, header=None, delimiter=',')
-            # listener_emotion = torch.from_numpy(np.array(listener_emotion.drop(0)).astype(np.float32))[
-            #                    cp: cp + self._clip_length*self.interval:self.interval]
-            listener_emotion = torch.from_numpy(np.array(listener_emotion.drop([0,752])).astype(np.float32))[
+            listener_emotion = torch.from_numpy(np.array(listener_emotion.drop(0)).astype(np.float32))[
                                cp: cp + self._clip_length*self.interval:self.interval]
+            # listener_emotion = torch.from_numpy(np.array(listener_emotion.drop([0,752])).astype(np.float32))[
+            #                    cp: cp + self._clip_length*self.interval:self.interval]
         if self.load_emotion_s:
             speaker_emotion_path = data[f'{speaker_prefix}_emotion_path']
             speaker_emotion = pd.read_csv(speaker_emotion_path, header=None, delimiter=',')
-            # speaker_emotion = torch.from_numpy(np.array(speaker_emotion.drop(0)).astype(np.float32))[
-            #                   cp: cp + self._clip_length*self.interval:self.interval]
-            speaker_emotion = torch.from_numpy(np.array(speaker_emotion.drop([0,752])).astype(np.float32))[
+            speaker_emotion = torch.from_numpy(np.array(speaker_emotion.drop(0)).astype(np.float32))[
                               cp: cp + self._clip_length*self.interval:self.interval]
+            # speaker_emotion = torch.from_numpy(np.array(speaker_emotion.drop([0,752])).astype(np.float32))[
+            #                   cp: cp + self._clip_length*self.interval:self.interval]
 
         # ========================= Load Listener 3DMM ==========================
         listener_3dmm = 0
