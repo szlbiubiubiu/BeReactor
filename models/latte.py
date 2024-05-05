@@ -239,7 +239,7 @@ class Latte(nn.Module):
         num_frames=16,
         class_dropout_prob=0.1,
         num_classes=1000,
-        learn_sigma=True,
+        learn_sigma=False,#learn_sigma=True,
         extras=1,
         attention_mode='math',
     ):
