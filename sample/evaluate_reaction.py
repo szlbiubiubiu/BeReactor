@@ -249,7 +249,7 @@ def main(args):
 
     print("-----------------Evaluating Metric-----------------")
 
-    p = args.threads
+    # p = args.threads
     
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
     TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
@@ -258,7 +258,7 @@ def main(args):
     FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-    FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='val')
+    FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
     FRDvs = compute_FRDvs(all_listener_emotion_pred.cpu())
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
