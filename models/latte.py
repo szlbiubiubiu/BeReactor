@@ -418,6 +418,7 @@ class Latte(nn.Module):
             c = timestep_spatial + facial_spatial
         else:
             c = timestep_spatial
+        pdb.set_trace()
         x = self.final_layer(x, c)               
         x = self.unpatchify(x)                  
         x = rearrange(x, '(b f) c h w -> b f c h w', b=batches)
