@@ -702,8 +702,7 @@ class GaussianDiffusion:
                 img = out["sample"]
 
     def _vb_terms_bpd(
-            self, model, x_start, x_t, t, clip_denoised=True, 
-            original_x=None,listener_ref=None, model_kwargs=None
+            self, model, x_start, x_t, t, clip_denoised=True, model_kwargs=None
     ):
         """
         Get a term for the variational lower-bound.
@@ -717,7 +716,7 @@ class GaussianDiffusion:
             x_start=x_start, x_t=x_t, t=t
         )
         out = self.p_mean_variance(
-            model, x_t, t, clip_denoised=clip_denoised, original_x=original_x,listener_ref=listener_ref,model_kwargs=model_kwargs
+            model, x_t, t, clip_denoised=clip_denoised, model_kwargs=model_kwargs
         )
         kl = normal_kl(
             true_mean, true_log_variance_clipped, out["mean"], out["log_variance"]
@@ -792,7 +791,6 @@ class GaussianDiffusion:
                     x_t=x_t,
                     t=t,
                     clip_denoised=False,
-                    original_x=original_x,listener_ref=listener_ref
                 )["output"]
                 if self.loss_type == LossType.RESCALED_MSE:
                     # Divide by 1000 for equivalence with initial implementation.
