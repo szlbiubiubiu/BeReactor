@@ -239,12 +239,11 @@ class Latte(nn.Module):
         num_frames=16,
         class_dropout_prob=0.1,
         num_classes=1000,
-        learn_sigma=False,#learn_sigma=True,
+        learn_sigma=True,
         extras=1,
         attention_mode='math',
     ):
         super().__init__()
-        pdb.set_trace()
         self.learn_sigma = learn_sigma
         self.in_channels = in_channels
         self.out_channels = in_channels * 2 if learn_sigma else in_channels
@@ -419,7 +418,6 @@ class Latte(nn.Module):
             c = timestep_spatial + facial_spatial
         else:
             c = timestep_spatial
-        pdb.set_trace()
         x = self.final_layer(x, c)               
         x = self.unpatchify(x)                  
         x = rearrange(x, '(b f) c h w -> b f c h w', b=batches)

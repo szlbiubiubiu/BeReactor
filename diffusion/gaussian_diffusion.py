@@ -774,7 +774,7 @@ class GaussianDiffusion:
             #     model_output = model(x_t, t, **model_kwargs).sample # for tav unet
             # except:
             #     model_output = model(x_t, t, **model_kwargs)
-            pdb.set_trace()
+
             if self.model_var_type in [
                 ModelVarType.LEARNED,
                 ModelVarType.LEARNED_RANGE,
@@ -804,7 +804,6 @@ class GaussianDiffusion:
                 ModelMeanType.START_X: x_start,
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
-            
             assert model_output.shape == target.shape == x_start.shape
             terms["mse"] = mean_flat((target - model_output) ** 2)
             if "vb" in terms:
