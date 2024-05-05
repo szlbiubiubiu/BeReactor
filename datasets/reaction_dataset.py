@@ -376,7 +376,7 @@ class ReactionDataset_readvideo(data.Dataset):
             self._video_path = os.path.join(self.real_dataset_path, 'Video_files')
             self._emotion_path = '/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
             pdb.set_trace()
-            self._emotion_path = os.path.join(self.emo_filepath24+'/train', self.split+'/Emotion')#'/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
+            self._emotion_path = os.path.join(self.emo_filepath24, self._split+'/Emotion')#'/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
         
         # self._emotion_path=os.path.join(self.real_dataset_path, 'Emotion')
             self._3dmm_path = os.path.join(self.real_dataset_path, '3D_FV_files')
