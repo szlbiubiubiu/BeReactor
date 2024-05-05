@@ -72,10 +72,10 @@ def main(args):
     pdb.set_trace()
     print('check test/val matrix..')
     # if val_test == 'val':
-    matrix_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/val_test_matrix'
-    speaker_neighbour_matrix = np.load(os.path.join(matrix_path, 'neighbour_emotion_val.npy'))
+    args.dataset_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/val_test_matrix'
+    speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_val.npy'))
     # else:
-    speaker_neighbour_matrix = np.load(os.path.join(matrix_path, 'neighbour_emotion_test.npy'))
+    speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_test.npy'))
 
     seed = args.global_seed + rank
     torch.manual_seed(seed)
@@ -196,12 +196,12 @@ def main(args):
         samples = vae.decode(samples / 0.18215).sample
         samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
 
-        #visualize 
-        video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        video_save_path = os.path.join(args.save_video_path, 'sample' + str(step)+'.mp4')
-        print(video_save_path)
-        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        print('save path {}'.format(args.save_video_path))
+        # #visualize 
+        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
 
         # Save and display images:
         # pdb.set_trace()
