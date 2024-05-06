@@ -202,7 +202,7 @@ def main(args):
         print(video_save_path)
         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         print('save path {}'.format(args.save_video_path))
-
+        pdb.set_trace()
         # Save and display images:
         # pdb.set_trace()
 
