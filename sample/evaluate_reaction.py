@@ -196,12 +196,12 @@ def main(args):
         samples = vae.decode(samples / 0.18215).sample
         samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
 
-        # #visualize 
-        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
+        #visualize 
+        video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        video_save_path = os.path.join(args.save_video_path, 'sample_test' + str(step)+'.mp4')
+        print(video_save_path)
+        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        print('save path {}'.format(args.save_video_path))
 
         # Save and display images:
         # pdb.set_trace()
@@ -269,7 +269,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
-    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt")
+    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/120-Latte-S-2-F32S3-reaction-Amp/checkpoints/0020000.pt")
+    #wrong label:/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt
     parser.add_argument("--save_video_path", type=str, default="./sample_videos/")
     args = parser.parse_args()
     omega_conf = OmegaConf.load(args.config)
