@@ -435,12 +435,13 @@ class ReactionDataset_readvideo(data.Dataset):
             #     ab_listener_emotion_path=ab_listener_emotion_path.replace('val/','')
             #     ab_listener_emotion_path=ab_listener_emotion_path.replace('test/','')
             # else:
-            ab_speaker_emotion_path=ab_speaker_emotion_path.replace('val','train')
-            ab_speaker_emotion_path=ab_speaker_emotion_path.replace('test','train')
+            # #old
+            # ab_speaker_emotion_path=ab_speaker_emotion_path.replace('val','train')
+            # ab_speaker_emotion_path=ab_speaker_emotion_path.replace('test','train')
 
-            ab_listener_emotion_path=ab_listener_emotion_path.replace('val','train')
-            ab_listener_emotion_path=ab_listener_emotion_path.replace('test','train')
-
+            # ab_listener_emotion_path=ab_listener_emotion_path.replace('val','train')
+            # ab_listener_emotion_path=ab_listener_emotion_path.replace('test','train')
+            #new
             ab_speaker_video_path=ab_speaker_video_path.replace('face_final_v2/val/Video_files','cropped_face')
             ab_speaker_video_path=ab_speaker_video_path.replace('face_final_v2/train/Video_files','cropped_face')
             ab_speaker_video_path=ab_speaker_video_path.replace('face_final_v2/test/Video_files','cropped_face')
