@@ -269,7 +269,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
-    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/120-Latte-S-2-F32S3-reaction-Amp/checkpoints/0020000.pt")
+    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/120-Latte-S-2-F32S3-reaction-Amp/checkpoints/0080000.pt")
     #wrong label:/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt
     parser.add_argument("--save_video_path", type=str, default="./sample_videos/")
     args = parser.parse_args()
