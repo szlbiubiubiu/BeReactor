@@ -1,4 +1,4 @@
-name: latte
+name: latte_new
 channels:
   - pytorch
   - nvidia
