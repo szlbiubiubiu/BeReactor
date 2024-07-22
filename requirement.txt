@@ -1,8 +1,3 @@
-
-
-pytorch == 2.2.0
-torchvision
-pytorch-cuda==11.8
 timm
 diffusers[torch]==0.24.0
 accelerate
