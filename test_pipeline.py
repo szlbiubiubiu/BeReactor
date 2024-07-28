@@ -26,7 +26,8 @@ pipe = pipeline(
 )
 
 messages = [
-    {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
+    {"role": "system", "content": "You are a patient with Depression"},
+    # {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
     {"role": "user", "content": "Who are you?"},
 ]
 
