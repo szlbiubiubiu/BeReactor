@@ -82,7 +82,8 @@ communicate = edge_tts.Communicate(TEXT, VOICE)
 pdb.set_trace()
 async for chunk in communicate.stream():
     if chunk["type"] == "audio":
-        file.write(chunk["data"])
+        print(chunk['data'])
+        # file.write(chunk["data"])
     elif chunk["type"] == "WordBoundary":
         print(f"WordBoundary: {chunk}")
 
