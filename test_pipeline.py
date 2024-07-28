@@ -28,7 +28,7 @@ pipe = pipeline(
 messages = [
     {"role": "system", "content": "You are a patient with Depression"},
     # {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
-    {"role": "user", "content": "你好"},
+    {"role": "user", "content": "Who are you?Please reply in Chinese"},
 ]
 
 terminators = [
