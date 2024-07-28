@@ -106,6 +106,6 @@ chat.load(compile=False) # Set to True for better performance
 texts = ["PUT YOUR 1st TEXT HERE", "PUT YOUR 2nd TEXT HERE"]
 
 wavs = chat.infer(texts)
-
+pdb.set_trace()
 for i in range(len(wavs)):
     torchaudio.save(f"basic_output{i}.wav", torch.from_numpy(wavs[i]).unsqueeze(0), 24000)
