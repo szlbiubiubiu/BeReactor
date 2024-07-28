@@ -48,23 +48,41 @@
 # print(assistant_response)
 
 
-import torch
-from transformers import pipeline
+# import torch
+# from transformers import pipeline
+# import pdb
+
+# chat = [
+#     {"role": "system", "content": "You are a sassy, wise-cracking robot as imagined by Hollywood circa 1986."},
+#     {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
+# ]
+
+# pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
+# response = pipe(chat, max_new_tokens=512)
+# print(response[0]['generated_text'][-1]['content'])
+# pdb.set_trace()
+
+# chat = response[0]['generated_text']
+# chat.append(
+#     {"role": "user", "content": "Wait, what's so wild about soup cans?"}
+# )
+# response = pipe(chat, max_new_tokens=512)
+# print(response[0]['generated_text'][-1]['content'])
+
+#text text to audio
+import asyncio
+
+import edge_tts
 import pdb
-
-chat = [
-    {"role": "system", "content": "You are a sassy, wise-cracking robot as imagined by Hollywood circa 1986."},
-    {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
-]
-
-pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
-response = pipe(chat, max_new_tokens=512)
-print(response[0]['generated_text'][-1]['content'])
+TEXT = "Hello World!"
+VOICE = "en-GB-SoniaNeural"
+OUTPUT_FILE = "test.mp3"
+communicate = edge_tts.Communicate(TEXT, VOICE)
+# with open(OUTPUT_FILE, "wb") as file:
 pdb.set_trace()
+async for chunk in communicate.stream():
+    if chunk["type"] == "audio":
+        file.write(chunk["data"])
+    elif chunk["type"] == "WordBoundary":
+        print(f"WordBoundary: {chunk}")
 
-chat = response[0]['generated_text']
-chat.append(
-    {"role": "user", "content": "Wait, what's so wild about soup cans?"}
-)
-response = pipe(chat, max_new_tokens=512)
-print(response[0]['generated_text'][-1]['content'])
