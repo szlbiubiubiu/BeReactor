@@ -16,7 +16,7 @@
 from typing import List, Optional
 
 import fire
-
+import pdb
 from llama import Dialog, Llama
 
 
@@ -82,7 +82,7 @@ These are just a few of the many attractions that Paris has to offer. With so mu
         temperature=temperature,
         top_p=top_p,
     )
-
+    pdb.set_trace()
     for dialog, result in zip(dialogs, results):
         for msg in dialog:
             print(f"{msg['role'].capitalize()}: {msg['content']}\n")
