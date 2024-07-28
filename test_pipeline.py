@@ -69,30 +69,43 @@
 # response = pipe(chat, max_new_tokens=512)
 # print(response[0]['generated_text'][-1]['content'])
 
-#text text to audio
-import asyncio
+######text text to audio---------------------
+# import asyncio
 
-import edge_tts
+# import edge_tts
+# import pdb
+# TEXT = "Hello World!"
+# VOICE = "en-GB-SoniaNeural"
+# OUTPUT_FILE = "test.mp3"
+# communicate = edge_tts.Communicate(TEXT, VOICE)
+# # with open(OUTPUT_FILE, "wb") as file:
+# pdb.set_trace()
+
+# async def amain() -> None:
+#     """Main function"""
+#     communicate = edge_tts.Communicate(TEXT, VOICE)
+#     # with open(OUTPUT_FILE, "wb") as file:
+#     pdb.set_trace()
+#     async for chunk in communicate.stream():
+#         if chunk["type"] == "audio":
+#             # file.write(chunk["data"])
+#             print(chunk['data'])
+#         elif chunk["type"] == "WordBoundary":
+#             print(f"WordBoundary: {chunk}")
+
+
+# if __name__ == "__main__":
+#     asyncio.run(amain())
+import ChatTTS
+import torch
+import torchaudio
 import pdb
-TEXT = "Hello World!"
-VOICE = "en-GB-SoniaNeural"
-OUTPUT_FILE = "test.mp3"
-communicate = edge_tts.Communicate(TEXT, VOICE)
-# with open(OUTPUT_FILE, "wb") as file:
-pdb.set_trace()
+chat = ChatTTS.Chat()
+chat.load(compile=False) # Set to True for better performance
 
-async def amain() -> None:
-    """Main function"""
-    communicate = edge_tts.Communicate(TEXT, VOICE)
-    # with open(OUTPUT_FILE, "wb") as file:
-    pdb.set_trace()
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            # file.write(chunk["data"])
-            print(chunk['data'])
-        elif chunk["type"] == "WordBoundary":
-            print(f"WordBoundary: {chunk}")
+texts = ["PUT YOUR 1st TEXT HERE", "PUT YOUR 2nd TEXT HERE"]
 
+wavs = chat.infer(texts)
 
-if __name__ == "__main__":
-    asyncio.run(amain())
+for i in range(len(wavs)):
+    torchaudio.save(f"basic_output{i}.wav", torch.from_numpy(wavs[i]).unsqueeze(0), 24000)
