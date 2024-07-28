@@ -80,10 +80,19 @@ OUTPUT_FILE = "test.mp3"
 communicate = edge_tts.Communicate(TEXT, VOICE)
 # with open(OUTPUT_FILE, "wb") as file:
 pdb.set_trace()
-async for chunk in communicate.stream():
-    if chunk["type"] == "audio":
-        print(chunk['data'])
-        # file.write(chunk["data"])
-    elif chunk["type"] == "WordBoundary":
-        print(f"WordBoundary: {chunk}")
 
+async def amain() -> None:
+    """Main function"""
+    communicate = edge_tts.Communicate(TEXT, VOICE)
+    # with open(OUTPUT_FILE, "wb") as file:
+    pdb.set_trace()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            # file.write(chunk["data"])
+            print(chunk['data'])
+        elif chunk["type"] == "WordBoundary":
+            print(f"WordBoundary: {chunk}")
+
+
+if __name__ == "__main__":
+    asyncio.run(amain())
