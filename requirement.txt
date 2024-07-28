@@ -14,4 +14,6 @@ soundfile
 opencv-python
 tslearn
 openai-whisper
-TTS
+piper-tts
+llama 3.1
+musetalk
