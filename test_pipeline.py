@@ -80,7 +80,7 @@ OUTPUT_FILE = "test.mp3"
 communicate = edge_tts.Communicate(TEXT, VOICE)
 # with open(OUTPUT_FILE, "wb") as file:
 pdb.set_trace()
-async for chunk in communicate.stream():
+for chunk in communicate.stream():
     if chunk["type"] == "audio":
         print(chunk['data'])
         # file.write(chunk["data"])
