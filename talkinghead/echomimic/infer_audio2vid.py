@@ -220,10 +220,10 @@ def main():
                 face_mask, _ = crop_and_pad(face_mask, crop_rect)
                 face_img = cv2.resize(face_img, (args.W, args.H))
                 face_mask = cv2.resize(face_mask, (args.W, args.H))
-            pdb.set_trace()
+            # pdb.set_trace()
             ref_image_pil = Image.fromarray(face_img[:, :, [2, 1, 0]])
             face_mask_tensor = torch.Tensor(face_mask).to(dtype=weight_dtype, device="cuda").unsqueeze(0).unsqueeze(0).unsqueeze(0) / 255.0
-            pdb.set_trace()
+            # pdb.set_trace()
             video = pipe(
                 ref_image_pil,
                 audio_path,
