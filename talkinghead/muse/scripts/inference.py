@@ -90,7 +90,7 @@ def main(args):
             if bbox == coord_placeholder:
                 continue
             x1, y1, x2, y2 = bbox
-            if not without_landmark:
+            if not args.without_landmark:
                 crop_frame = frame[y1:y2, x1:x2]
             else:
                 crop_frame = frame
