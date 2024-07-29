@@ -1,7 +1,7 @@
 task_0:
 #  video_path: "data/video/yongen.mp4"
 #  audio_path: "data/audio/yongen.wav"
- video_path: "/homes/zs003/test_images/siyang.jpg"
+ video_path: "/homes/zs003/test_images/siyang.png"
  audio_path: "/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/1.wav"
 #  "/homes/zs003/test_images/superv.jpg":
 #     - "/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/1.wav"
