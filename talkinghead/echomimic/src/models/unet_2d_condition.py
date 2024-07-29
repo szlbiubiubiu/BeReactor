@@ -16,6 +16,7 @@ from diffusers.models.attention_processor import (
     AttnProcessor,
 )
 
+import diffusers
 if diffusers.__version__ >'0.25':
     from diffusers.models.embeddings import GLIGENTextBoundingboxProjection as PositionNet
 else:
