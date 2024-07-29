@@ -71,6 +71,7 @@ def main(args):
         whisper_feature = audio_processor.audio2feat(audio_path)
         whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
         ############################################## preprocess input image  ##############################################
+        pdb.set_trace()
         if os.path.exists(crop_coord_save_path) and args.use_saved_coord:
             print("using extracted coordinates")
             with open(crop_coord_save_path,'rb') as f:
