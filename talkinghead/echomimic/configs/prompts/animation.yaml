@@ -15,13 +15,17 @@ weight_dtype: 'fp16'
 
 ## test cases
 test_cases:
-  "./assets/test_imgs/a.png":
-    - "./assets/test_audios/echomimic_en.wav"
-  "./assets/test_imgs/b.png":
-    - "./assets/test_audios/echomimic_en_girl.wav"
-  "./assets/test_imgs/c.png":
-    - "./assets/test_audios/echomimic_en_girl.wav"
-  "./assets/test_imgs/d.png":
-    - "./assets/test_audios/echomimic_en_girl.wav"
-  "./assets/test_imgs/e.png":
-    - "./assets/test_audios/echomimic_en.wav"
+  "/homes/zs003/test_images/superv.jpg":
+    - "/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/1.wav"
+  
+# test_cases:
+#   "./assets/test_imgs/a.png":
+#     - "./assets/test_audios/echomimic_en.wav"
+#   "./assets/test_imgs/b.png":
+#     - "./assets/test_audios/echomimic_en_girl.wav"
+#   "./assets/test_imgs/c.png":
+#     - "./assets/test_audios/echomimic_en_girl.wav"
+#   "./assets/test_imgs/d.png":
+#     - "./assets/test_audios/echomimic_en_girl.wav"
+#   "./assets/test_imgs/e.png":
+#     - "./assets/test_audios/echomimic_en.wav"
