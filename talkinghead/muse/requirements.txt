@@ -19,3 +19,5 @@ ffmpeg-python
 gradio
 spaces
 moviepy
+
+# pip install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html
