@@ -114,10 +114,10 @@
 
 #talking head--------------------------------
 
-from talkinghead.MuseTalk.musetalk.utils.utils import get_file_type,get_video_fps,datagen
-from talkinghead.MuseTalk.musetalk.utils.preprocessing import get_landmark_and_bbox,read_imgs,coord_placeholder
-from talkinghead.MuseTalk.musetalk.utils.blending import get_image
-from talkinghead.MuseTalk.musetalk.utils.utils import load_all_model
+from talkinghead.muse.musetalk.utils.utils import get_file_type,get_video_fps,datagen
+from talkinghead.muse.musetalk.utils.preprocessing import get_landmark_and_bbox,read_imgs,coord_placeholder
+from talkinghead.muse.musetalk.utils.blending import get_image
+from talkinghead.muse.musetalk.utils.utils import load_all_model
 import shutil
 import torch
 import cv2
