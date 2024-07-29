@@ -15,6 +15,8 @@ from musetalk.utils.blending import get_image
 from musetalk.utils.utils import load_all_model
 import shutil
 
+import pdb
+
 # load model weights
 audio_processor, vae, unet, pe = load_all_model()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -81,6 +83,7 @@ def main(args):
                 pickle.dump(coord_list, f)
                 
         i = 0
+        pdb.set_trace()
         input_latent_list = []
         for bbox, frame in zip(coord_list, frame_list):
             if bbox == coord_placeholder:
