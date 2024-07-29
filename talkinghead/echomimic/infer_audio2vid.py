@@ -21,6 +21,8 @@ import torch
 from diffusers import AutoencoderKL, DDIMScheduler
 from omegaconf import OmegaConf
 from PIL import Image
+import pdb
+
 
 from src.models.unet_2d_condition import UNet2DConditionModel
 from src.models.unet_3d_echo import EchoUNet3DConditionModel
@@ -221,7 +223,7 @@ def main():
 
             ref_image_pil = Image.fromarray(face_img[:, :, [2, 1, 0]])
             face_mask_tensor = torch.Tensor(face_mask).to(dtype=weight_dtype, device="cuda").unsqueeze(0).unsqueeze(0).unsqueeze(0) / 255.0
-
+            pdb.set_trace()
             video = pipe(
                 ref_image_pil,
                 audio_path,
