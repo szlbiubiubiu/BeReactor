@@ -113,7 +113,8 @@
 #     torchaudio.save(f"basic_output{i}.wav", torch.from_numpy(wavs[i]).unsqueeze(0), 24000)
 
 #talking head--------------------------------
-
+import sys
+sys.path.append('/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse')
 from musetalk.utils.utils import get_file_type,get_video_fps,datagen
 from musetalk.utils.preprocessing import get_landmark_and_bbox,read_imgs,coord_placeholder
 from musetalk.utils.blending import get_image
