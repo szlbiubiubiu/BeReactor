@@ -90,7 +90,10 @@ def main(args):
             if bbox == coord_placeholder:
                 continue
             x1, y1, x2, y2 = bbox
-            crop_frame = frame[y1:y2, x1:x2]
+            if not without_landmark:
+                crop_frame = frame[y1:y2, x1:x2]
+            else:
+                crop_frame = frame
             crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
             latents = vae.get_latents_for_unet(crop_frame)
             input_latent_list.append(latents)
@@ -153,6 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--fps", type=int, default=25)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--output_vid_name", type=str, default=None)
+    parser.add_argument("--without_landmark", type=bool, default=True)
     parser.add_argument("--use_saved_coord",
                         action="store_true",
                         help='use saved coordinate to save time')
