@@ -68,7 +68,7 @@ if __name__=='__main__':
     #init talking head
     
     # load model weights
-    pdb.set_trace()
+    # pdb.set_trace()
     audio_processor, vae, unet, pe = load_all_model()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     timesteps = torch.tensor([0], device=device)
