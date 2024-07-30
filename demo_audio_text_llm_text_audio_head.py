@@ -30,7 +30,7 @@ if __name__=='__main__':
 
     #text_audio_define
     VOICE = "en-GB-SoniaNeural"
-    audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/1.wav'
+    audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     #load audio
     #audio to text
     # audio_file="audio.mp3"
