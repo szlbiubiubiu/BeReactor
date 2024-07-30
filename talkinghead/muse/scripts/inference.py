@@ -106,6 +106,7 @@ def main(args):
         print("start inference")
         video_num = len(whisper_chunks)
         batch_size = args.batch_size
+        input_latent_list_cycle= len(whisper_chunks)*input_latent_list  #image level, if it is video should change
         gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
         res_frame_list = []
         for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):

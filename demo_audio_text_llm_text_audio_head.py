@@ -59,7 +59,7 @@ if __name__=='__main__':
 
     # # print the recognized text
     # print(result.text)
-    pdb.set_trace()
+    # pdb.set_trace()
     #split audio, results --> sentences
     sentences=result["text"].split('.')
     ##LLM processing
@@ -109,7 +109,7 @@ if __name__=='__main__':
         # wavs = chat.infer(current_text)
 
 
-        pdb.set_trace()
+        # pdb.set_trace()
         OUTPUT_audio_FILE=result_img_save_path+'/output_audio.wav'
         communicate = edge_tts.Communicate(current_text, VOICE)
         communicate.save_sync(OUTPUT_audio_FILE)
