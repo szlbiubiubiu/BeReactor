@@ -20,7 +20,7 @@ def load_all_model():
     # vae = VAE(model_path = "./models/sd-vae-ft-mse/")
     # unet = UNet(unet_config="./models/musetalk/musetalk.json",
     #             model_path ="./models/musetalk/pytorch_model.bin")
-    audio_processor = Audio2Feature(model_path="./models/whisper/tiny.pt")
+    audio_processor = Audio2Feature(model_path="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/whisper/tiny.pt")
     vae = VAE(model_path = "/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/sd-vae-ft-mse/")
     unet = UNet(unet_config="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/musetalk/musetalk.json",
                 model_path ="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/musetalk/pytorch_model.bin")
