@@ -197,11 +197,11 @@ if __name__=='__main__':
             bbox = coord_list_cycle[i%(len(coord_list_cycle))]
             ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
             x1, y1, x2, y2 = bbox
-            try:
-                res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
-            except:
-#                 print(bbox)
-                continue
+            # try:
+            res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+#             except:
+# #                 print(bbox)
+#                 continue
             
             combine_frame = get_image(ori_frame,res_frame,bbox)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
