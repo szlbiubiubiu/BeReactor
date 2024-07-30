@@ -24,7 +24,7 @@ import cv2
 import pdb
 import numpy as np
 from tqdm import tqdm
-
+import urllib.request
 
 if __name__=='__main__':
 
