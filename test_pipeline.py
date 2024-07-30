@@ -147,6 +147,7 @@ latents = vae.get_latents_for_unet(crop_frame)
 # gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
 # for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
 whisper_batch=whisper_chunks
+pdb.set_trace()
 audio_feature_batch = torch.from_numpy(whisper_batch)
 audio_feature_batch = audio_feature_batch.to(device=unet.device,
                                                 dtype=unet.model.dtype) # torch, B, 5*N,384
