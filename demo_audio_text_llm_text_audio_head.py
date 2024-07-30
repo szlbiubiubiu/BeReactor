@@ -169,10 +169,11 @@ if __name__=='__main__':
         frame_list_cycle = frame_list + frame_list[::-1]
         coord_list_cycle = coord_list + coord_list[::-1]
         video_num = len(whisper_chunks)
-        input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
+        # input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
         # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
         pdb.set_trace()
         gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
+        res_frame_list=[]
         for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
         # for whisper_batch in whisper_chunks:
             # whisper_batch=whisper_chunks
@@ -186,7 +187,7 @@ if __name__=='__main__':
             # pdb.set_trace()
             pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
             recon = vae.decode_latents(pred_latents)
-            res_frame_list=[]
+            
             # pdb.set_trace()
             for res_frame in recon:
                 res_frame_list.append(res_frame)
