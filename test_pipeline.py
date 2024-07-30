@@ -154,14 +154,14 @@ gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
 for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(len(whisper_chunks)/batch_size)))):
 # for whisper_batch in whisper_chunks:
     # whisper_batch=whisper_chunks
-    pdb.set_trace()
+    # pdb.set_trace()
     audio_feature_batch = torch.from_numpy(whisper_batch)
     audio_feature_batch = audio_feature_batch.to(device=unet.device,
                                                     dtype=unet.model.dtype) # torch, B, 5*N,384
     audio_feature_batch = pe(audio_feature_batch)
     # latent_batch=latents
     latent_batch = latent_batch.to(dtype=unet.model.dtype)
-    pdb.set_trace()
+    # pdb.set_trace()
     pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
     recon = vae.decode_latents(pred_latents)
     res_frame_list=[]
