@@ -121,7 +121,7 @@ if __name__=='__main__':
 
         #talking head
         
-
+        pdb.set_trace()
         whisper_feature = audio_processor.audio2feat(wavs)
         whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
 
