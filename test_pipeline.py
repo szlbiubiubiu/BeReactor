@@ -159,7 +159,7 @@ for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(len(
     audio_feature_batch = audio_feature_batch.to(device=unet.device,
                                                     dtype=unet.model.dtype) # torch, B, 5*N,384
     audio_feature_batch = pe(audio_feature_batch)
-    latent_batch=latents
+    # latent_batch=latents
     latent_batch = latent_batch.to(dtype=unet.model.dtype)
     pdb.set_trace()
     pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
