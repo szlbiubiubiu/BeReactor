@@ -87,7 +87,7 @@ if __name__=='__main__':
     for i in range(len(sentences)):
         if i==0:
             chat = [
-            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)},
+            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 30 words"},
             {"role": "user", "content": sentences[0]}
                 ]
             a=1
@@ -112,7 +112,9 @@ if __name__=='__main__':
         for chunk in communicate.stream_sync():
             if chunk["type"] == "audio":
                 # file.write(chunk["data"])
-                wavs.append(chunk["data"])
+                audio = np.frombuffer(chunk["data"], np.int16).astype(np.float32)*(1/32768.0)
+                # wavs.append(chunk["data"])
+                wavs.append(audio)
             elif chunk["type"] == "WordBoundary":
                 print(f"WordBoundary: {chunk}")
         # communicate.save_sync(OUTPUT_FILE)# change to talking head format
@@ -120,7 +122,8 @@ if __name__=='__main__':
         # #audio to talking head, whisper,tiny
 
         #talking head
-        
+        # wavs=np.frombuffer(wavs[0], dtype=np.float16)
+        # audio = np.frombuffer(data, np.int16).astype(np.float32)*(1/32768.0)
         pdb.set_trace()
         whisper_feature = audio_processor.audio2feat(wavs)
         whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
