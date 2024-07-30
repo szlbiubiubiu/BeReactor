@@ -169,7 +169,9 @@ if __name__=='__main__':
         frame_list_cycle = frame_list + frame_list[::-1]
         coord_list_cycle = coord_list + coord_list[::-1]
         video_num = len(whisper_chunks)
-        input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
+        input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
+        # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
+        pdb.set_trace()
         gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
         for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
         # for whisper_batch in whisper_chunks:
