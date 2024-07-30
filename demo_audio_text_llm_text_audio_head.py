@@ -149,7 +149,7 @@ if __name__=='__main__':
             audio_feature_batch = pe(audio_feature_batch)
             # latent_batch=latents
             latent_batch = latent_batch.to(dtype=unet.model.dtype)
-            pdb.set_trace()
+            # pdb.set_trace()
             pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
             recon = vae.decode_latents(pred_latents)
             res_frame_list=[]
