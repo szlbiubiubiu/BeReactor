@@ -127,6 +127,8 @@ import shutil
 import torch
 import cv2
 import pdb
+import numpy as np
+
 # load model weights
 pdb.set_trace()
 audio_processor, vae, unet, pe = load_all_model()
@@ -134,6 +136,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 timesteps = torch.tensor([0], device=device)
 
 fps=25
+batch_size=8
 wavs='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/1.wav'
 img_path='/homes/zs003/test_images/superv.jpg'
 
@@ -144,9 +147,12 @@ whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fp
 crop_frame = cv2.imread(img_path)
 crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
 latents = vae.get_latents_for_unet(crop_frame)
-# gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
-# for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
-for whisper_batch in whisper_chunks:
+input_latent_list=[]
+input_latent_list.append(latents)
+input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
+for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(len(whisper_chunks)/batch_size)))):
+# for whisper_batch in whisper_chunks:
     # whisper_batch=whisper_chunks
     pdb.set_trace()
     audio_feature_batch = torch.from_numpy(whisper_batch)
