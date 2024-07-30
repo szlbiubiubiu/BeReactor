@@ -50,12 +50,12 @@ if __name__=='__main__':
     # _, probs = model.detect_language(mel)
     # print(f"Detected language: {max(probs, key=probs.get)}")
 
-    # decode the audio
-    options = whisper.DecodingOptions()
-    result = whisper.decode(model, mel, options)
+    # # decode the audio
+    # options = whisper.DecodingOptions()
+    # result = whisper.decode(model, mel, options)
 
-    # print the recognized text
-    print(result.text)
+    # # print the recognized text
+    # print(result.text)
     pdb.set_trace()
     #split audio, results --> sentences
     sentences=result["text"]
