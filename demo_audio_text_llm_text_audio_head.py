@@ -35,7 +35,7 @@ if __name__=='__main__':
     #audio to text
     # audio_file="audio.mp3"
     model = whisper.load_model("base.en")
-    pdb.set_trace()
+    # pdb.set_trace()
     result = model.transcribe(audio_file)
     print(result["text"])
 
@@ -58,7 +58,7 @@ if __name__=='__main__':
     # print(result.text)
     pdb.set_trace()
     #split audio, results --> sentences
-    sentences=result["text"]
+    sentences=result["text"].split('.')
     ##LLM processing
     pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
     
