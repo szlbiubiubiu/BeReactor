@@ -34,7 +34,7 @@ if __name__=='__main__':
     #load audio
     #audio to text
     # audio_file="audio.mp3"
-    model = whisper.load_model("small.en")
+    model = whisper.load_model("base.en")
     result = model.transcribe(audio_file)
     print(result["text"])
 
