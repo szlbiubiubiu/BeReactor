@@ -37,7 +37,7 @@ if __name__=='__main__':
     model = whisper.load_model("base")
     result = model.transcribe(audio_file)
     print(result["text"])
-
+    pdb.set_trace()
     #split audio, results --> sentences
     sentences=result["text"]
     ##LLM processing
