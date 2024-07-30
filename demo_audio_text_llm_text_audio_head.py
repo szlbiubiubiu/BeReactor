@@ -169,6 +169,7 @@ if __name__=='__main__':
         frame_list_cycle = frame_list + frame_list[::-1]
         coord_list_cycle = coord_list + coord_list[::-1]
         video_num = len(whisper_chunks)
+        input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
         gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
         for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
         # for whisper_batch in whisper_chunks:
@@ -201,7 +202,7 @@ if __name__=='__main__':
             
             combine_frame = get_image(ori_frame,res_frame,bbox)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-            pdb.set_trace()
+            # pdb.set_trace()
             cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         pdb.set_trace()
         cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
