@@ -88,6 +88,7 @@ if __name__=='__main__':
             # {"role": "system", "content": "You are a random man with different personallity."},
             # {"role": "user", "content": sentences[0]}
             #     ]
+            a=1
         else:
             chat = response[0]['generated_text']
             chat.append(
