@@ -11,6 +11,8 @@ from mmpose.apis import inference_topdown, init_model
 from mmpose.structures import merge_data_samples
 import torch
 from tqdm import tqdm
+import sys
+sys.path.append('/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse')
 
 # initialize the mmpose model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
