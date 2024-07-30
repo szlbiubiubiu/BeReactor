@@ -35,6 +35,7 @@ if __name__=='__main__':
     #audio to text
     # audio_file="audio.mp3"
     model = whisper.load_model("base.en")
+    pdb.set_trace()
     result = model.transcribe(audio_file)
     print(result["text"])
 
