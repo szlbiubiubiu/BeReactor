@@ -26,13 +26,14 @@ import numpy as np
 from tqdm import tqdm
 import urllib.request
 import os
+import copy
 if __name__=='__main__':
 
     #text_audio_define
     VOICE = "en-GB-SoniaNeural"
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     result_img_save_path='./result_talking/siyang'
-    
+    img_path='/homes/zs003/test_images/siyang.png'#siyang.png, superv.jpg
     #load audio
     #audio to text
     # audio_file="audio.mp3"
@@ -79,7 +80,7 @@ if __name__=='__main__':
     fps=25
     batch_size=8
     # wavs='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/1.wav'
-    img_path='/homes/zs003/test_images/superv.jpg'
+    
     # chat = ChatTTS.Chat()
     # chat.load(compile=False) # Set to True for better performance
     # chat = [
@@ -139,14 +140,36 @@ if __name__=='__main__':
         whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
 
         #image processing
-        crop_frame = cv2.imread(img_path)
-        crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-        latents = vae.get_latents_for_unet(crop_frame)
-        input_latent_list=[]
-        input_latent_list.append(latents)
+        # crop_frame = cv2.imread(img_path)
+        #detect landmark
+        
+        input_img_list = [img_path, ]
+        bbox_shift=0
+        coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+        # with open(crop_coord_save_path, 'wb') as f:
+        #     pickle.dump(coord_list, f)
+        input_latent_list = []
+        for bbox, frame in zip(coord_list, frame_list):
+            if bbox == coord_placeholder:
+                continue
+            x1, y1, x2, y2 = bbox
+            # if not args.without_landmark:
+            crop_frame = frame[y1:y2, x1:x2]
+            # else:
+            #     crop_frame = frame
+            crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+            latents = vae.get_latents_for_unet(crop_frame)
+            input_latent_list.append(latents)
+        # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+        # latents = vae.get_latents_for_unet(crop_frame)
+        # input_latent_list=[]
+        # input_latent_list.append(latents)
         input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+        frame_list_cycle = frame_list + frame_list[::-1]
+        coord_list_cycle = coord_list + coord_list[::-1]
+        video_num = len(whisper_chunks)
         gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
-        for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(len(whisper_chunks)/batch_size)))):
+        for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
         # for whisper_batch in whisper_chunks:
             # whisper_batch=whisper_chunks
             # pdb.set_trace()
@@ -163,20 +186,21 @@ if __name__=='__main__':
             # pdb.set_trace()
             for res_frame in recon:
                 res_frame_list.append(res_frame)
-                cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
-#         print("pad talking image to original video")
-#         for i, res_frame in enumerate(tqdm(res_frame_list)):
-#             bbox = coord_list_cycle[i%(len(coord_list_cycle))]
-#             ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
-#             x1, y1, x2, y2 = bbox
-#             try:
-#                 res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
-#             except:
-# #                 print(bbox)
-#                 continue
+                # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
+        print("pad talking image to original video")
+        for i, res_frame in enumerate(tqdm(res_frame_list)):
+            bbox = coord_list_cycle[i%(len(coord_list_cycle))]
+            ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
+            x1, y1, x2, y2 = bbox
+            try:
+                res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+            except:
+#                 print(bbox)
+                continue
             
-#             combine_frame = get_image(ori_frame,res_frame,bbox)
+            combine_frame = get_image(ori_frame,res_frame,bbox)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+            cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
         pdb.set_trace()
         cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
         print(cmd_img2video)
