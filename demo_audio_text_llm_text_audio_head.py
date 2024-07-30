@@ -125,7 +125,7 @@ if __name__=='__main__':
         # wavs=np.frombuffer(wavs[0], dtype=np.float16)
         # audio = np.frombuffer(data, np.int16).astype(np.float32)*(1/32768.0)
         pdb.set_trace()
-        whisper_feature = audio_processor.audio2feat(wavs)
+        whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
         whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
 
         #image processing
