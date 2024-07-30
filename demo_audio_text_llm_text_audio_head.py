@@ -113,14 +113,15 @@ if __name__=='__main__':
         communicate = edge_tts.Communicate(current_text, VOICE)
         # # message in self.stream()
         wavs=[]
+        with open(OUTPUT_audio_FILE, "wb") as file:
         for chunk in communicate.stream_sync():
             if chunk["type"] == "audio":
                 # file.write(chunk["data"])
                 audio = np.frombuffer(chunk["data"], np.int16).astype(np.float32)*(1/32768.0)
                 # wavs.append(chunk["data"])
                 wavs.append(audio)
-                with open(OUTPUT_audio_FILE, "wb") as file:
-                    file.write(chunk["data"])
+                
+                file.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
                 print(f"WordBoundary: {chunk}")
         # communicate.save_sync(OUTPUT_FILE)
