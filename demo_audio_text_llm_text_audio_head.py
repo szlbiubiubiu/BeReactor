@@ -99,10 +99,10 @@ if __name__=='__main__':
         
         #text to audio
         
-        wavs = chat.infer(current_text)
+        # wavs = chat.infer(current_text)
 
 
-
+        pdb.set_trace()
         communicate = edge_tts.Communicate(current_text, VOICE)
         # # message in self.stream()
         wavs=[]
