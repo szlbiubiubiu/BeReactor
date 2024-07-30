@@ -87,7 +87,7 @@ if __name__=='__main__':
     for i in range(len(sentences)):
         if i==0:
             chat = [
-            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(5)},
+            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)},
             {"role": "user", "content": sentences[0]}
                 ]
             a=1
