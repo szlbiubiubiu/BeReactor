@@ -109,7 +109,7 @@ if __name__=='__main__':
         communicate = edge_tts.Communicate(current_text, VOICE)
         # # message in self.stream()
         wavs=[]
-        for chunk in communicate.stream():
+        async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 # file.write(chunk["data"])
                 wavs.append(chunk["data"])
