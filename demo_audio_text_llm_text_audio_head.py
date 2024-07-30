@@ -79,16 +79,16 @@ if __name__=='__main__':
     img_path='/homes/zs003/test_images/superv.jpg'
     # chat = ChatTTS.Chat()
     # chat.load(compile=False) # Set to True for better performance
-    chat = [
-    {"role": "system", "content": "You are a random man with different personallity."},
-    {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
-        ]
+    # chat = [
+    # {"role": "system", "content": "You are a random man with different personallity."},
+    # {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
+    #     ]
     for i in range(len(sentences)):
         if i==0:
-            # chat = [
-            # {"role": "system", "content": "You are a random man with different personallity."},
-            # {"role": "user", "content": sentences[0]}
-            #     ]
+            chat = [
+            {"role": "system", "content": "You are a random man with different personallity."},
+            {"role": "user", "content": sentences[0]}
+                ]
             a=1
         else:
             chat = response[0]['generated_text']
