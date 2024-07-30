@@ -119,9 +119,12 @@ if __name__=='__main__':
                 audio = np.frombuffer(chunk["data"], np.int16).astype(np.float32)*(1/32768.0)
                 # wavs.append(chunk["data"])
                 wavs.append(audio)
+                with open(OUTPUT_audio_FILE, "wb") as file:
+                    file.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
                 print(f"WordBoundary: {chunk}")
-        communicate.save_sync(OUTPUT_audio_FILE)
+        # communicate.save_sync(OUTPUT_FILE)
+        # communicate.save_sync(OUTPUT_audio_FILE)
         # communicate.save_sync(OUTPUT_FILE)# change to talking head format
 
         # #audio to talking head, whisper,tiny
