@@ -128,7 +128,7 @@ import torch
 import cv2
 import pdb
 import numpy as np
-
+from tqdm import tqdm
 # load model weights
 pdb.set_trace()
 audio_processor, vae, unet, pe = load_all_model()
