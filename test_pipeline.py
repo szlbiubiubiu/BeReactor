@@ -146,17 +146,18 @@ crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
 latents = vae.get_latents_for_unet(crop_frame)
 # gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
 # for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
-whisper_batch=whisper_chunks
-pdb.set_trace()
-audio_feature_batch = torch.from_numpy(whisper_batch)
-audio_feature_batch = audio_feature_batch.to(device=unet.device,
-                                                dtype=unet.model.dtype) # torch, B, 5*N,384
-audio_feature_batch = pe(audio_feature_batch)
-latent_batch=latents
-latent_batch = latent_batch.to(dtype=unet.model.dtype)
+for whisper_batch in whisper_chunks:
+    # whisper_batch=whisper_chunks
+    pdb.set_trace()
+    audio_feature_batch = torch.from_numpy(whisper_batch)
+    audio_feature_batch = audio_feature_batch.to(device=unet.device,
+                                                    dtype=unet.model.dtype) # torch, B, 5*N,384
+    audio_feature_batch = pe(audio_feature_batch)
+    latent_batch=latents
+    latent_batch = latent_batch.to(dtype=unet.model.dtype)
 
-pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
-recon = vae.decode_latents(pred_latents)
-res_frame_list=[]
-for res_frame in recon:
-    res_frame_list.append(res_frame)
+    pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
+    recon = vae.decode_latents(pred_latents)
+    res_frame_list=[]
+    for res_frame in recon:
+        res_frame_list.append(res_frame)
