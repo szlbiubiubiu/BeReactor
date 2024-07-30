@@ -57,7 +57,7 @@ chat = [
     {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
 ]
 #torch.bfloat16
-pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
+pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device_map="auto")
 response = pipe(chat, max_new_tokens=512)
 print(response[0]['generated_text'][-1]['content'])
 pdb.set_trace()
