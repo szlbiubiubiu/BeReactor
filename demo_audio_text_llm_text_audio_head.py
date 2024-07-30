@@ -152,6 +152,7 @@ if __name__=='__main__':
             pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
             recon = vae.decode_latents(pred_latents)
             res_frame_list=[]
+            pdb.set_trace()
             for res_frame in recon:
                 res_frame_list.append(res_frame)
                 cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
@@ -168,7 +169,7 @@ if __name__=='__main__':
             
 #             combine_frame = get_image(ori_frame,res_frame,bbox)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-
+        pdb.set_trace()
         cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
         print(cmd_img2video)
         os.system(cmd_img2video)
