@@ -78,22 +78,22 @@ if __name__=='__main__':
     img_path='/homes/zs003/test_images/superv.jpg'
     # chat = ChatTTS.Chat()
     # chat.load(compile=False) # Set to True for better performance
-    # chat = [
-    # {"role": "system", "content": "You are a random man with different personallity."},
-    # {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
-    #     ]
+    chat = [
+    {"role": "system", "content": "You are a random man with different personallity."},
+    {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
+        ]
     for i in range(len(sentences)):
         if i==0:
-            chat = [
-            {"role": "system", "content": "You are a random man with different personallity."},
-            {"role": "user", "content": sentences[0]}
-                ]
+            # chat = [
+            # {"role": "system", "content": "You are a random man with different personallity."},
+            # {"role": "user", "content": sentences[0]}
+            #     ]
         else:
             chat = response[0]['generated_text']
             chat.append(
                 {"role": "user", "content": sentences[i+1]}
             )
-        response = pipe(chat, max_new_tokens=512,pad_token_id=pipe.tokenizer.eos_token_id)
+        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         current_text=response[0]['generated_text'][-1]['content']
         print(response[0]['generated_text'][-1]['content'])
         
