@@ -182,5 +182,5 @@ if __name__=='__main__':
         os.system(cmd_combine_audio)
         
         os.remove("temp.mp4")
-        shutil.rmtree(result_img_save_path)
+        # shutil.rmtree(result_img_save_path)
         print(f"result is save to {output_vid_name}")
