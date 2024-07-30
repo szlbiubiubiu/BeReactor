@@ -109,6 +109,7 @@ if __name__=='__main__':
 
 
         pdb.set_trace()
+        OUTPUT_audio_FILE=result_img_save_path+'/output_audio.wav'
         communicate = edge_tts.Communicate(current_text, VOICE)
         # # message in self.stream()
         wavs=[]
@@ -120,6 +121,7 @@ if __name__=='__main__':
                 wavs.append(audio)
             elif chunk["type"] == "WordBoundary":
                 print(f"WordBoundary: {chunk}")
+        communicate.save_sync(OUTPUT_audio_FILE)
         # communicate.save_sync(OUTPUT_FILE)# change to talking head format
 
         # #audio to talking head, whisper,tiny
@@ -177,7 +179,7 @@ if __name__=='__main__':
         
 
         output_vid_name = os.path.join('./results/',"siyang.mp4")
-        cmd_combine_audio = f"ffmpeg -y -v warning -i {audio_file} -i temp.mp4 {output_vid_name}"
+        cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
         print(cmd_combine_audio)
         os.system(cmd_combine_audio)
         
