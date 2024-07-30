@@ -93,7 +93,7 @@ if __name__=='__main__':
             chat.append(
                 {"role": "user", "content": sentences[i+1]}
             )
-        response = pipe(chat, max_new_tokens=512)
+        response = pipe(chat, max_new_tokens=512,pad_token_id=pipe.tokenizer.eos_token_id)
         current_text=response[0]['generated_text'][-1]['content']
         print(response[0]['generated_text'][-1]['content'])
         
