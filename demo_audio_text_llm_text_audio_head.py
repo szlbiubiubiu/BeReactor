@@ -83,10 +83,11 @@ if __name__=='__main__':
     # {"role": "system", "content": "You are a random man with different personallity."},
     # {"role": "user", "content": "Hey, can you tell me any fun things to do in New York?"}
     #     ]
+    rand_num=torch.randint(0,100,(1,))
     for i in range(len(sentences)):
         if i==0:
             chat = [
-            {"role": "system", "content": "You are a random man with different personallity."},
+            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(5)},
             {"role": "user", "content": sentences[0]}
                 ]
             a=1
