@@ -25,12 +25,14 @@ import pdb
 import numpy as np
 from tqdm import tqdm
 import urllib.request
-
+import os
 if __name__=='__main__':
 
     #text_audio_define
     VOICE = "en-GB-SoniaNeural"
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
+    result_img_save_path='./results/siyang'
+    
     #load audio
     #audio to text
     # audio_file="audio.mp3"
@@ -152,3 +154,31 @@ if __name__=='__main__':
             res_frame_list=[]
             for res_frame in recon:
                 res_frame_list.append(res_frame)
+                cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
+#         print("pad talking image to original video")
+#         for i, res_frame in enumerate(tqdm(res_frame_list)):
+#             bbox = coord_list_cycle[i%(len(coord_list_cycle))]
+#             ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
+#             x1, y1, x2, y2 = bbox
+#             try:
+#                 res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+#             except:
+# #                 print(bbox)
+#                 continue
+            
+#             combine_frame = get_image(ori_frame,res_frame,bbox)
+            # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+
+        cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+        print(cmd_img2video)
+        os.system(cmd_img2video)
+        
+
+        output_vid_name = os.path.join('./results/',"siyang.mp4")
+        cmd_combine_audio = f"ffmpeg -y -v warning -i {audio_file} -i temp.mp4 {output_vid_name}"
+        print(cmd_combine_audio)
+        os.system(cmd_combine_audio)
+        
+        os.remove("temp.mp4")
+        shutil.rmtree(result_img_save_path)
+        print(f"result is save to {output_vid_name}")
