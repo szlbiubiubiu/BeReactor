@@ -345,7 +345,7 @@ class ReactionDataset_readvideo(data.Dataset):
             self.real_dataset_path=os.path.join(real_dataset_path, self._split)
         self._list_path = pd.read_csv(os.path.join(self._root_path, self._split + '.csv'), header=None, delimiter=',')
         self._list_path = self._list_path.drop(0)
-        self._new_list_path = pd.read_csv(os.path.join(self._root_path, self._split + '_new.csv'), header=None, delimiter=',')
+        self._new_list_path = self._list_path.copy()#pd.read_csv(os.path.join(self._root_path, self._split + '_new.csv'), header=None, delimiter=',')
         self._new_list_path = self._new_list_path.drop(0)
 
         self.load_audio = load_audio
