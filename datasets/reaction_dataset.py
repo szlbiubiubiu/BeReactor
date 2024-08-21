@@ -428,7 +428,30 @@ class ReactionDataset_readvideo(data.Dataset):
             ab_listener_emotion_path = os.path.join(self._emotion_path, nl + '.csv')
             ab_listener_3dmm_path = os.path.join(self._3dmm_path, lp + '.npy')
             # pdb.set_trace()
-
+            if 'NoXI' in ab_speaker_emotion_path:
+                # pdb.set_trace()
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('Novice_video','P2')
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('Expert_video','P1')
+            if 'Emotion/RECOLA/group' in ab_speaker_emotion_path:
+                # pdb.set_trace()
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('P25','P1')
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('P26','P2')
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('P41','P1')
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('P42','P2')
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('P45','P1')
+                ab_speaker_emotion_path=ab_speaker_emotion_path.replace('P46','P2')
+            if 'NoXI' in ab_listener_emotion_path:
+                # pdb.set_trace()
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('Novice_video','P2')
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('Expert_video','P1')
+            if 'Emotion/RECOLA/group' in ab_listener_emotion_path:
+                # pdb.set_trace()
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('P25','P1')
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('P26','P2')
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('P41','P1')
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('P42','P2')
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('P45','P1')
+                ab_listener_emotion_path=ab_listener_emotion_path.replace('P46','P2')
             # if 'sbg'  in platform.node() or 'rdg' in platform.node():
             #     ab_speaker_emotion_path=ab_speaker_emotion_path.replace('val/','')
             #     ab_speaker_emotion_path=ab_speaker_emotion_path.replace('test/','')
