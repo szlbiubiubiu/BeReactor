@@ -2,7 +2,7 @@
 dataset: "reaction"
 
 data_path: "/path/to/datasets/preprocess_ffs/train/videos/" # s
-pretrained_model_path: "/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/pretrained_models/"
+pretrained_model_path: "./pretrained_models/"
 
 # save and load
 results_dir: "./results"
