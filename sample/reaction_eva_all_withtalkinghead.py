@@ -101,7 +101,7 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
 
 
         # pdb.set_trace()
-        OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)'.wav'
+        OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
         communicate = edge_tts.Communicate(current_text, VOICE)
         communicate.save_sync(OUTPUT_audio_FILE)
         # # message in self.stream()
@@ -249,7 +249,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor, vae, 
 
 
     # pdb.set_trace()
-    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)'.wav'
+    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
     communicate.save_sync(OUTPUT_audio_FILE)
     # # message in self.stream()
