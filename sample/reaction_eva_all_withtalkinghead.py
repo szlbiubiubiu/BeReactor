@@ -216,7 +216,8 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
         print(f"result is save to {output_vid_name}")
 
 
-def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
+def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     pdb.set_trace()
     result = whisper_model.transcribe(audio_file)
@@ -279,39 +280,40 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor, vae, 
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
 
-    #image processing
-    # crop_frame = cv2.imread(img_path)
-    #detect landmark
+    # #image processing
+    # # crop_frame = cv2.imread(img_path)
+    # #detect landmark
     
-    input_img_list = [img_path, ]
-    bbox_shift=0
-    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
-    # with open(crop_coord_save_path, 'wb') as f:
-    #     pickle.dump(coord_list, f)
-    input_latent_list = []
-    for bbox, frame in zip(coord_list, frame_list):
-        if bbox == coord_placeholder:
-            continue
-        x1, y1, x2, y2 = bbox
-        # if not args.without_landmark:
-        crop_frame = frame[y1:y2, x1:x2]
-        # else:
-        #     crop_frame = frame
-        crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-        latents = vae.get_latents_for_unet(crop_frame)
-        input_latent_list.append(latents)
-    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    # latents = vae.get_latents_for_unet(crop_frame)
-    # input_latent_list=[]
-    # input_latent_list.append(latents)
+    # input_img_list = [img_path, ]
+    # bbox_shift=0
+    # coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    # # with open(crop_coord_save_path, 'wb') as f:
+    # #     pickle.dump(coord_list, f)
+    # input_latent_list = []
+    # for bbox, frame in zip(coord_list, frame_list):
+    #     if bbox == coord_placeholder:
+    #         continue
+    #     x1, y1, x2, y2 = bbox
+    #     # if not args.without_landmark:
+    #     crop_frame = frame[y1:y2, x1:x2]
+    #     # else:
+    #     #     crop_frame = frame
+    #     crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    #     latents = vae.get_latents_for_unet(crop_frame)
+    #     input_latent_list.append(latents)
+    # # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    # # latents = vae.get_latents_for_unet(crop_frame)
+    # # input_latent_list=[]
+    # # input_latent_list.append(latents)
+    input_latent_list=input_latent
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    frame_list_cycle = frame_list + frame_list[::-1]
-    coord_list_cycle = coord_list + coord_list[::-1]
+    # frame_list_cycle = frame_list + frame_list[::-1]
+    # coord_list_cycle = coord_list + coord_list[::-1]
     video_num = len(whisper_chunks)
     # input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
     # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
     # pdb.set_trace()
-    timesteps = torch.tensor([0], device=device)
+    timesteps = torch.tensor([0], device=unet.device)
     gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
     res_frame_list=[]
     res_frame_list_latent=[]
@@ -378,6 +380,8 @@ def main(args):
     local_rank = int(os.environ["LOCAL_RANK"])
     device = torch.device("cuda", local_rank)
     clip_size=32 #64
+    audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
+
     #
     pdb.set_trace()
     print('check test/val matrix..')
@@ -527,14 +531,15 @@ def main(args):
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
-            samples = vae.decode(samples / 0.18215).sample
-            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             if index_clip==0:
                 out_samples=samples
             else:
                 out_samples=torch.cat(out_samples,samples)
+            samples = vae.decode(samples / 0.18215).sample
+            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+            
         #can consider do not use the decode of vae
-        frames=calculate_talkinghead_genall(audio_file,whisper_model,audio_processor, vae, unet, pe)
+        frames=calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,out_samples, pipe,vae, unet, pe)
         pdb.set_trace()
         #generate talking head
         result = whisper_model.transcribe(audio_file)
