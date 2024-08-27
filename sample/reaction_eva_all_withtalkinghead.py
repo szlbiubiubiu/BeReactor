@@ -490,7 +490,7 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
         out_samples=None
-        pdb.set_trace()
+        # pdb.set_trace()
         for index_clip in range((video_data['img'].shape)[1]//clip_size):
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
@@ -538,8 +538,8 @@ def main(args):
                 out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
                 out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
-            samples = vae.decode(samples / 0.18215).sample
-            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+            # samples = vae.decode(samples / 0.18215).sample
+            # samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
         pdb.set_trace()
         #can consider do not use the decode of vae
         frames=calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,out_samples, pipe,vae, unet, pe)
