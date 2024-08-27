@@ -384,7 +384,7 @@ def main(args):
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
 
     #
-    pdb.set_trace()
+    # pdb.set_trace()
     print('check test/val matrix..')
     # if val_test == 'val':
     args.dataset_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/val_test_matrix'
@@ -490,7 +490,7 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
         out_samples=None
-        for index_clip in range(len(video_data['img'])//clip_size):
+        for index_clip in range((video_data['img'].shape)[1]//clip_size):
             x = video_data['img'].to(device, non_blocking=True)#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)#.half()
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)
