@@ -233,7 +233,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
                 ]
             a=1
         else:
-            chat = response[0]['generated_text']
+            chat.append(response[0]['generated_text'])
             chat.append(
                 {"role": "user", "content": sentences[i]}
             )
@@ -247,7 +247,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # wavs = chat.infer(current_text)
 
 
-    # pdb.set_trace()
+    pdb.set_trace()
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
     communicate.save_sync(OUTPUT_audio_FILE)
