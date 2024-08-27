@@ -516,7 +516,7 @@ def main(args):
             else:
                 sample_fn = model.forward
                 model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-            # pdb.set_trace()
+            pdb.set_trace()
             # Sample images:
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
