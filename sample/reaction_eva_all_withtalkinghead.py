@@ -56,10 +56,11 @@ torch.backends.cudnn.allow_tf32 = True
 
 
 #talking head libs
-from talkinghead.musetalk.utils.utils import get_file_type,get_video_fps,datagen
-from talkinghead.musetalk.utils.preprocessing import get_landmark_and_bbox,read_imgs,coord_placeholder
-from talkinghead.musetalk.utils.blending import get_image
-from talkinghead.musetalk.utils.utils import load_all_model
+sys.path.append('/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse')
+from talkinghead.muse.musetalk.utils.utils import get_file_type,get_video_fps,datagen
+from talkinghead.muse.musetalk.utils.preprocessing import get_landmark_and_bbox,read_imgs,coord_placeholder
+from talkinghead.muse.musetalk.utils.blending import get_image
+from talkinghead.muse.musetalk.utils.utils import load_all_model
 
 from transformers import pipeline
 import whisper

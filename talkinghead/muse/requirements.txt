@@ -19,5 +19,11 @@ ffmpeg-python
 gradio
 spaces
 moviepy
-
+#reaction lib
+einops
+timm
+decord
+av
+tslearn
+#diffusers==0.24
 # pip install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html
