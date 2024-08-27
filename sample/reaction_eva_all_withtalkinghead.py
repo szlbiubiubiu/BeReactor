@@ -235,7 +235,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         else:
             chat = response[0]['generated_text']
             chat.append(
-                {"role": "user", "content": sentences[i+1]}
+                {"role": "user", "content": sentences[i]}
             )
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         current_text=response[0]['generated_text'][-1]['content']
