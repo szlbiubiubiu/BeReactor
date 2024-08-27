@@ -193,10 +193,7 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
             x1, y1, x2, y2 = bbox
             # try:
             res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
-#             except:
-# #                 print(bbox)
-#                 continue
-            
+
             combine_frame = get_image(ori_frame,res_frame,bbox)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
             # pdb.set_trace()
@@ -231,7 +228,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     for i in range(len(sentences)):
         if i==0:
             chat = [
-            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 30 words"},
+            {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
             {"role": "user", "content": sentences[0]}
                 ]
             a=1
