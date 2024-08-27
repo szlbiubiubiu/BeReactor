@@ -516,7 +516,7 @@ def main(args):
             else:
                 sample_fn = model.forward
                 model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-            pdb.set_trace()
+            # pdb.set_trace()
             # Sample images:
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
@@ -535,9 +535,9 @@ def main(args):
             b, f, c, h, w = samples.shape
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
             if index_clip==0:
-                out_samples=samples
+                out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
-                out_samples=torch.cat(out_samples,samples)
+                out_samples=torch.cat(out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b),dim=1)
             samples = vae.decode(samples / 0.18215).sample
             samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
         pdb.set_trace()
