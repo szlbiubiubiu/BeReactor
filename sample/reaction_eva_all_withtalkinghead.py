@@ -305,7 +305,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # # input_latent_list=[]
     # # input_latent_list.append(latents)
     input_latent_list=input_latent
-    input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
     # frame_list_cycle = frame_list + frame_list[::-1]
     # coord_list_cycle = coord_list + coord_list[::-1]
     video_num = len(whisper_chunks)
