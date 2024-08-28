@@ -441,7 +441,7 @@ def main(args):
     #init talking head
     
     # load model weights
-    pdb.set_trace()
+    # pdb.set_trace()
     audio_processor, vae, unet, pe = load_all_model()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     timesteps = torch.tensor([0], device=device)
@@ -466,7 +466,9 @@ def main(args):
     model.eval()  # important!
     diffusion = create_diffusion(str(args.num_sampling_steps))
     # vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
-    vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
+    reaction_vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
+
+
     # vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
     # text_encoder = TextEmbedder().to(device)
 
@@ -556,7 +558,7 @@ def main(args):
             #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             # else:
             #     out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
-            samples = vae.decode(samples / 0.18215).sample
+            samples = reaction_vae.decode(samples / 0.18215).sample
             samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
