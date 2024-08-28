@@ -540,13 +540,15 @@ def main(args):
             # samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
         pdb.set_trace()
         #can consider do not use the decode of vae
-        frames=calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,out_samples, pipe,vae, unet, pe)
-        pdb.set_trace()
-        #generate talking head
-        result = whisper_model.transcribe(audio_file)
-        print(result["text"])
+        for batch_index in range(len(out_samples)):
 
-        sentences=result["text"].split('.')
+            calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,out_samples[batch_index], pipe,vae, unet, pe)
+            pdb.set_trace()
+        # #generate talking head
+        # result = whisper_model.transcribe(audio_file)
+        # print(result["text"])
+
+        # sentences=result["text"].split('.')
 
 
 
