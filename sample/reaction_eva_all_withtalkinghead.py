@@ -396,7 +396,7 @@ def main(args):
     # rank = int(os.environ["RANK"])
     # local_rank = int(os.environ["LOCAL_RANK"])
     # device = torch.device("cuda", local_rank)
-    device = torch.device("cuda", 1)
+    device = torch.device("cuda", 0)
     clip_size=32 #64
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
 
