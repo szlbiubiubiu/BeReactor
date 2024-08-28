@@ -163,6 +163,7 @@ if __name__=='__main__':
             #     crop_frame = frame
             crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
             latents = vae.get_latents_for_unet(crop_frame)
+            pdb.set_trace()
             input_latent_list.append(latents)
         # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         # latents = vae.get_latents_for_unet(crop_frame)
