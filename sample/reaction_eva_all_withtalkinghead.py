@@ -305,6 +305,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # # input_latent_list=[]
     # # input_latent_list.append(latents)
     pdb.set_trace()
+    input_latent_list=[]
     for single_frame in input_latent:
         crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
@@ -392,9 +393,10 @@ def main(args):
     # device = rank % torch.cuda.device_count()
     # local_rank = rank
 
-    rank = int(os.environ["RANK"])
-    local_rank = int(os.environ["LOCAL_RANK"])
-    device = torch.device("cuda", local_rank)
+    # rank = int(os.environ["RANK"])
+    # local_rank = int(os.environ["LOCAL_RANK"])
+    # device = torch.device("cuda", local_rank)
+    device = torch.device("cuda", 1)
     clip_size=32 #64
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
 
@@ -407,10 +409,10 @@ def main(args):
     # else:
     speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_test.npy'))
 
-    seed = args.global_seed + rank
-    torch.manual_seed(seed)
+    # seed = args.global_seed + rank
+    # torch.manual_seed(seed)
     torch.cuda.set_device(device)
-    print(f"Starting rank={rank}, local rank={local_rank}, seed={seed}, world_size={dist.get_world_size()}.")
+    # print(f"Starting rank={rank}, local rank={local_rank}, seed={seed}, world_size={dist.get_world_size()}.")
 
 
     torch.set_grad_enabled(False)
