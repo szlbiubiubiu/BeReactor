@@ -304,9 +304,20 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # # latents = vae.get_latents_for_unet(crop_frame)
     # # input_latent_list=[]
     # # input_latent_list.append(latents)
-    input_latent_list=input_latent
-    # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
+    pdb.set_trace()
+    for single_frame in input_latent:
+        crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+        latents = vae.get_latents_for_unet(crop_frame)
+        input_latent_list.append(latents)
+
+    #input latent start, directly use latent
+    # input_latent_list=input_latent
+    # input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
+
+    #----
+    #use image----
+    input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    
     # frame_list_cycle = frame_list + frame_list[::-1]
     # coord_list_cycle = coord_list + coord_list[::-1]
     video_num = len(whisper_chunks)
@@ -329,7 +340,9 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         latent_batch = latent_batch.to(dtype=unet.model.dtype)
         # pdb.set_trace()
         pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
-        
+        #mask talent
+
+
         #do not reconstruct images if use reaction framework
         # recon = vae.decode_latents(pred_latents)
         
@@ -337,6 +350,9 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         # for res_frame in recon:
         #     res_frame_list.append(res_frame)
         for res_latent in pred_latents:
+            #mask latent
+            # res_latent_detrans=res_latent*0.5+0.5
+            # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
             res_frame_list_latent.append(res_latent)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # print("pad talking image to original video")
@@ -533,12 +549,17 @@ def main(args):
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
+            # if index_clip==0:
+            #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+            # else:
+            #     out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
+            samples = vae.decode(samples / 0.18215).sample
+            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             if index_clip==0:
                 out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
                 out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
-            # samples = vae.decode(samples / 0.18215).sample
-            # samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+            
         pdb.set_trace()
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
