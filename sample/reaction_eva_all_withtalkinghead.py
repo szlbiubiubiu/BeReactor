@@ -308,7 +308,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     input_latent_list=[]
     for single_frame in input_latent:
         # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-        latents = vae.get_latents_for_unet(crop_frame)
+        latents = vae.get_latents_for_unet_nonorm(single_frame)
         input_latent_list.append(latents)
 
     #input latent start, directly use latent
