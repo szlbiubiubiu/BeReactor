@@ -11,9 +11,9 @@ elif ffmpeg_path not in os.getenv('PATH'):
     os.environ["PATH"] = f"{ffmpeg_path}:{os.environ['PATH']}"
 
     
-from musetalk.whisper.audio2feature import Audio2Feature
-from musetalk.models.vae import VAE
-from musetalk.models.unet import UNet,PositionalEncoding
+from talkinghead.muse.musetalk.whisper.audio2feature import Audio2Feature
+from talkinghead.muse.musetalk.models.vae import VAE
+from talkinghead.muse.musetalk.models.unet import UNet,PositionalEncoding
 
 import pdb
 def load_all_model():
