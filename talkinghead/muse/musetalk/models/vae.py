@@ -129,7 +129,7 @@ class VAE():
         :param img: The image to process.
         :return: A concatenated tensor of latents for U-Net input.
         """
-        pdb.set_trace()
+        # pdb.set_trace()
         # ref_image = self.preprocess_img(img,half_mask=True) # [1, 3, 256, 256] RGB, torch tensor
         # if half_mask:
         masked_image = img * (self._mask_tensor.cuda()>0.5)

@@ -304,7 +304,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # # latents = vae.get_latents_for_unet(crop_frame)
     # # input_latent_list=[]
     # # input_latent_list.append(latents)
-    pdb.set_trace()
+    # pdb.set_trace()
     input_latent_list=[]
     for single_frame in input_latent:
         # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
@@ -329,6 +329,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
     res_frame_list=[]
     res_frame_list_latent=[]
+    pdb.set_trace()
     for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
     # for whisper_batch in whisper_chunks:
         # whisper_batch=whisper_chunks
