@@ -168,6 +168,7 @@ if __name__=='__main__':
         # latents = vae.get_latents_for_unet(crop_frame)
         # input_latent_list=[]
         # input_latent_list.append(latents)
+        pdb.set_trace()
         input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
         frame_list_cycle = frame_list + frame_list[::-1]
         coord_list_cycle = coord_list + coord_list[::-1]
