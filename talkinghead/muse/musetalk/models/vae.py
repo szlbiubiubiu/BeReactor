@@ -132,7 +132,7 @@ class VAE():
         pdb.set_trace()
         # ref_image = self.preprocess_img(img,half_mask=True) # [1, 3, 256, 256] RGB, torch tensor
         # if half_mask:
-        masked_image = img * (self._mask_tensor>0.5)
+        masked_image = img * (self._mask_tensor.cuda()>0.5)
         masked_latents = self.encode_latents(masked_image) # [1, 4, 32, 32], torch tensor
         # ref_image = self.preprocess_img(img,half_mask=False) # [1, 3, 256, 256] RGB, torch tensor
         unmasked_img=img
