@@ -550,7 +550,8 @@ def main(args):
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
-            # samples = rearrange(samples, 'b f c h w -> (b f) c h w')
+            pdb.set_trace()
+            samples = rearrange(samples, 'b f c h w -> (b f) c h w')
             # if index_clip==0:
             #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             # else:
