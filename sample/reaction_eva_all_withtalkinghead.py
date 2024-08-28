@@ -386,17 +386,17 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 def main(args):
     # Setup PyTorch:
     # torch.manual_seed(args.seed)
-    # setup_distributed()
+    setup_distributed()
     # dist.init_process_group("nccl")
     # assert args.global_batch_size % dist.get_world_size() == 0, f"Batch size must be divisible by world size."
     # rank = dist.get_rank()
     # device = rank % torch.cuda.device_count()
     # local_rank = rank
 
-    # rank = int(os.environ["RANK"])
-    # local_rank = int(os.environ["LOCAL_RANK"])
-    # device = torch.device("cuda", local_rank)
-    device = torch.device("cuda", 0)
+    rank = int(os.environ["RANK"])
+    local_rank = int(os.environ["LOCAL_RANK"])
+    device = torch.device("cuda", local_rank)
+    # device = torch.device("cuda", 0)
     clip_size=32 #64
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
 
