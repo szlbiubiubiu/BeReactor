@@ -559,9 +559,9 @@ def main(args):
             samples = vae.decode(samples / 0.18215).sample
             samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             if index_clip==0:
-                out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+                out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
-                out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
+                out_samples=torch.cat((out_samples,samples),dim=1)
             
         pdb.set_trace()
         #can consider do not use the decode of vae
