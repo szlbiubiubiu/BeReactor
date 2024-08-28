@@ -386,7 +386,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 def main(args):
     # Setup PyTorch:
     # torch.manual_seed(args.seed)
-    setup_distributed()
+    # setup_distributed()
     # dist.init_process_group("nccl")
     # assert args.global_batch_size % dist.get_world_size() == 0, f"Batch size must be divisible by world size."
     # rank = dist.get_rank()
