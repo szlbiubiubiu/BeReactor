@@ -15,11 +15,13 @@ from musetalk.whisper.audio2feature import Audio2Feature
 from musetalk.models.vae import VAE
 from musetalk.models.unet import UNet,PositionalEncoding
 
+import pdb
 def load_all_model():
     # audio_processor = Audio2Feature(model_path="./models/whisper/tiny.pt")
     # vae = VAE(model_path = "./models/sd-vae-ft-mse/")
     # unet = UNet(unet_config="./models/musetalk/musetalk.json",
     #             model_path ="./models/musetalk/pytorch_model.bin")
+    pdb.set_trace()
     audio_processor = Audio2Feature(model_path="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/whisper/tiny.pt")
     vae = VAE(model_path = "/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/sd-vae-ft-mse/")
     unet = UNet(unet_config="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/musetalk/musetalk.json",
