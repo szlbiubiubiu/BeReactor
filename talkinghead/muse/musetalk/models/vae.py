@@ -7,6 +7,8 @@ import numpy as np
 from PIL import Image
 import os
 
+
+import pdb
 class VAE():
     """
     VAE (Variational Autoencoder) class for image processing.
@@ -118,6 +120,23 @@ class VAE():
         masked_latents = self.encode_latents(ref_image) # [1, 4, 32, 32], torch tensor
         ref_image = self.preprocess_img(img,half_mask=False) # [1, 3, 256, 256] RGB, torch tensor
         ref_latents = self.encode_latents(ref_image) # [1, 4, 32, 32], torch tensor
+        latent_model_input = torch.cat([masked_latents, ref_latents], dim=1)
+        return latent_model_input
+    
+    def get_latents_for_unet_nonorm(self,img):
+        """
+        Prepare latent variables for a U-Net model.
+        :param img: The image to process.
+        :return: A concatenated tensor of latents for U-Net input.
+        """
+        pdb.set_trace()
+        # ref_image = self.preprocess_img(img,half_mask=True) # [1, 3, 256, 256] RGB, torch tensor
+        # if half_mask:
+        masked_image = img * (self._mask_tensor>0.5)
+        masked_latents = self.encode_latents(masked_image) # [1, 4, 32, 32], torch tensor
+        # ref_image = self.preprocess_img(img,half_mask=False) # [1, 3, 256, 256] RGB, torch tensor
+        unmasked_img=img
+        ref_latents = self.encode_latents(unmasked_img) # [1, 4, 32, 32], torch tensor
         latent_model_input = torch.cat([masked_latents, ref_latents], dim=1)
         return latent_model_input
 

@@ -248,7 +248,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # wavs = chat.infer(current_text)
 
 
-    pdb.set_trace()
+    # pdb.set_trace()
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
     communicate.save_sync(OUTPUT_audio_FILE)
@@ -274,7 +274,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     #talking head
     # wavs=np.frombuffer(wavs[0], dtype=np.float16)
     # audio = np.frombuffer(data, np.int16).astype(np.float32)*(1/32768.0)
-    pdb.set_trace()
+    # pdb.set_trace()
     # whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
@@ -550,7 +550,7 @@ def main(args):
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
-            pdb.set_trace()
+            # pdb.set_trace()
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
             # if index_clip==0:
             #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
