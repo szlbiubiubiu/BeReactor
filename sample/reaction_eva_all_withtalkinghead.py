@@ -346,44 +346,50 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 
 
         #do not reconstruct images if use reaction framework
-        # recon = vae.decode_latents(pred_latents)
+        recon = vae.decode_latents(pred_latents)
         
         # pdb.set_trace()
-        # for res_frame in recon:
-        #     res_frame_list.append(res_frame)
+        for res_frame in recon:
+            res_frame_list.append(res_frame)
         for res_latent in pred_latents:
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
             # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
             res_frame_list_latent.append(res_latent)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
-    # print("pad talking image to original video")
-    # pdb.set_trace()
-    # for i, res_frame in enumerate(tqdm(res_frame_list)):
-    #     bbox = coord_list_cycle[i%(len(coord_list_cycle))]
-    #     ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
-    #     x1, y1, x2, y2 = bbox
-    #     # try:
-    #     res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+    # return res_frame_list
 
-    #     combine_frame = get_image(ori_frame,res_frame,bbox)
-    #     # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-    #     # pdb.set_trace()
-    #     cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-    # pdb.set_trace()
-    # cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
-    # print(cmd_img2video)
-    # os.system(cmd_img2video)
+
+
+
+    print("pad talking image to original video")
+    pdb.set_trace()
+    for i, res_frame in enumerate(tqdm(res_frame_list)):
+        # bbox = coord_list_cycle[i%(len(coord_list_cycle))]
+        # ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
+        # x1, y1, x2, y2 = bbox
+        # # try:
+        # res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+
+        # combine_frame = get_image(ori_frame,res_frame,bbox)
+        # # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        # # pdb.set_trace()
+        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+    pdb.set_trace()
+    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+    print(cmd_img2video)
+    os.system(cmd_img2video)
     
 
-    # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
-    # cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
-    # print(cmd_combine_audio)
-    # os.system(cmd_combine_audio)
+    output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
+    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
+    print(cmd_combine_audio)
+    os.system(cmd_combine_audio)
     
-    # os.remove("temp.mp4")
+    os.remove("temp.mp4")
     # # shutil.rmtree(result_img_save_path)
-    # print(f"result is save to {output_vid_name}")        
+    print(f"result is save to {output_vid_name}")        
 def main(args):
     # Setup PyTorch:
     # torch.manual_seed(args.seed)
