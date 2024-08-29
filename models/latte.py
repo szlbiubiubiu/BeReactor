@@ -505,10 +505,10 @@ class DiffusionVideoAutoencoder(nn.Module):
         self.linear = nn.Linear(384, 384)
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
         self.emo_proj=nn.Sequential(nn.Linear(25,128),
-                                    nn.Dropout(p=0.5)
+                                    nn.Dropout(p=0.1)
                                     )
         self.id_proj=nn.Sequential(nn.Linear(512,64),
-                                    nn.Dropout(p=0.5)
+                                    nn.Dropout(p=0.1)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()
