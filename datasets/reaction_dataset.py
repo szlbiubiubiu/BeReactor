@@ -365,7 +365,7 @@ class ReactionDataset_readvideo(data.Dataset):
         # self._emotion_path = os.path.join(self._data_path, 'Emotion')
         # self._3dmm_path = os.path.join(self._data_path, '3D_FV_files')
         # self.reaction_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
-        if 'sbg'  in platform.node() or 'rdg' in platform.node():
+        if 'sbg'  in platform.node() or 'dg' in platform.node():
             self._audio_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
             self._emotion_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
