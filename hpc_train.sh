@@ -6,8 +6,8 @@
 #$ -pe smp 16          # 8 cores per GPU
 #$ -l gpu=2           # request 1 GPU
 ##$ -l gpu_type=hopper   
-#$ -l gpu_type=ampere   
-##$ -l cluster=andrena
+##$ -l gpu_type=ampere   
+#$ -l cluster=andrena
 ##$ -m se
 # bash
 # module load anaconda3/2020.02
