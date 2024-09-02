@@ -12,7 +12,7 @@ pretrained:
 # model config: 
 # model: Latte-XL/2
 model: Latte-S/2
-num_frames: 64 #32 #16
+num_frames: 128 #32 #16
 image_size: 256 # choices=[256, 512]
 # num_sampling_steps: 250
 frame_interval: 3
@@ -30,7 +30,7 @@ start_clip_iter: 20000
 local_batch_size: 2 # important 5
 max_train_steps: 1000000
 global_seed: 3407
-num_workers: 8
+num_workers: 12
 log_every: 100
 lr_warmup_steps: 0
 resume_from_checkpoint:
