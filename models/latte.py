@@ -371,7 +371,7 @@ class Latte(nn.Module):
             y_spatial = repeat(y, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
-            pdb.set_trace()
+            # pdb.set_trace()
             original_x=self.sp_drop_operation(original_x,training=False)
             listener_ref=self.lis_drop_operation(listener_ref,training=False)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
@@ -552,7 +552,7 @@ class DiffusionVideoAutoencoder(nn.Module):
             
         if lnd is None:
             lnd = id
-        pdb.set_trace()
+        # pdb.set_trace()
         b,v,c,w,h=id.shape
         b,v,c_l,w_l,h_l=lnd.shape
         # pdb.set_trace()
