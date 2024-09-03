@@ -372,8 +372,8 @@ class Latte(nn.Module):
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
             # pdb.set_trace()
-            original_x=self.sp_drop_operation(original_x,training=True)
-            listener_ref=self.lis_drop_operation(listener_ref,training=True)
+            original_x=self.sp_drop_operation(original_x,training=False)
+            listener_ref=self.lis_drop_operation(listener_ref,training=False)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
@@ -505,10 +505,10 @@ class DiffusionVideoAutoencoder(nn.Module):
         self.linear = nn.Linear(384, 384)
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
         self.emo_proj=nn.Sequential(nn.Linear(25,128),
-                                    nn.Dropout(p=0.1)
+                                    nn.Dropout(p=0.5)
                                     )
         self.id_proj=nn.Sequential(nn.Linear(512,64),
-                                    nn.Dropout(p=0.1)
+                                    nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()
