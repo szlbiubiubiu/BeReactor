@@ -367,7 +367,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
         ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
-        bbox = ori_frame.size()#coord_list_cycle[i%(len(coord_list_cycle))]
+        bbox = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
         x1, y1, x2, y2 = bbox
         # try:
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
@@ -560,7 +560,7 @@ def main(args):
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
-            pdb.set_trace()
+            # pdb.set_trace()
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
             # if index_clip==0:
             #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
