@@ -327,6 +327,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # pdb.set_trace()
     timesteps = torch.tensor([0], device=unet.device)
     gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
+    ori_frame_list=[]
     res_frame_list=[]
     res_frame_list_latent=[]
     pdb.set_trace()
@@ -348,13 +349,14 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         #do not reconstruct images if use reaction framework
         recon = vae.decode_latents(pred_latents)
         
-        # pdb.set_trace()
+        pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
-        for res_latent in pred_latents:
+        for i,single_ori,res_latent in enumerate( ,pred_latents):
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
             # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
+            ori_frame_list.append(single_ori)
             res_frame_list_latent.append(res_latent)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # return res_frame_list
@@ -366,9 +368,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
-        ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
-        bbox = ori_frame.size#coord_list_cycle[i%(len(coord_list_cycle))]
-        pdb.set_trace()
+        ori_frame = copy.deepcopy(ori_frame_list[i%(len(res_frame_list))])
+        bbox = ori_frame.size()#coord_list_cycle[i%(len(coord_list_cycle))]
         x1, y1, x2, y2 = bbox
         # try:
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
