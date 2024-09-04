@@ -349,9 +349,10 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         #do not reconstruct images if use reaction framework
         recon = vae.decode_latents(pred_latents)
         
-        pdb.set_trace()
+        # pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
+        pdb.set_trace()
         for i,single_ori,res_latent in enumerate( latent_batch,pred_latents):
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
@@ -562,7 +563,7 @@ def main(args):
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
-            pdb.set_trace()
+            # pdb.set_trace()
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
             # if index_clip==0:
             #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
