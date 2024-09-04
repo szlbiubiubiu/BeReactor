@@ -69,7 +69,7 @@ import pdb
 import edge_tts
 import cv2
 from tqdm import tqdm
-
+import copy
 #it is single forward function
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
@@ -327,7 +327,6 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     # pdb.set_trace()
     timesteps = torch.tensor([0], device=unet.device)
     gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
-    ori_frame_list=[]
     res_frame_list=[]
     res_frame_list_latent=[]
     pdb.set_trace()
@@ -352,12 +351,10 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         # pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
-        pdb.set_trace()
-        for i,single_ori,res_latent in enumerate( latent_batch.tolist(),pred_latents.tolist()):
+        for res_latent in pred_latents:
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
             # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
-            ori_frame_list.append(single_ori)
             res_frame_list_latent.append(res_latent)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # return res_frame_list
@@ -369,7 +366,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
-        ori_frame = copy.deepcopy(ori_frame_list[i%(len(res_frame_list))])
+        ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         bbox = ori_frame.size()#coord_list_cycle[i%(len(coord_list_cycle))]
         x1, y1, x2, y2 = bbox
         # try:
@@ -563,7 +560,7 @@ def main(args):
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
             b, f, c, h, w = samples.shape
-            # pdb.set_trace()
+            pdb.set_trace()
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
             # if index_clip==0:
             #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
