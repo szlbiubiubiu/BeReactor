@@ -352,7 +352,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
-        for i,single_ori,res_latent in enumerate( ,pred_latents):
+        for i,single_ori,res_latent in enumerate( latent_batch,pred_latents):
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
             # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
