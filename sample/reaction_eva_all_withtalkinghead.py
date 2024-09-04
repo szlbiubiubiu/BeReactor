@@ -365,17 +365,19 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     print("pad talking image to original video")
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        # bbox = coord_list_cycle[i%(len(coord_list_cycle))]
-        # ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
-        # x1, y1, x2, y2 = bbox
-        # # try:
-        # res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+        
+        ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
+        bbox = ori_frame.size#coord_list_cycle[i%(len(coord_list_cycle))]
+        pdb.set_trace()
+        x1, y1, x2, y2 = bbox
+        # try:
+        res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
 
-        # combine_frame = get_image(ori_frame,res_frame,bbox)
-        # # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-        # # pdb.set_trace()
+        combine_frame = get_image(ori_frame,res_frame,bbox)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
+        # pdb.set_trace()
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     pdb.set_trace()
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
     print(cmd_img2video)
