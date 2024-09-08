@@ -174,6 +174,21 @@ class image_drop_emb(nn.Module):
             # zero_image=torch.zeros_like(image)
             # image=zero_image
         return image
+
+class feature_drop_emb(nn.Module):
+    def __init__(self,  dropout_prob=0.0):
+        super().__init__()
+        self.dropout_prob=dropout_prob
+
+    def forward(self,image,training=False):
+        use_dropout = self.dropout_prob > 0
+        if (training and use_dropout):
+            # pdb.set_trace()
+            drop_ids = torch.rand((image.shape[0]), device=image.device) < self.dropout_prob
+            image = torch.where(drop_ids, torch.zeros_like(image), image)
+            # zero_image=torch.zeros_like(image)
+            # image=zero_image
+        return image
 #################################################################################
 #                                 Core Latte Model                                #
 #################################################################################
@@ -265,6 +280,7 @@ class Latte(nn.Module):
                     ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
             self.sp_drop_operation=image_drop_emb(0.1)
             self.lis_drop_operation=image_drop_emb(0.1)
+            self.feat_drop_operation=feature_drop_emb(0.1)
         if self.extras == 78: # timestep + text_embedding
             self.text_embedding_projection = nn.Sequential(
             nn.SiLU(),
@@ -371,10 +387,11 @@ class Latte(nn.Module):
             y_spatial = repeat(y, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
-            # pdb.set_trace()
-            original_x=self.sp_drop_operation(original_x,training=False)
-            listener_ref=self.lis_drop_operation(listener_ref,training=False)
+            pdb.set_trace()
+            # original_x=self.sp_drop_operation(original_x,training=False)
+            # listener_ref=self.lis_drop_operation(listener_ref,training=False)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
+            facial_cond=self.feat_drop_operation(facial_cond,training=self.training)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 78:
