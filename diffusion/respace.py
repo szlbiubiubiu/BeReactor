@@ -123,7 +123,7 @@ class _WrappedModel:
         # self.rescale_timesteps = rescale_timesteps
         self.original_num_steps = original_num_steps
 
-    def __call__(self, x, ts,original_x=None,listener_ref=None, **kwargs):
+    def __call__(self, x, ts, **kwargs):
         map_tensor = th.tensor(self.timestep_map, device=ts.device, dtype=ts.dtype)
         new_ts = map_tensor[ts]
         # if self.rescale_timesteps:
