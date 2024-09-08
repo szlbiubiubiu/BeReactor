@@ -184,7 +184,7 @@ class feature_drop_emb(nn.Module):
         use_dropout = self.dropout_prob > 0
         if (training and use_dropout):
             # pdb.set_trace()
-            drop_ids = torch.rand((image.shape[0]), device=image.device) < self.dropout_prob
+            drop_ids = torch.rand((image.shape[0],1), device=image.device) < self.dropout_prob
             image = torch.where(drop_ids, torch.zeros_like(image), image)
             # zero_image=torch.zeros_like(image)
             # image=zero_image
