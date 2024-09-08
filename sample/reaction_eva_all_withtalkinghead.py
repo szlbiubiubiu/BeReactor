@@ -523,6 +523,24 @@ def main(args):
             z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
         else:
             z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+        # if args.use_fp16:
+        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+        # else:
+        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+
+        # Setup classifier-free guidance:
+        # z = torch.cat([z, z], 0)
+        if using_cfg:
+            z = torch.cat([z, z], 0)
+            y = torch.randint(0, args.num_classes, (1,), device=device)
+            y_null = torch.tensor([101] * 1, device=device)
+            y = torch.cat([y, y_null], dim=0)
+            model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            sample_fn = model.forward_with_cfg
+        else:
+            sample_fn = model.forward
+            model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+
 
         for index_clip in range((video_data['img'].shape)[1]//clip_size):
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
@@ -530,26 +548,26 @@ def main(args):
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             original_x=x
-            # listener_ref=listener_ref
-            # Create sampling noise:
-            if args.use_fp16:
-                z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-            else:
-                z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+            # # listener_ref=listener_ref
+            # # Create sampling noise:
+            # if args.use_fp16:
+            #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+            # else:
+            #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
 
-            # Setup classifier-free guidance:
-            # z = torch.cat([z, z], 0)
-            if using_cfg:
-                z = torch.cat([z, z], 0)
-                y = torch.randint(0, args.num_classes, (1,), device=device)
-                y_null = torch.tensor([101] * 1, device=device)
-                y = torch.cat([y, y_null], dim=0)
-                model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-                sample_fn = model.forward_with_cfg
-            else:
-                sample_fn = model.forward
-                model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-            # pdb.set_trace()
+            # # Setup classifier-free guidance:
+            # # z = torch.cat([z, z], 0)
+            # if using_cfg:
+            #     z = torch.cat([z, z], 0)
+            #     y = torch.randint(0, args.num_classes, (1,), device=device)
+            #     y_null = torch.tensor([101] * 1, device=device)
+            #     y = torch.cat([y, y_null], dim=0)
+            #     model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            #     sample_fn = model.forward_with_cfg
+            # else:
+            #     sample_fn = model.forward
+            #     model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+            # # pdb.set_trace()
             # Sample images:
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
