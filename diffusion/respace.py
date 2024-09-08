@@ -93,9 +93,9 @@ class SpacedDiffusion(GaussianDiffusion):
 
     # @torch.compile
     def training_losses(
-        self, model,original_x=None,listener_ref=None, *args, **kwargs
+        self, model, *args, **kwargs
     ):  # pylint: disable=signature-differs
-        return super().training_losses(self._wrap_model(model),original_x=original_x,listener_ref=listener_ref, *args, **kwargs)
+        return super().training_losses(self._wrap_model(model), *args, **kwargs)
 
     def condition_mean(self, cond_fn, *args, **kwargs):
         return super().condition_mean(self._wrap_model(cond_fn), *args, **kwargs)
