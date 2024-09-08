@@ -686,9 +686,10 @@ class GaussianDiffusion:
             from tqdm.auto import tqdm
 
             indices = tqdm(indices)
-        pdb.set_trace()
+        
         for i in indices:
             t = th.tensor([i] * shape[0], device=device)
+            pdb.set_trace()
             with th.no_grad():
                 out = self.ddim_sample(
                     model,
