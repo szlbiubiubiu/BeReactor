@@ -283,11 +283,11 @@ class GaussianDiffusion:
         # model_output = model(x, t, **model_kwargs)
         pdb.set_trace()
         model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
-        # try:
-        #     model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
-        # except:
-        #     # print('error occurs')
-        #     model_output = model(x, t, **model_kwargs)
+        try:
+            model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+        except:
+            # print('error occurs')
+            model_output = model(x, t, **model_kwargs)
         # try:
         #     model_output = model_output.sample # for tav unet
         # except:
@@ -775,7 +775,7 @@ class GaussianDiffusion:
             if self.loss_type == LossType.RESCALED_KL:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
-            # pdb.set_trace()
+            pdb.set_trace()
             model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
             # pdb.set_trace()
             # try:
