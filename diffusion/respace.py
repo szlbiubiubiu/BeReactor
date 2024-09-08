@@ -87,10 +87,10 @@ class SpacedDiffusion(GaussianDiffusion):
         super().__init__(**kwargs)
 
     def p_mean_variance(
-        self, model,original_x=None,listener_ref=None, *args, **kwargs
+        self, model, *args, **kwargs
     ):  # pylint: disable=signature-differs
         pdb.set_trace()
-        return super().p_mean_variance(self._wrap_model(model),original_x=original_x,listener_ref=original_x, *args, **kwargs)
+        return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
 
     # @torch.compile
     def training_losses(
