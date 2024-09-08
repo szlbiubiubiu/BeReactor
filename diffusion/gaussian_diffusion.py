@@ -281,7 +281,7 @@ class GaussianDiffusion:
         B, F, C = x.shape[:3]
         assert t.shape == (B,)
         # model_output = model(x, t, **model_kwargs)
-        # pdb.set_trace()
+        pdb.set_trace()
         try:
             model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
         except:
