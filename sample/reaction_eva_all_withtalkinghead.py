@@ -518,7 +518,12 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
         out_samples=None
-        pdb.set_trace()
+        # pdb.set_trace()
+        if args.use_fp16:
+            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+        else:
+            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+
         for index_clip in range((video_data['img'].shape)[1]//clip_size):
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)#[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
