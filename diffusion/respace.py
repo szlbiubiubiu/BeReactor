@@ -8,7 +8,7 @@ import torch as th
 
 from .gaussian_diffusion import GaussianDiffusion
 
-
+import pdb
 def space_timesteps(num_timesteps, section_counts):
     """
     Create a list of timesteps to use from an original diffusion process,
@@ -89,6 +89,7 @@ class SpacedDiffusion(GaussianDiffusion):
     def p_mean_variance(
         self, model,original_x=None,listener_ref=None, *args, **kwargs
     ):  # pylint: disable=signature-differs
+        pdb.set_trace()
         return super().p_mean_variance(self._wrap_model(model),original_x=original_x,listener_ref=original_x, *args, **kwargs)
 
     # @torch.compile
