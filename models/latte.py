@@ -552,7 +552,7 @@ class DiffusionVideoAutoencoder(nn.Module):
             
         if lnd is None:
             lnd = id
-        # pdb.set_trace()
+        pdb.set_trace()
         b,v,c,w,h=id.shape
         b,v,c_l,w_l,h_l=lnd.shape
         # pdb.set_trace()
