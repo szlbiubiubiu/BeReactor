@@ -285,6 +285,7 @@ class GaussianDiffusion:
         try:
             model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
         except:
+            print('error occurs')
             model_output = model(x, t, **model_kwargs)
         # try:
         #     model_output = model_output.sample # for tav unet
