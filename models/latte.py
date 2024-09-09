@@ -439,7 +439,27 @@ class Latte(nn.Module):
         x = self.unpatchify(x)                  
         x = rearrange(x, '(b f) c h w -> b f c h w', b=batches)
         return x
-
+    def forward_with_cfg_reaction(self, x, t,original_x=None,listener_ref=None, y=None, cfg_scale=7.0, use_fp16=False, text_embedding=None):
+        """
+        Forward pass of Latte, but also batches the unconditional forward pass for classifier-free guidance.
+        """
+        # https://github.com/openai/glide-text2im/blob/main/notebooks/text2im.ipynb
+        pdb.set_trace()
+        half = x[: len(x) // 2]
+        combined = torch.cat([half, half], dim=0)
+        if use_fp16:
+            combined = combined.to(dtype=torch.float16)
+        model_out = self.forward(combined, t,original_x=original_x,listener_ref=listener_ref, y=y, use_fp16=use_fp16, text_embedding=text_embedding)
+        # For exact reproducibility reasons, we apply classifier-free guidance on only
+        # three channels by default. The standard approach to cfg applies it to all channels.
+        # This can be done by uncommenting the following line and commenting-out the line following that.
+        # eps, rest = model_out[:, :self.in_channels], model_out[:, self.in_channels:]
+        # eps, rest = model_out[:, :3], model_out[:, 3:]
+        eps, rest = model_out[:, :, :4, ...], model_out[:, :, 4:, ...] 
+        cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
+        half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
+        eps = torch.cat([half_eps, half_eps], dim=0) 
+        return torch.cat([eps, rest], dim=2)
     def forward_with_cfg(self, x, t, y=None, cfg_scale=7.0, use_fp16=False, text_embedding=None):
         """
         Forward pass of Latte, but also batches the unconditional forward pass for classifier-free guidance.

@@ -517,7 +517,7 @@ def main(args):
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
-        torch.manual_seed(1)
+        torch.manual_seed(0)
         out_samples=None
         # pdb.set_trace()
         if args.use_fp16:
@@ -532,12 +532,22 @@ def main(args):
         # Setup classifier-free guidance:
         # z = torch.cat([z, z], 0)
         if using_cfg:
+            ###original classifier free guidance
+            # z = torch.cat([z, z], 0)
+            # y = torch.randint(0, args.num_classes, (1,), device=device)
+            # y_null = torch.tensor([101] * 1, device=device)
+            # y = torch.cat([y, y_null], dim=0)
+            # model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            # sample_fn = model.forward_with_cfg
+            #-----------------end original guidance
+            
+            #-----------------begin reaction guidance
             z = torch.cat([z, z], 0)
-            y = torch.randint(0, args.num_classes, (1,), device=device)
-            y_null = torch.tensor([101] * 1, device=device)
-            y = torch.cat([y, y_null], dim=0)
-            model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            sample_fn = model.forward_with_cfg
+            # y = torch.randint(0, args.num_classes, (1,), device=device)
+            # y_null = torch.tensor([101] * 1, device=device)
+            # y = torch.cat([y, y_null], dim=0)
+            model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            sample_fn = model.forward_with_cfg_reaction
         else:
             sample_fn = model.forward
             model_kwargs = dict(y=None, use_fp16=args.use_fp16)
@@ -549,6 +559,12 @@ def main(args):
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             original_x=x
+
+            #classifier free guidance, change half to zero
+            x_uncon=torch.zeros_like(x)
+            listener_ref_uncon=torch.zeros_like(listener_ref)
+            x=torch.cat([x,x_uncon],dim=0)
+            listener_ref=torch.cat([listener_ref,listener_ref_uncon],dim=0)
             # # listener_ref=listener_ref
             # # Create sampling noise:
             # if args.use_fp16:
@@ -573,7 +589,7 @@ def main(args):
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
                     sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=torch.flip(listener_ref, dims=(0,)),#torch.flip(listener_ref, dims=(0,))
+                    original_x=x,listener_ref=listener_ref,#torch.flip(listener_ref, dims=(0,))
                 )
             elif args.sample_method == 'ddpm':
                 samples = diffusion.p_sample_loop(
@@ -692,7 +708,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
-    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0050000.pt")
+    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
 
     
