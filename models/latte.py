@@ -459,6 +459,7 @@ class Latte(nn.Module):
         cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0) 
+        pdb.set_trace()
         return torch.cat([eps, rest], dim=2)
     def forward_with_cfg(self, x, t, y=None, cfg_scale=7.0, use_fp16=False, text_embedding=None):
         """
