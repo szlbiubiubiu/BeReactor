@@ -573,7 +573,7 @@ def main(args):
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
                     sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=listener_ref,#torch.flip(listener_ref, dims=(0,))
+                    original_x=x,listener_ref=torch.flip(listener_ref, dims=(0,)),#torch.flip(listener_ref, dims=(0,))
                 )
             elif args.sample_method == 'ddpm':
                 samples = diffusion.p_sample_loop(
