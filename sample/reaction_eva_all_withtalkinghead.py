@@ -562,12 +562,13 @@ def main(args):
 
             #classifier free guidance, change half to zero
             # pdb.set_trace()
-            listener_ref=torch.flip(listener_ref, dims=(0,))
-            x=torch.flip(x, dims=(0,))
-            x_uncon=torch.zeros_like(x)
-            listener_ref_uncon=torch.zeros_like(listener_ref)
-            x=torch.cat([x,x_uncon],dim=0)
-            listener_ref=torch.cat([listener_ref,listener_ref_uncon],dim=0)
+            # listener_ref=torch.flip(listener_ref, dims=(0,))
+            # x=torch.flip(x, dims=(0,))
+            if using_cfg:
+                x_uncon=torch.zeros_like(x)
+                listener_ref_uncon=torch.zeros_like(listener_ref)
+                x=torch.cat([x,x_uncon],dim=0)
+                listener_ref=torch.cat([listener_ref,listener_ref_uncon],dim=0)
             # # listener_ref=listener_ref
             # # Create sampling noise:
             # if args.use_fp16:
@@ -603,7 +604,8 @@ def main(args):
             print(samples.shape)
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
-            samples=samples[:len(x)//2]
+            if using_cfg:
+                samples=samples[:len(x)//2]
             b, f, c, h, w = samples.shape
             # pdb.set_trace()
             samples = rearrange(samples, 'b f c h w -> (b f) c h w')
