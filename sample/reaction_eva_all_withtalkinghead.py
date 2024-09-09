@@ -329,7 +329,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
     res_frame_list=[]
     res_frame_list_latent=[]
-    pdb.set_trace()
+    # pdb.set_trace()
     for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
     # for whisper_batch in whisper_chunks:
         # whisper_batch=whisper_chunks
@@ -363,7 +363,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 
 
     print("pad talking image to original video")
-    pdb.set_trace()
+    # pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
         ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
@@ -563,7 +563,7 @@ def main(args):
             #classifier free guidance, change half to zero
             # pdb.set_trace()
             # listener_ref=torch.flip(listener_ref, dims=(0,))
-            # x=torch.flip(x, dims=(0,))
+            x=torch.flip(x, dims=(0,))
             if using_cfg:
                 x_uncon=torch.zeros_like(x)
                 listener_ref_uncon=torch.zeros_like(listener_ref)
