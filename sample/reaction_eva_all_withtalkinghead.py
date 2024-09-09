@@ -561,6 +561,7 @@ def main(args):
             original_x=x
 
             #classifier free guidance, change half to zero
+            pdb.set_trace()
             x_uncon=torch.zeros_like(x)
             listener_ref_uncon=torch.zeros_like(listener_ref)
             x=torch.cat([x,x_uncon],dim=0)
