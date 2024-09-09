@@ -517,7 +517,7 @@ def main(args):
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
-        torch.manual_seed(0)
+        torch.manual_seed(1)
         out_samples=None
         # pdb.set_trace()
         if args.use_fp16:
