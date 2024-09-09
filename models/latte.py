@@ -444,7 +444,7 @@ class Latte(nn.Module):
         Forward pass of Latte, but also batches the unconditional forward pass for classifier-free guidance.
         """
         # https://github.com/openai/glide-text2im/blob/main/notebooks/text2im.ipynb
-        pdb.set_trace()
+        # pdb.set_trace()
         half = x[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
         if use_fp16:
