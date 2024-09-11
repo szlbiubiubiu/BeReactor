@@ -376,7 +376,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         combine_frame = get_image(ori_frame,res_frame,bbox)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     pdb.set_trace()
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
@@ -615,7 +615,7 @@ def main(args):
             #     out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
             # pdb.set_trace()
             samples = reaction_vae.decode(samples / 0.18215).sample
-            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)*0.5+0.5
+            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)#*0.5+0.5
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
