@@ -137,7 +137,7 @@ class VAE():
         # ref_image = self.preprocess_img(img,half_mask=False) # [1, 3, 256, 256] RGB, torch tensor
         unmasked_img=img.unsqueeze(0)
         ref_latents = self.encode_latents(unmasked_img) # [1, 4, 32, 32], torch tensor
-        latent_model_input = torch.cat([masked_latents, ref_latents], dim=1)
+        latent_model_input = torch.cat([ref_latents,masked_latents], dim=1)
         return latent_model_input
 
 if __name__ == "__main__":

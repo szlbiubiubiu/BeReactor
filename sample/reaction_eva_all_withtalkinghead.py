@@ -620,15 +620,15 @@ def main(args):
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
                 out_samples=torch.cat((out_samples,samples),dim=1)
-        #save original video
-        video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
-        print(video_save_path)
-        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        print('save path {}'.format(args.save_video_path))
+        # #save original video
+        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
 
 
-        pdb.set_trace()
+        # pdb.set_trace()
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
 
