@@ -153,6 +153,7 @@ if __name__=='__main__':
         # with open(crop_coord_save_path, 'wb') as f:
         #     pickle.dump(coord_list, f)
         input_latent_list = []
+        pdb.set_trace()
         for bbox, frame in zip(coord_list, frame_list):
             if bbox == coord_placeholder:
                 continue

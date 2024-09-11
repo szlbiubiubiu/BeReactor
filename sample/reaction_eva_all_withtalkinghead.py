@@ -615,7 +615,7 @@ def main(args):
             #     out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
             pdb.set_trace()
             samples = reaction_vae.decode(samples / 0.18215).sample
-            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)*0.5+0.5
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
