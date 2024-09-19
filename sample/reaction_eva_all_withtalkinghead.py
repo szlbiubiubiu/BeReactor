@@ -225,7 +225,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
-    for i in range(len(sentences)):
+    for i in range(2):
         if i==0:
             chat = [
             {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply within 10 words"},
