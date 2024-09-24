@@ -381,7 +381,7 @@ class Latte(nn.Module):
         # pdb.set_trace()
         x = self.x_embedder(x) + self.pos_embed  
 
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = batches)
+        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = batches*frames)
         pdb.set_trace()
         x = torch.cat((x, cls_tokens), dim=1)
         t = self.t_embedder(t, use_fp16=use_fp16)                  
