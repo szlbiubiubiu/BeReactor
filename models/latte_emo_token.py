@@ -443,10 +443,12 @@ class Latte(nn.Module):
             c = timestep_spatial
         pdb.set_trace()
         x = self.final_layer(x, c)    
+        emo_predict=x[:,-1,:]
+        x=x[:,:-1,:]
         pdb.set_trace()           
         x = self.unpatchify(x)                  
         x = rearrange(x, '(b f) c h w -> b f c h w', b=batches)
-        return x
+        return x,emo_predict
     def forward_with_cfg_reaction(self, x, t,original_x=None,listener_ref=None, y=None, cfg_scale=7.0, use_fp16=False, text_embedding=None):
         """
         Forward pass of Latte, but also batches the unconditional forward pass for classifier-free guidance.

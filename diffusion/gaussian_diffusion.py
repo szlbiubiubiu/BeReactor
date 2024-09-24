@@ -743,7 +743,7 @@ class GaussianDiffusion:
         return {"output": output, "pred_xstart": out["pred_xstart"]}
 
     def training_losses(self, model, x_start, t, model_kwargs=None, 
-            original_x=None,listener_ref=None,vae=None,emo_label=None, noise=None):
+            original_x=None,listener_ref=None,emo_label_forregression=None,vae=None,emo_label=None, noise=None):
         """
         Compute training losses for a single timestep.
         :param model: the model to evaluate loss on.
@@ -776,7 +776,13 @@ class GaussianDiffusion:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
             # pdb.set_trace()
-            model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+            if emo_label_forregression is not None:
+
+                model_output,emo_out_forregression = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+                emo_loss = torch.nn.functional.mse_loss(emo_out_forregression,emo_label_forregression)
+            else:
+                model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+                emo_loss=0
             # pdb.set_trace()
             # try:
             #     model_output = model(x_t, t, **model_kwargs).sample # for tav unet
@@ -815,7 +821,7 @@ class GaussianDiffusion:
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
             assert model_output.shape == target.shape == x_start.shape
-            terms["mse"] = mean_flat((target - model_output) ** 2)
+            terms["mse"] = mean_flat((target - model_output) ** 2)+emo_loss
             if "vb" in terms:
                 terms["loss"] = terms["mse"] + terms["vb"]
             else:
