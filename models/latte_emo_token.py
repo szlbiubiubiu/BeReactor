@@ -382,7 +382,7 @@ class Latte(nn.Module):
         x = self.x_embedder(x) + self.pos_embed  
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = batches*frames)
-        pdb.set_trace()
+        # pdb.set_trace()
         x = torch.cat((x, cls_tokens), dim=1)
         t = self.t_embedder(t, use_fp16=use_fp16)                  
         timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
@@ -417,7 +417,7 @@ class Latte(nn.Module):
                 c = timestep_spatial
             # pdb.set_trace()
             x  = spatial_block(x, c)
-            pdb.set_trace()
+            # pdb.set_trace()
             x = rearrange(x, '(b f) t d -> (b t) f d', b=batches)
             # Add Time Embedding
             if i == 0:
@@ -441,6 +441,7 @@ class Latte(nn.Module):
             c = timestep_spatial + facial_spatial
         else:
             c = timestep_spatial
+        pdb.set_trace()
         x = self.final_layer(x, c)    
         pdb.set_trace()           
         x = self.unpatchify(x)                  
