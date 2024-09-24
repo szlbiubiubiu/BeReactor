@@ -5,7 +5,7 @@ sys.path.append(os.path.split(sys.path[0])[0])
 from .latte import Latte_models
 from .latte_img import LatteIMG_models
 from .latte_t2v import LatteT2V
-from .latte_emo_token import Latte as Latte_emo
+from .latte_emo_token import Latte_emo
 
 from torch.optim.lr_scheduler import LambdaLR
 import pdb
