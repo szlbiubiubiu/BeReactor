@@ -779,6 +779,9 @@ class GaussianDiffusion:
             if emo_label_forregression is not None:
 
                 model_output,emo_out_forregression = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+                emo_shape=emo_out_forregression.shape
+
+                emo_out_forregression=emo_out_forregression.reshape(x_t.shape[0],-1,emo_shape[-1])
                 emo_loss = torch.nn.functional.mse_loss(emo_out_forregression,emo_label_forregression)
             else:
                 model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)

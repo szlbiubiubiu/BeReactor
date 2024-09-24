@@ -300,6 +300,11 @@ class Latte(nn.Module):
         ])
 
         self.final_layer = FinalLayer(hidden_size, patch_size, self.out_channels)
+
+        self.fea_2_emo=nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(hidden_size, 25, bias=True)
+        )
         self.initialize_weights()
 
     def initialize_weights(self):
@@ -444,6 +449,8 @@ class Latte(nn.Module):
         pdb.set_trace()
         x = self.final_layer(x, c)    
         emo_predict=x[:,-1,:]
+        emo_predict=self.fea_2_emo(emo_predict)
+        
         x=x[:,:-1,:]
         pdb.set_trace()           
         x = self.unpatchify(x)                  
