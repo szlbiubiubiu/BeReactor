@@ -211,7 +211,7 @@ class TransformerBlock(nn.Module):
         )
 
     def forward(self, x, c):
-        # pdb.set_trace()
+        pdb.set_trace()
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(c).chunk(6, dim=1)
         x = x + gate_msa.unsqueeze(1) * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
         x = x + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
@@ -385,7 +385,7 @@ class Latte(nn.Module):
         pdb.set_trace()
         x = torch.cat((x, cls_tokens), dim=1)
         t = self.t_embedder(t, use_fp16=use_fp16)                  
-        timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]+1) 
+        timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
         timestep_temp = repeat(t, 'n d -> (n c) d', c=self.pos_embed.shape[1]+1)
 
         if self.extras == 2:
