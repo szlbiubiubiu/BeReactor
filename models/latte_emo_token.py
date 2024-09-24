@@ -289,8 +289,8 @@ class Latte(nn.Module):
 
         num_patches = self.x_embedder.num_patches
         # Will use fixed sin-cos embedding:
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, hidden_size), requires_grad=False)
-        self.temp_embed = nn.Parameter(torch.zeros(1, num_frames, hidden_size), requires_grad=False)
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches+1, hidden_size), requires_grad=False)
+        self.temp_embed = nn.Parameter(torch.zeros(1, num_frames+1, hidden_size), requires_grad=False)
         self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_size))
         self.hidden_size =  hidden_size
 
