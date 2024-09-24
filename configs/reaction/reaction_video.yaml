@@ -2,12 +2,12 @@
 dataset: "reaction"
 
 data_path: "/path/to/datasets/preprocess_ffs/train/videos/" # s
-# pretrained_model_path: "/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/pretrained_models/"
-pretrained_model_path: "/data/home/acw569/paper_face/face_react/latte/latte_reaction/pretrained_models"
+pretrained_model_path: "/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/pretrained_models/"
+# pretrained_model_path: "/data/home/acw569/paper_face/face_react/latte/latte_reaction/pretrained_models"
 
 # save and load
-# results_dir: "./results"
-results_dir: '/data/scratch/acw569/checkpoint/latte_check' #'/data/scratch/acw569/checkpoint/latte_check' #"./results"
+results_dir: "./results"
+# results_dir: '/data/scratch/acw569/checkpoint/latte_check' #'/data/scratch/acw569/checkpoint/latte_check' #"./results"
 pretrained:
 
 # model config: 
