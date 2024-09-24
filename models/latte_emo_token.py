@@ -449,8 +449,9 @@ class Latte(nn.Module):
         pdb.set_trace()
         x = self.final_layer(x, c)    
         emo_predict=x[:,-1,:]
+        pdb.set_trace()
         emo_predict=self.fea_2_emo(emo_predict)
-        
+
         x=x[:,:-1,:]
         pdb.set_trace()           
         x = self.unpatchify(x)                  
