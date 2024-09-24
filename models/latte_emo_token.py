@@ -303,7 +303,7 @@ class Latte(nn.Module):
 
         self.fea_2_emo=nn.Sequential(
             nn.SiLU(),
-            nn.Linear(self.out_channels, 25, bias=True)
+            nn.Linear(patch_size * patch_size * self.out_channels, 25, bias=True)
         )
         self.initialize_weights()
 
