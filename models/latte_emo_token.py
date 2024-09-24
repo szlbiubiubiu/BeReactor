@@ -446,14 +446,14 @@ class Latte(nn.Module):
             c = timestep_spatial + facial_spatial
         else:
             c = timestep_spatial
-        pdb.set_trace()
+        # pdb.set_trace()
         x = self.final_layer(x, c)    
         emo_predict=x[:,-1,:]
-        pdb.set_trace()
+        # pdb.set_trace()
         emo_predict=self.fea_2_emo(emo_predict)
 
         x=x[:,:-1,:]
-        pdb.set_trace()           
+        # pdb.set_trace()           
         x = self.unpatchify(x)                  
         x = rearrange(x, '(b f) c h w -> b f c h w', b=batches)
         return x,emo_predict
