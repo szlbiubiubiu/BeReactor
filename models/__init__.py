@@ -30,7 +30,7 @@ def get_lr_scheduler(optimizer, name, **kwargs):
         raise NotImplementedError(name)
     
 def get_models(args):
-    pdb.set_trace()
+    # pdb.set_trace()
     if 'LatteIMG' in args.model:
         return LatteIMG_models[args.model](
                 input_size=args.latent_size,
