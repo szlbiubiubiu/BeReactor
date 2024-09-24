@@ -289,8 +289,8 @@ class Latte(nn.Module):
 
         num_patches = self.x_embedder.num_patches
         # Will use fixed sin-cos embedding:
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches+1, hidden_size), requires_grad=False)
-        self.temp_embed = nn.Parameter(torch.zeros(1, num_frames+1, hidden_size), requires_grad=False)
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, hidden_size), requires_grad=False)
+        self.temp_embed = nn.Parameter(torch.zeros(1, num_frames, hidden_size), requires_grad=False)
         self.cls_token = nn.Parameter(torch.randn(1, 1, hidden_size))
         self.hidden_size =  hidden_size
 
@@ -385,8 +385,8 @@ class Latte(nn.Module):
         pdb.set_trace()
         x = torch.cat((x, cls_tokens), dim=1)
         t = self.t_embedder(t, use_fp16=use_fp16)                  
-        timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
-        timestep_temp = repeat(t, 'n d -> (n c) d', c=self.pos_embed.shape[1])
+        timestep_spatial = repeat(t, 'n d -> (n c) d', c=self.temp_embed.shape[1]+1) 
+        timestep_temp = repeat(t, 'n d -> (n c) d', c=self.pos_embed.shape[1]+1)
 
         if self.extras == 2:
             y = self.y_embedder(y, self.training)
@@ -398,8 +398,8 @@ class Latte(nn.Module):
             # listener_ref=self.lis_drop_operation(listener_ref,training=False)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             facial_cond=self.feat_drop_operation(facial_cond,training=self.training)
-            facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
-            facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
+            facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]+1) 
+            facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1]+1)
         elif self.extras == 78:
             text_embedding = self.text_embedding_projection(text_embedding.reshape(batches, -1))
             text_embedding_spatial = repeat(text_embedding, 'n d -> (n c) d', c=self.temp_embed.shape[1])
