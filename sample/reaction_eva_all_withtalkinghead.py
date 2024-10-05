@@ -228,7 +228,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     result = whisper_model.transcribe(audio_file)
     print(result["text"])
     
-    sentences=result["text"]#.split('.')
+    sentences=result["text"].split('.')
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
