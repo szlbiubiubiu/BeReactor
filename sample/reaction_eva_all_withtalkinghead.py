@@ -275,7 +275,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
         response = pipe(conversation_history, max_length=1000)[0]["generated_text"]
         
         # Extract the new response part (after the user input)
-        response = response[len(conversation_history):]
+        # response = response[len(conversation_history):]
         all_text=all_text+response
         print(f"LLaMA: {response.strip()}")
 
