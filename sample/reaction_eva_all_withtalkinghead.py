@@ -263,7 +263,9 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
                 # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
                 {"role": "user", "content": sentences[i]+". please reply within 10 words"}
             )
+        
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
+        pdb.set_trace()
         current_text=response[0]['generated_text'][-1]['content']
         all_text=all_text+current_text
         print(response[0]['generated_text'][-1]['content'])
