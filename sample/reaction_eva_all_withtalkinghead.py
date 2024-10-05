@@ -260,7 +260,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
             {"role": "user", "content": sentences[0]}
                 ]
             a=1
-            conversation_history += f"User: {sentences[0]}\n"
+            conversation_history += f"User: {sentences[0]}\nAssistant:"
         else:
             # chat=response[0]['generated_text']
             # chat.append(
