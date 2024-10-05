@@ -232,6 +232,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
+    conversation_history = ""
     # for i in range(1):
     #     if i==0:
     #         chat = [
