@@ -261,7 +261,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
             # chat=response[0]['generated_text']
             chat.append(
                 # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-                {"role": "Assistant", "content": current_text}
+                {"role": "Assistant", "content": current_text},
                 {"role": "user", "content": sentences[i]+". please reply within 10 words"}
             )
         
