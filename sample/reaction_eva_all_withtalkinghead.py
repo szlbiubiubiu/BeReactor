@@ -253,7 +253,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     for i in range(len(sentences)):
         if i==0:
             chat = [
-            {"role": "system", "content": "We are having an interview. You are a person with a specific personality, subjected to the random seed:."+str(5)+". respond within 30 words in each rely"},
+            {"role": "system", "content": "We are having an interview. You are a person with a specific personality, subjected to the random seed:."+str(5)+".\\
+                 Please stay tune for more information in the following user input. respond within 30 words in each rely"},
             {"role": "user", "content": sentences[0]}
                 ]
             a=1
