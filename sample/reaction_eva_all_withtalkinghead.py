@@ -268,7 +268,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
             #     {"role": "user", "content": sentences[i]+". please reply within 10 words"}
             # )
             conversation_history += f" {response}\n"
-            conversation_history += f"User: {sentences[i]}\nAssistant"
+            conversation_history += f"User: {sentences[i]}\nAssistant:"
         # conversation_history += f"User: {user_input}\n"
         pdb.set_trace()
         # Generate a response using the pipeline
