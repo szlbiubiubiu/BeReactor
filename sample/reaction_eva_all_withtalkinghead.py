@@ -252,7 +252,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
     #     print(response[0]['generated_text'][-1]['content'])
     
     # #text to audio
-    pdb.set_trace()
+    # pdb.set_trace()
     for i in range(len(sentences)):
         if i==0:
             chat = [
@@ -270,7 +270,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
             conversation_history += f" {response}\n"
             conversation_history += f"User: {sentences[i]}\nAssistant"
         # conversation_history += f"User: {user_input}\n"
-
+        pdb.set_trace()
         # Generate a response using the pipeline
         response = pipe(conversation_history, max_length=1000)[0]["generated_text"]
         
