@@ -232,7 +232,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
-    conversation_history = ""
+    conversation_history = "system:You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words\n"
     # for i in range(1):
     #     if i==0:
     #         chat = [
