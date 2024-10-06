@@ -221,7 +221,7 @@ def chat_with_llama(model, tokenizer, conversation_history):
         # Decode the response
         response = tokenizer.decode(outputs[:, inputs['input_ids'].shape[-1]:][0], skip_special_tokens=True)
         return response
-def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
+def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     pdb.set_trace()
@@ -716,7 +716,8 @@ def main(args):
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
 
-            calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,out_samples[batch_index], pipe,vae, unet, pe)
+            calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe)
             pdb.set_trace()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
