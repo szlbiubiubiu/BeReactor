@@ -255,7 +255,19 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
             chat = [
             {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
             +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            {"role": "user", "content": sentences[0]}
+            
+            # {"role": "system", "content": 
+            # "Please reply with a tone of emotion level:\
+            # Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
+            #                     'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
+            #             'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"},            
+            
+            
+            
+            {"role": "user", "content": sentences[0]+"Please reply with a tone of emotion level:\
+            Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
+                                'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
+                        'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"}
                 ]
             a=1
         else:
@@ -273,36 +285,37 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         all_text=all_text+current_text
         print(response[0]['generated_text'][-1]['content'])
     
-    # #text to audio
-    # pdb.set_trace()
-    for i in range(len(sentences)):
-        if i==0:
-            chat = [
-            {"role": "system", "content": "We are having an interview. You are a person with a specific personality, subjected to the random seed:."+str(5)+". Please reply within 10 words"},
-            {"role": "user", "content": sentences[0]}
-                ]
-            a=1
-            conversation_history += f"User: {sentences[0]}\nAssistant:"
-        else:
-            # chat=response[0]['generated_text']
-            # chat.append(
-            #     # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-            #     {"role": "user", "content": sentences[i]+". please reply within 10 words"}
-            # )
-            conversation_history += f"{response}\n"
-            conversation_history += f"User: {sentences[i]}\nAssistant:"
-        # conversation_history += f"User: {user_input}\n"
-        pdb.set_trace()
-        # Generate a response using the pipeline
-        response = pipe(conversation_history, max_length=1000)[0]["generated_text"]
+    # # #text to audio
+    # # pdb.set_trace()
+    # for i in range(len(sentences)):
+    #     if i==0:
+    #         chat = [
+    #         {"role": "system", "content": "We are having an interview. You are a person with a specific personality, subjected to the random seed:."+str(5)+". Please reply within 10 words"},
+    #         {"role": "user", "content": sentences[0]}
+    #             ]
+    #         a=1
+    #         conversation_history += f"User: {sentences[0]}\nAssistant:"
+    #     else:
+    #         # chat=response[0]['generated_text']
+    #         # chat.append(
+    #         #     # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
+    #         #     {"role": "user", "content": sentences[i]+". please reply within 10 words"}
+    #         # )
+    #         conversation_history += f"{response}\n"
+    #         conversation_history += f"User: {sentences[i]}\nAssistant:"
+    #     # conversation_history += f"User: {user_input}\n"
+    #     pdb.set_trace()
+    #     # Generate a response using the pipeline
+    #     response = pipe(conversation_history, max_length=1000)[0]["generated_text"]
         
-        # Extract the new response part (after the user input)
-        response = response[len(conversation_history):]
-        # all_text=all_text+response
-        print(f"Assistant: {response.strip()}")
+    #     # Extract the new response part (after the user input)
+    #     response = response[len(conversation_history):]
+    #     # all_text=all_text+response
+    #     print(f"Assistant: {response.strip()}")
 
-        # # Append LLaMA's response to the conversation history
-        # conversation_history += f"LLaMA: {response}\n"
+    #     # # Append LLaMA's response to the conversation history
+    #     # conversation_history += f"LLaMA: {response}\n"
+    
     # from transformers import AutoModelForCausalLM, AutoTokenizer
 
     # # Load the Llama 3 model and tokenizer (assuming it's hosted on Hugging Face)
