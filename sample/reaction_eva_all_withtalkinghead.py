@@ -265,10 +265,10 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
             
             
             
-            {"role": "user", "content": sentences[0]+"Please reply with a tone of emotion level:\
+            {"role": "user", "content": sentences[0]+". (Please reply with a tone of emotion level:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{},\
                                 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, \
-                        'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
+                        'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy)".format(
                             emo_label[0,:,10].mean(),emo_label[0,:,-9].mean(),emo_label[0,:,-8].mean(),emo_label[0,:,-7].mean(),emo_label[0,:,-6].mean(),
                             emo_label[0,:,-5].mean(),emo_label[0,:,-4].mean(),emo_label[0,:,-3].mean(),emo_label[0,:,-2].mean(),emo_label[0,:,-1].mean())
                         }
