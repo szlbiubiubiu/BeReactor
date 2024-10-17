@@ -265,9 +265,12 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
             
             
             {"role": "user", "content": sentences[0]+"Please reply with a tone of emotion level:\
-            Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
-                                'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
-                        'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"}
+            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{},\
+                                'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, \
+                        'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
+                            single_express[0],single_express[1],single_express[2],single_express[3],single_express[4],
+                            single_express[5],single_express[6],single_express[7],single_val,single_arousal)
+                        }
                 ]
             a=1
         else:
