@@ -250,6 +250,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     #     current_text=response[0]['generated_text'][-1]['content']
     #     all_text=all_text+current_text
     #     print(response[0]['generated_text'][-1]['content'])
+    pdb.set_trace()
     for i in range(len(sentences)):
         if i==0:
             chat = [
@@ -268,8 +269,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{},\
                                 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, \
                         'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            single_express[0],single_express[1],single_express[2],single_express[3],single_express[4],
-                            single_express[5],single_express[6],single_express[7],single_val,single_arousal)
+                            emo_label[0],emo_label[1],emo_label[2],emo_label[3],emo_label[4],
+                            emo_label[5],emo_label[6],emo_label[7],emo_label[-2],emo_label)
                         }
                 ]
             a=1
