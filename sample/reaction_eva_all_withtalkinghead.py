@@ -279,7 +279,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
             chat.append(
                 # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
                 {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy)".format(
+            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             emo_label[0,:,10].mean(),emo_label[0,:,-9].mean(),emo_label[0,:,-8].mean(),emo_label[0,:,-7].mean(),emo_label[0,:,-6].mean(),
                             emo_label[0,:,-5].mean(),emo_label[0,:,-4].mean(),emo_label[0,:,-3].mean(),emo_label[0,:,-2].mean(),emo_label[0,:,-1].mean())
                         +'. Remove the emotion number in your reply.)'}#+". please reply within 10 words"}
