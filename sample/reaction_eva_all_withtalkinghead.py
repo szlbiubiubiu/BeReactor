@@ -325,7 +325,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     # #au loss
         #     # au_loss= mean_flat((au-emo_label[:,:,:15])**2)
         #     # emo_loss= mean_flat((emo-emo_label[:,:,15:])**2)
-        return id_feats,emo_fea,au_disfa,au_bp4d
+        return id_feats,emo_fea#,au_disfa,au_bp4d
 
 pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
@@ -339,7 +339,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     pdb.set_trace()
     #get emotion from images
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent)
+    id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
     expression=emo_fea['expression']
     expression_soft=F.softmax(expression,dim=1)
     valence=emo_fea['valence']
