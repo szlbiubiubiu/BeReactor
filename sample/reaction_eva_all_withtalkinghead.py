@@ -75,6 +75,7 @@ import edge_tts
 import cv2
 from tqdm import tqdm
 import copy
+import torch.nn.functional as F
 #it is single forward function
 
 
