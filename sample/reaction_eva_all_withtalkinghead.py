@@ -327,8 +327,8 @@ class DiffusionVideoAutoencoder(nn.Module):
         return id_feats,emo_fea,au_disfa,au_bp4d
 
 pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
-encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", "pretrain_root+./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "pretrain_root+./pretrained_models/79999_iter.pth"
-                    ,emotion_file_path='pretrain_root+./pretrained_models/emonet_8.pth', au_file_path_disfa='pretrain_root+./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='pretrain_root+./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
+encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
+                    ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
 
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
