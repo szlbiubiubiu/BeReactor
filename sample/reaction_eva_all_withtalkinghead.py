@@ -246,14 +246,14 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
-        if au_file_path_disfa is not None:
-            # pdb.set_trace()
-            self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
-            # self.au_net_DISFA.load_state_dict(torch.load(au_file_path_disfa, map_location='cuda')['state_dict'])
-            # self.au_net_DISFA.eval()
-            self.au_net_BP4D=MEFL.MEFARG(num_classes=12,backbone='resnet18').requires_grad_(False) #num_classes: 12   neighbor_num: 4
-            # self.au_net_BP4D.load_state_dict(torch.load(au_file_path_bp4d, map_location='cuda')['state_dict'])
-            # self.au_net_BP4D.eval()
+        # if au_file_path_disfa is not None:
+        #     # pdb.set_trace()
+        #     self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
+        #     # self.au_net_DISFA.load_state_dict(torch.load(au_file_path_disfa, map_location='cuda')['state_dict'])
+        #     # self.au_net_DISFA.eval()
+        #     self.au_net_BP4D=MEFL.MEFARG(num_classes=12,backbone='resnet18').requires_grad_(False) #num_classes: 12   neighbor_num: 4
+        #     # self.au_net_BP4D.load_state_dict(torch.load(au_file_path_bp4d, map_location='cuda')['state_dict'])
+        #     # self.au_net_BP4D.eval()
         if emotion_file_path is not None:
             #input resolution is 256
             self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
