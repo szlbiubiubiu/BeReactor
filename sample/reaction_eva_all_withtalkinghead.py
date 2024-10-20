@@ -259,13 +259,14 @@ class DiffusionVideoAutoencoder(nn.Module):
             self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
             self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
             # self.emo_net.eval()
-    def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
+    def forward_listener(self, generated_listener,clip_leng=32,emo_cond=None,return_emo=False):
         # pdb.set_trace()
         id=generated_listener
-        b,v,c,w,h=id.shape
+        # clip_leng
+        b,c,w,h=id.shape
         # b,v,c_l,w_l,h_l=lnd.shape
 
-        id=id.view(b*v,c,w,h)
+        # id=id.view(b*v,c,w,h)
         # lnd=lnd.view(b*v,c_l,w_l,h_l)
 
         # pdb.set_trace()
@@ -274,7 +275,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # fea
         # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
         # feats = feats.view(b,v,-1)
-        id_feats=id_feats.view(b,v,-1)
+        id_feats=id_feats.view(b//clip_leng,clip_leng,-1)
 
 
         
