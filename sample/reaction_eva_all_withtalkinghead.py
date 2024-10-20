@@ -47,6 +47,11 @@ from utils import (clip_grad_norm_, create_logger, update_ema,
                    write_tensorboard, setup_distributed,
                    get_experiment_dir, text_preprocessing)
 
+
+from model.model_irse import IDnet
+from model.basenet import LNDnet
+from model.seg_model_2 import BGnet
+from model.emo_net import EmoNet
 import torch.nn.functional as Func
 from metric import *   #import evaluation metric
 import pdb
@@ -71,6 +76,9 @@ import cv2
 from tqdm import tqdm
 import copy
 #it is single forward function
+
+
+
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     # pdb.set_trace()
@@ -221,9 +229,120 @@ def chat_with_llama(model, tokenizer, conversation_history):
         # Decode the response
         response = tokenizer.decode(outputs[:, inputs['input_ids'].shape[-1]:][0], skip_special_tokens=True)
         return response
+
+# def forward_listener():
+
+
+class DiffusionVideoAutoencoder(nn.Module):
+    def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,au_file_path_bp4d=None,emotion_file_path=None):
+        super(DiffusionVideoAutoencoder, self).__init__()
+        self.idnet = IDnet(id_file_path).requires_grad_(False)#don't have to modify resolution
+        # self.idnet.eval()
+        # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
+        self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
+        self.linear = nn.Linear(1024, 512)
+        self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
+        self.emo_proj=nn.Sequential(nn.Linear(25,512),
+                                    nn.Dropout(p=0.5)
+                                    )
+        self.emo_cond_linear=nn.Linear(512*2,512)
+        if au_file_path_disfa is not None:
+            # pdb.set_trace()
+            self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
+            # self.au_net_DISFA.load_state_dict(torch.load(au_file_path_disfa, map_location='cuda')['state_dict'])
+            # self.au_net_DISFA.eval()
+            self.au_net_BP4D=MEFL.MEFARG(num_classes=12,backbone='resnet18').requires_grad_(False) #num_classes: 12   neighbor_num: 4
+            # self.au_net_BP4D.load_state_dict(torch.load(au_file_path_bp4d, map_location='cuda')['state_dict'])
+            # self.au_net_BP4D.eval()
+        if emotion_file_path is not None:
+            #input resolution is 256
+            self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
+            self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
+            # self.emo_net.eval()
+    def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
+        # pdb.set_trace()
+        id=generated_listener
+        b,v,c,w,h=id.shape
+        # b,v,c_l,w_l,h_l=lnd.shape
+
+        id=id.view(b*v,c,w,h)
+        # lnd=lnd.view(b*v,c_l,w_l,h_l)
+
+        # pdb.set_trace()
+        id_feats = self.idnet(id)  # [B, 512]
+        # lnd_feats = self.lndnet(id) # [B, 102]
+        # fea
+        # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
+        # feats = feats.view(b,v,-1)
+        id_feats=id_feats.view(b,v,-1)
+
+
+        
+
+        # if len(feats.shape)==3:
+        #     feats=torch.nn.functional.avg_pool2d(feats, (feats.shape[1], 1), stride=(feats.shape[1], 1)).squeeze()
+        if id_feats is not None:
+            id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1)).squeeze()
+        # if return_emo:
+        # pdb.set_trace()
+        # self.emo_net.eval()
+        pdb.set_trace()
+        self.emo_net.eval()
+        self.au_net_DISFA.eval()
+        self.au_net_BP4D.eval()
+        emo_fea=self.emo_net(id)
+        
+        # expression_soft=F.softmax(emo_fea,dim=1)
+        # emo_fea
+        # self.au_net_DISFA.eval()
+        # self.au_net_BP4D.eval()
+        au_disfa=self.au_net_DISFA(id)[0]
+        au_bp4d=self.au_net_BP4D(id)[0]
+
+
+
+        # if listener_ref != None and past_emo!=None:
+        #     #1 get listener id
+        #     listener_id_feats = self.idnet(listener_ref) 
+        #     speaker_feat=torch.cat([id_feats,au_disfa,au_bp4d,])
+
+        #     #2 past emotion with lstm
+        #     listener_temporal_emo, hidden_status = self.lstm(self.emo_proj(past_emo[:,-1]), hidden_status, 
+        #                             hidden_status)
+        #     feats=torch.cat([listener_id_feats,listener_temporal_emo,feats])#fuse speaker+ listener condition
+        #     # au_bp4d=model_forward.au_bp4d
+        #     # au_disfa=model_forward.au_disfa
+
+        #     # # pdb.set_trace()
+        #     # #
+        #     # au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        #     # au=torch.reshape(au,[len(generated_listener),-1,15])
+
+        #     # #
+        #     # emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        #     # emo=torch.reshape(emo,[len(generated_listener),-1,10])
+        #     # #au loss
+        #     # au_loss= mean_flat((au-emo_label[:,:,:15])**2)
+        #     # emo_loss= mean_flat((emo-emo_label[:,:,15:])**2)
+        return id_feats,emo_fea,au_disfa,au_bp4d
+
+pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
+encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", "pretrain_root+./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "pretrain_root+./pretrained_models/79999_iter.pth"
+                    ,emotion_file_path='pretrain_root+./pretrained_models/emonet_8.pth', au_file_path_disfa='pretrain_root+./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='pretrain_root+./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
+
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
+
+    pdb.set_trace()
+    #get emotion from images
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent)
+    expression=emo_fea['expression']
+    expression_soft=F.softmax(expression,dim=1)
+    valence=emo_fea['valence']
+    arousal=emo_fea['arousal']
+
+
     pdb.set_trace()
     result = whisper_model.transcribe(audio_file)
     print(result["text"])
