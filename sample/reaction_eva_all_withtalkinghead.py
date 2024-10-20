@@ -48,10 +48,10 @@ from utils import (clip_grad_norm_, create_logger, update_ema,
                    get_experiment_dir, text_preprocessing)
 
 
-from model.model_irse import IDnet
-from model.basenet import LNDnet
-from model.seg_model_2 import BGnet
-from model.emo_net import EmoNet
+from models.model_irse import IDnet
+from models.basenet import LNDnet
+from models.seg_model_2 import BGnet
+from models.emo_net import EmoNet
 import torch.nn.functional as Func
 from metric import *   #import evaluation metric
 import pdb
