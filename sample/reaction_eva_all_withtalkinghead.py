@@ -552,7 +552,9 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
     # pdb.set_trace()
     timesteps = torch.tensor([0], device=unet.device)
-    gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
+    # gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
+    gen = datagen_reaction(whisper_chunks,input_latent_list_cycle,batch_size)
+    
     res_frame_list=[]
     res_frame_list_latent=[]
     # pdb.set_trace()

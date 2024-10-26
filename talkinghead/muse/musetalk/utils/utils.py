@@ -69,3 +69,31 @@ def datagen(whisper_chunks,
         latent_batch = torch.cat(latent_batch, dim=0)
 
         yield whisper_batch, latent_batch
+
+def datagen_reaction(whisper_chunks,
+            vae_encode_latents,
+            batch_size=8,
+            delay_frame=0):
+    whisper_batch, latent_batch = [], []
+    laten_repeat=len(whisper_chunks)//len(vae_encode_latents)
+    pdb.set_trace()
+    ##expand latent, repeat chanel-->stack on image
+    vae_encode_latents=einops.repeat(vae_encode_latents, 'b c h w ->  b (laten_repeat c)h w', repeat=laten_repeat)
+    for i, w in enumerate(whisper_chunks):
+        idx = (i+delay_frame)%len(vae_encode_latents)
+        latent = vae_encode_latents[idx]
+        whisper_batch.append(w)
+        latent_batch.append(latent)
+
+        if len(latent_batch) >= batch_size:
+            whisper_batch = np.stack(whisper_batch)
+            latent_batch = torch.cat(latent_batch, dim=0)
+            yield whisper_batch, latent_batch
+            whisper_batch, latent_batch = [], []
+
+    # the last batch may smaller than batch size
+    if len(latent_batch) > 0:
+        whisper_batch = np.stack(whisper_batch)
+        latent_batch = torch.cat(latent_batch, dim=0)
+
+        yield whisper_batch, latent_batch
