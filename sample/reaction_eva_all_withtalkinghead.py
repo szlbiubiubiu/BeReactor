@@ -508,34 +508,34 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # #image processing
     # # crop_frame = cv2.imread(img_path)
     # #detect landmark
-    
-    # input_img_list = [img_path, ]
-    # bbox_shift=0
-    # coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
-    # # with open(crop_coord_save_path, 'wb') as f:
-    # #     pickle.dump(coord_list, f)
-    # input_latent_list = []
-    # for bbox, frame in zip(coord_list, frame_list):
-    #     if bbox == coord_placeholder:
-    #         continue
-    #     x1, y1, x2, y2 = bbox
-    #     # if not args.without_landmark:
-    #     crop_frame = frame[y1:y2, x1:x2]
-    #     # else:
-    #     #     crop_frame = frame
-    #     crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    #     latents = vae.get_latents_for_unet(crop_frame)
-    #     input_latent_list.append(latents)
+    img_path='/homes/zs003/test_images/siyang.png'
+    input_img_list = [img_path, ]
+    bbox_shift=0
+    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    # with open(crop_coord_save_path, 'wb') as f:
+    #     pickle.dump(coord_list, f)
+    input_latent_list = []
+    for bbox, frame in zip(coord_list, frame_list):
+        if bbox == coord_placeholder:
+            continue
+        x1, y1, x2, y2 = bbox
+        # if not args.without_landmark:
+        crop_frame = frame[y1:y2, x1:x2]
+        # else:
+        #     crop_frame = frame
+        crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+        latents = vae.get_latents_for_unet(crop_frame)
+        input_latent_list.append(latents)
     # # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # # latents = vae.get_latents_for_unet(crop_frame)
     # # input_latent_list=[]
     # # input_latent_list.append(latents)
     # pdb.set_trace()
-    input_latent_list=[]
-    for single_frame in input_latent:
-        # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-        latents = vae.get_latents_for_unet_nonorm(single_frame)
-        input_latent_list.append(latents)
+    # input_latent_list=[]
+    # for single_frame in input_latent:
+    #     # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    #     latents = vae.get_latents_for_unet_nonorm(single_frame)
+    #     input_latent_list.append(latents)
 
     #input latent start, directly use latent
     # input_latent_list=input_latent
@@ -602,9 +602,9 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
 
         combine_frame = get_image(ori_frame,res_frame,bbox)
-        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
+        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     pdb.set_trace()
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
