@@ -80,7 +80,7 @@ def datagen_reaction(whisper_chunks,
     vae_encode_latents_new=[]
     for single_latent in vae_encode_latents:
         repeated_latent=laten_repeat * [single_latent]
-        vae_encode_latents_new=repeated_latent
+        vae_encode_latents_new+=repeated_latent
     pdb.set_trace()
     # vae_encode_latents_new=[laten_repeat * [single_latent] for single_latent in vae_encode_latents]
     ##expand latent, repeat chanel-->stack on image
