@@ -482,7 +482,7 @@ class ReactionDataset_readvideo(data.Dataset):
             if not all(map(os.path.exists, [ab_speaker_video_path, ab_speaker_audio_path, ab_speaker_emotion_path, ab_speaker_3dmm_path, ab_listener_video_path, ab_listener_audio_path, ab_listener_emotion_path, ab_listener_3dmm_path])):
                 # pdb.set_trace()
                 print([ab_speaker_video_path, ab_speaker_audio_path, ab_speaker_emotion_path, ab_speaker_3dmm_path, ab_listener_video_path, ab_listener_audio_path, ab_listener_emotion_path, ab_listener_3dmm_path])
-                pdb.set_trace()
+                # pdb.set_trace()
                 continue
 
 
