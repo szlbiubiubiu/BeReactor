@@ -775,17 +775,21 @@ class GaussianDiffusion:
             if self.loss_type == LossType.RESCALED_KL:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
-            # pdb.set_trace()
-            if emo_label_forregression is not None:
-
-                model_output,emo_out_forregression = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
-                emo_shape=emo_out_forregression.shape
-
-                emo_out_forregression=emo_out_forregression.reshape(x_t.shape[0],-1,emo_shape[-1])
-                emo_loss = 0#torch.nn.functional.mse_loss(emo_out_forregression,emo_label_forregression)
-            else:
-                model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+            model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
                 emo_loss=0
+            # if emo_label_forregression is not None:
+
+            #     model_output,emo_out_forregression = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+            #     emo_shape=emo_out_forregression.shape
+
+            #     emo_out_forregression=emo_out_forregression.reshape(x_t.shape[0],-1,emo_shape[-1])
+            #     emo_loss = 0#torch.nn.functional.mse_loss(emo_out_forregression,emo_label_forregression)
+            # else:
+            #     model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
+            #     emo_loss=0
+
+
+
             # pdb.set_trace()
             # try:
             #     model_output = model(x_t, t, **model_kwargs).sample # for tav unet
