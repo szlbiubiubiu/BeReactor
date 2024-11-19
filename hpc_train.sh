@@ -5,8 +5,8 @@
 #$ -l h_vmem=7.5G      # 11G RAM per core
 #$ -pe smp 16          # 8 cores per GPU
 #$ -l gpu=2           # request 1 GPU
-##$ -l gpu_type=hopper   
-#$ -l gpu_type=ampere   
+#$ -l gpu_type=hopper   
+##$ -l gpu_type=ampere   
 ##$ -l cluster=andrena
 ##$ -m se
 # bash
