@@ -376,7 +376,7 @@ class ReactionDataset_readvideo(data.Dataset):
         
             self._audio_path = '/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together'#os.path.join(self.real_dataset_path, 'Audio_files')
             # self._video_path = os.path.join(self.real_dataset_path, 'Video_files')
-            self._video_path='/import/nobackup_mmv_ioannisp/zs003/face_react/NOXI_original/NOXI_newcrop'
+            self._video_path='/import/nobackup_mmv_ioannisp/zs003/face_react/NOXI_original/'
             self._emotion_path = '/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
             # pdb.set_trace()
             self._emotion_path = os.path.join(self.emo_filepath24, self._split+'/Emotion')#'/import/nobackup_mmv_ioannisp/zs003/face_react/face_v2_newlabel/train/New_Emotion'
