@@ -776,7 +776,7 @@ class GaussianDiffusion:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
             model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
-                emo_loss=0
+            emo_loss=0
             # if emo_label_forregression is not None:
 
             #     model_output,emo_out_forregression = model(x_t, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
