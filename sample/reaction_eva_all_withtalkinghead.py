@@ -698,7 +698,7 @@ def main(args):
     # a pre-trained model or load a custom Latte checkpoint from train.py:
     ckpt_path = args.ckpt
     state_dict = find_model(ckpt_path)
-    model.load_state_dict(state_dict,strict=False)
+    model.load_state_dict(state_dict,strict=True)
 
     model.eval()  # important!
     diffusion = create_diffusion(str(args.num_sampling_steps))
@@ -951,7 +951,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
-    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/crop_crop_19_nov/0240000.pt")
+    parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/crop_crop_28_Nov/0280000.pt")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
     #/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt
     
