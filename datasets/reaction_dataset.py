@@ -993,7 +993,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
                 img=Image.fromarray(frame.asnumpy())
                 img = self._transform(img)
                 clip.append(img.unsqueeze(0))
-            listener_align_video_path = torch.cat(clip, dim=0)
+            listener_align_video_clip = torch.cat(clip, dim=0)
 
         # ========================= Load Speaker audio clip (listener audio is NEVER needed) ==========================
         listener_audio_clip, speaker_audio_clip = 0, 0
@@ -1056,7 +1056,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
         # pdb.set_trace()
         return {'img': speaker_video_clip,'speaker_align_video_clip':speaker_align_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
-                                'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_align_video_path':listener_align_video_path,
+                                'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_align_video_path':listener_align_video_clip,
                                 'listener_emotion': listener_emotion,
                                 'listener_3dmm': listener_3dmm,'listener_reference': listener_reference,
                                 'speaker_emotion_path':speaker_emotion_path,'listener_emotion_path':listener_emotion_path,
