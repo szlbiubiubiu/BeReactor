@@ -848,9 +848,9 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
 #------------------------------------------------------------------------------------------------------------------------------------------------
 
             self.data_list.append(
-                {'speaker_video_path': ab_speaker_video_path, 'ab_speaker_aligned_video_path':ab_speaker_aligned_video_path,'speaker_audio_path': ab_speaker_audio_path,
+                {'speaker_video_path': ab_speaker_video_path, 'speaker_aligned_video_path':ab_speaker_aligned_video_path,'speaker_audio_path': ab_speaker_audio_path,
                  'speaker_emotion_path': ab_speaker_emotion_path, 'speaker_3dmm_path': ab_speaker_3dmm_path,
-                 'listener_video_path': ab_listener_video_path, 'ab_listener_aligned_video_path':ab_listener_aligned_video_path,'listener_audio_path': ab_listener_audio_path,
+                 'listener_video_path': ab_listener_video_path, 'listener_aligned_video_path':ab_listener_aligned_video_path,'listener_audio_path': ab_listener_audio_path,
                  'listener_emotion_path': ab_listener_emotion_path, 'listener_3dmm_path': ab_listener_3dmm_path})
 
         self._len = len(self.data_list)
