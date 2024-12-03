@@ -238,7 +238,7 @@ def main(args):
 
             # x = video_data['img'].to(device, non_blocking=True)
             # x = video_data['listener_video_clip'].to(device, non_blocking=True)
-            listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)
+            listener_ref=video_data['listener_align_video_clip'].to(device, non_blocking=True)#video_data['listener_video_clip'].to(device, non_blocking=True)
             emo_label_forregression=video_data['listener_emotion'].to(device, non_blocking=True)
             
             x = video_data['img'].to(device, non_blocking=True)
