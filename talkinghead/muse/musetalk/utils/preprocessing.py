@@ -87,7 +87,7 @@ def get_bbox_range(img_list,upperbondrange =0):
     
 
 def get_landmark_and_bbox(img_list,upperbondrange =0):
-    if isinstance(s, str):
+    if isinstance(img_list, str):
         frames = read_imgs(img_list)
     else:
         frames=img_list
