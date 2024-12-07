@@ -129,7 +129,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         
         # get bounding boxes by face detetion
         bbox = fa.get_detections_for_batch(np.asarray(fb))
-        pdb.set_trace()
+        # pdb.set_trace()
         # adjust the bounding box refer to landmark
         # Add the bounding box to a tuple and append it to the coordinates list
         for j, f in enumerate(bbox):

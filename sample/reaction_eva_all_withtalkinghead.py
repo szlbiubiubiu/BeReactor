@@ -409,7 +409,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
             )
         
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        pdb.set_trace()
+        # pdb.set_trace()
         current_text=response[0]['generated_text'][-1]['content']
         all_text=all_text+current_text
         print(response[0]['generated_text'][-1]['content'])
