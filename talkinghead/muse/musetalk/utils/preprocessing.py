@@ -103,7 +103,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
     average_range_plus = []
     for fb in tqdm(batches):
 
-        if isinstance(img_list, torch.Tensor)
+        if isinstance(img_list, torch.Tensor):
             fb=fb.cpu().numpy()
         # if isinstance(, str):
         # fb=fb.cpu().numpy()
