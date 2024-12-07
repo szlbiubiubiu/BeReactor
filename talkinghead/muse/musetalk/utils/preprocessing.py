@@ -121,7 +121,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         #     fb=fb.cpu().numpy()
         # if isinstance(, str):
         # fb=fb.cpu().numpy()
-        results = inference_topdown(model, np.asarray(fb)[0])
+        results = inference_topdown(model, np.asarray(fb))#[0])
         results = merge_data_samples(results)
         keypoints = results.pred_instances.keypoints
         face_land_mark= keypoints[0][23:91]

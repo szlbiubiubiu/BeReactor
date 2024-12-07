@@ -508,10 +508,10 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # # #image processing
     # # # crop_frame = cv2.imread(img_path)
     # # #detect landmark
-    img_path='/homes/zs003/test_images/siyang.png'
-    input_img_list = [img_path, ]
-    bbox_shift=0
-    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    # img_path='/homes/zs003/test_images/siyang.png'
+    # input_img_list = [img_path, ]
+    # bbox_shift=0
+    # coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
     # # with open(crop_coord_save_path, 'wb') as f:
     # #     pickle.dump(coord_list, f)
     # input_latent_list = []
