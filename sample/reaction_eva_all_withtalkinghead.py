@@ -551,6 +551,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
         input_latent_list.append(latents)
+    pdb.set_trace()
     # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # latents = vae.get_latents_for_unet(crop_frame)
     # input_latent_list=[]
