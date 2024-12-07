@@ -102,6 +102,11 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
     average_range_minus = []
     average_range_plus = []
     for fb in tqdm(batches):
+
+        if isinstance(img_list, torch.Tensor)
+            fb=fb.cpu().numpy()
+        # if isinstance(, str):
+        # fb=fb.cpu().numpy()
         results = inference_topdown(model, np.asarray(fb)[0])
         results = merge_data_samples(results)
         keypoints = results.pred_instances.keypoints
