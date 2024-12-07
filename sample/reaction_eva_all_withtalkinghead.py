@@ -530,12 +530,37 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # latents = vae.get_latents_for_unet(crop_frame)
     # input_latent_list=[]
     # input_latent_list.append(latents)
+
     pdb.set_trace()
-    input_latent_list=[]
-    for single_frame in input_latent:
-        # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-        latents = vae.get_latents_for_unet_nonorm(single_frame)
+    input_img_list = input_latent#[img_path, ]
+    bbox_shift=0
+    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    # with open(crop_coord_save_path, 'wb') as f:
+    #     pickle.dump(coord_list, f)
+    input_latent_list = []
+    for bbox, frame in zip(coord_list, frame_list):
+        if bbox == coord_placeholder:
+            continue
+        x1, y1, x2, y2 = bbox
+        # if not args.without_landmark:
+        crop_frame = frame[y1:y2, x1:x2]
+        # else:
+        #     crop_frame = frame
+        crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+        latents = vae.get_latents_for_unet(crop_frame)
         input_latent_list.append(latents)
+    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    # latents = vae.get_latents_for_unet(crop_frame)
+    # input_latent_list=[]
+    # input_latent_list.append(latents)
+
+    # #no crop
+    # pdb.set_trace()
+    # input_latent_list=[]
+    # for single_frame in input_latent:
+    #     # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    #     latents = vae.get_latents_for_unet_nonorm(single_frame)
+    #     input_latent_list.append(latents)
 
     #input latent start, directly use latent
     # input_latent_list=input_latent
@@ -546,7 +571,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
     
     # frame_list_cycle = frame_list + frame_list[::-1]
-    # coord_list_cycle = coord_list + coord_list[::-1]
+    coord_list_cycle = coord_list + coord_list[::-1]
     video_num = len(whisper_chunks)
     # input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
     # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
@@ -591,11 +616,12 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
 
     print("pad talking image to original video")
-    # pdb.set_trace()
+    pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
-        ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
-        t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
+        ori_frame = copy.deepcopy(input_latent_list_cycle[i%(len(res_frame_list))])
+        # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
+        t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
         bbox=[0,0,t_shape[0],t_shape[1]]
         x1, y1, x2, y2 = bbox
         # try:
