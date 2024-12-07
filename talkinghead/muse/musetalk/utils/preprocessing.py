@@ -11,6 +11,7 @@ from mmpose.apis import inference_topdown, init_model
 from mmpose.structures import merge_data_samples
 import torch
 from tqdm import tqdm
+import pdb
 # import sys
 # sys.path.append('/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse')
 
@@ -101,6 +102,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         print('get key_landmark and face bounding boxes with the default value')
     average_range_minus = []
     average_range_plus = []
+    pdb.set_trace()
     for fb in tqdm(batches):
 
         if isinstance(img_list, torch.Tensor):
