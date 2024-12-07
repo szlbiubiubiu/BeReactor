@@ -88,7 +88,7 @@ def get_bbox_range(img_list,upperbondrange =0):
     
 
 def get_landmark_and_bbox(img_list,upperbondrange =0):
-    if isinstance(img_list, str):
+    if isinstance(img_list[0], str):
         frames = read_imgs(img_list)
         batch_size_fa = 1
         pdb.set_trace()
