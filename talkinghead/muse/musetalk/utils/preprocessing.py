@@ -104,7 +104,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         # if isinstance(frames[0], torch.Tensor):
         #     batches = [frames[i:i + batch_size_fa].cpu().numpy() for i in range(0, len(frames), batch_size_fa)]
         # else:
-        batches = [np.transpose(np.squeeze(frames[i:i + batch_size_fa]),(1,2,0)) for i in range(0, len(frames), batch_size_fa)]
+        batches = [np.transpose(frames[i:i + batch_size_fa],(0,2,3,1)) for i in range(0, len(frames), batch_size_fa)]
     
     coords_list = []
     landmarks = []
@@ -121,7 +121,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         #     fb=fb.cpu().numpy()
         # if isinstance(, str):
         # fb=fb.cpu().numpy()
-        results = inference_topdown(model, np.asarray(fb))#[0])
+        results = inference_topdown(model, np.asarray(fb)[0])
         results = merge_data_samples(results)
         keypoints = results.pred_instances.keypoints
         face_land_mark= keypoints[0][23:91]
