@@ -91,7 +91,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
     if isinstance(img_list[0], str):
         frames = read_imgs(img_list)
         batch_size_fa = 1
-        pdb.set_trace()
+        # pdb.set_trace()
         # if isinstance(frames[0], torch.Tensor):
         #     batches = [frames[i:i + batch_size_fa].cpu().numpy() for i in range(0, len(frames), batch_size_fa)]
         # else:
@@ -114,7 +114,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         print('get key_landmark and face bounding boxes with the default value')
     average_range_minus = []
     average_range_plus = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for fb in tqdm(batches):
 
         # if isinstance(fb, torch.Tensor):
@@ -129,7 +129,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
         
         # get bounding boxes by face detetion
         bbox = fa.get_detections_for_batch(np.asarray(fb))
-        
+        pdb.set_trace()
         # adjust the bounding box refer to landmark
         # Add the bounding box to a tuple and append it to the coordinates list
         for j, f in enumerate(bbox):
