@@ -531,7 +531,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # input_latent_list=[]
     # input_latent_list.append(latents)
 
-    pdb.set_trace()
+    
     # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1))),input_latent.shape[0],axis=0)#[img_path, ]
     # input_img_list[sample]
@@ -540,6 +540,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
+    pdb.set_trace()
     for bbox, frame in zip(coord_list, frame_list):
         if bbox == coord_placeholder:
             continue
