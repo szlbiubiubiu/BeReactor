@@ -542,6 +542,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     input_latent_list = []
     pdb.set_trace()
     for bbox, frame in zip(coord_list, frame_list):
+        frame=np.squeeze(frame)
         if bbox == coord_placeholder:
             continue
         x1, y1, x2, y2 = bbox
