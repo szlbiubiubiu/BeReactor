@@ -97,7 +97,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
     # if isinstance(frames[0], torch.Tensor):
     #     batches = [frames[i:i + batch_size_fa].cpu().numpy() for i in range(0, len(frames), batch_size_fa)]
     # else:
-    batches = [frames[i:i + batch_size_fa] for i in range(0, len(frames), batch_size_fa)]
+    batches = [np.transpose(np.squeeze(frames[i:i + batch_size_fa]),(1,2,0)) for i in range(0, len(frames), batch_size_fa)]
     coords_list = []
     landmarks = []
     if upperbondrange != 0:
