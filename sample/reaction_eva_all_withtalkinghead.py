@@ -552,7 +552,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         #     crop_frame = frame
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
-        input_latent_list.append(torch.tensor(127.5*(latents+1),dtype=torch.uint8))
+        input_latent_list.append(latents)
     pdb.set_trace()
     # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # latents = vae.get_latents_for_unet(crop_frame)
@@ -597,7 +597,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     
     res_frame_list=[]
     res_frame_list_latent=[]
-    pdb.set_trace()
+    # pdb.set_trace()
     for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
     # for whisper_batch in whisper_chunks:
         # whisper_batch=whisper_chunks
@@ -634,8 +634,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
-        ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
-        # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
+        # ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
+        ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
         t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
         bbox=[0,0,t_shape[0],t_shape[1]]
