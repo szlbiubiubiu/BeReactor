@@ -597,7 +597,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     
     res_frame_list=[]
     res_frame_list_latent=[]
-    # pdb.set_trace()
+    pdb.set_trace()
     for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
     # for whisper_batch in whisper_chunks:
         # whisper_batch=whisper_chunks
