@@ -586,7 +586,15 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     original_image_cycle=vae_encode_latents_new
     
     # frame_list_cycle = frame_list + frame_list[::-1]
-    coord_list_cycle = coord_list + coord_list[::-1]
+    # coord_list_cycle = coord_list + coord_list[::-1]
+
+    coord_list_cycle_new=[]
+    for single_coord in coord_list_cycle:
+        repeated_coord=laten_repeat * [single_coord]
+        coord_list_cycle_new+=repeated_coord
+    coord_list_cycle=vae_encode_latents_new
+
+
     video_num = len(whisper_chunks)
     # input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
     # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
