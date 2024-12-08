@@ -576,6 +576,15 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
     pdb.set_trace()
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
+    
+    laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
+    pdb.set_trace()
+    vae_encode_latents_new=[]
+    for single_latent in original_image_cycle:
+        repeated_latent=laten_repeat * [single_latent]
+        vae_encode_latents_new+=repeated_latent
+    original_image_cycle=vae_encode_latents_new
+    
     # frame_list_cycle = frame_list + frame_list[::-1]
     coord_list_cycle = coord_list + coord_list[::-1]
     video_num = len(whisper_chunks)
