@@ -592,7 +592,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     for single_coord in coord_list_cycle:
         repeated_coord=laten_repeat * [single_coord]
         coord_list_cycle_new+=repeated_coord
-    coord_list_cycle=vae_encode_latents_new
+    coord_list_cycle=coord_list_cycle_new
 
 
     video_num = len(whisper_chunks)
