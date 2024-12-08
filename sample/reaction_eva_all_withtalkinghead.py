@@ -653,7 +653,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         # pdb.set_trace()
         # combine_frame = get_image(ori_frame,res_frame,bbox)
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
-        combine_frame = get_image(res_frame,np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],bbox)
+        combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
 
         cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
