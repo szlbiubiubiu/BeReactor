@@ -575,7 +575,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     #use image----
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
     pdb.set_trace()
-    original_image_cycle= np.squeeze(np.split(input_latent,input_latent.shape[0],axis=0))+ np.squeeze(np.split(input_latent,input_latent.shape[0],axis=0))[::-1]
+    original_image_cycle= torch.squeeze(torch.chunk(input_latent,input_latent.shape[0],dim=0))+ torch.squeeze(torch.chunk(input_latent,input_latent.shape[0],dim=0))[::-1]
     # frame_list_cycle = frame_list + frame_list[::-1]
     coord_list_cycle = coord_list + coord_list[::-1]
     video_num = len(whisper_chunks)
