@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from face_parsing import FaceParsing
 
+import pdb
 fp = FaceParsing()
 
 def get_crop_box(box, expand):
@@ -52,7 +53,7 @@ def get_image(image,face,face_box,upper_boundary_ratio = 0.5,expand=1.2):
     blur_kernel_size = int(0.1 * ori_shape[0] // 2 * 2) + 1
     mask_array = cv2.GaussianBlur(np.array(modified_mask_image), (blur_kernel_size, blur_kernel_size), 0)
     mask_image = Image.fromarray(mask_array)
-    
+    pdb.set_trace()
     face_large.paste(face, (x-x_s, y-y_s, x1-x_s, y1-y_s))
     body.paste(face_large, crop_box[:2], mask_image)
     body = np.array(body)
