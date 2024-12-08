@@ -634,8 +634,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
-        # ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
-        ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
+        ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
+        # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
         t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
         bbox=[0,0,t_shape[0],t_shape[1]]
