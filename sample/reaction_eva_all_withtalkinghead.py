@@ -533,7 +533,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     
     # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
-    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,3,2,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
+    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
     # input_img_list[sample]
     bbox_shift=0
     coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
@@ -644,7 +644,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
         # pdb.set_trace()
         # combine_frame = get_image(ori_frame,res_frame,bbox)
-        combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1)),res_frame,bbox)
+        combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0)[:,:,::-1].cpu()+1)),res_frame,bbox)
         cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
