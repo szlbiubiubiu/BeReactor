@@ -631,7 +631,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         x1, y1, x2, y2 = bbox
         # try:
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
-
+        pdb.set_trace()
         combine_frame = get_image(ori_frame,res_frame,bbox)
         cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
