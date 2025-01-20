@@ -3,7 +3,7 @@
 #$ -j y
 #$ -l h_rt=96:0:0     # XX hours runtime
 #$ -l h_vmem=7.5G      # 11G RAM per core
-#$ -pe smp 12          # 8 cores per GPU
+#$ -pe smp 8          # 8 cores per GPU
 #$ -l gpu=1           # request 1 GPU
 ##$ -l gpu_type=hopper   
 #$ -l gpu_type=ampere   
