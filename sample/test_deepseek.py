@@ -23,56 +23,56 @@ import pdb
 
 
 
-# # #vllm offical example
+# #vllm offical example
 
 
-# # SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: Apache-2.0
 
-# from vllm import LLM, SamplingParams
+from vllm import LLM, SamplingParams
 
-# # llm = LLM(model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",max_model_len=104576)#,max_model_len=32768
-# llm = LLM(model="deepseek-ai/DeepSeek-R1-Distill-Llama-8B",max_model_len=23632)#,max_model_len=32768
+# llm = LLM(model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",max_model_len=104576)#,max_model_len=32768
+llm = LLM(model="deepseek-ai/DeepSeek-R1-Distill-Llama-8B",max_model_len=23632)#,max_model_len=32768
 
-# sampling_params = SamplingParams(temperature=0.6)
-
-
-# def print_outputs(outputs):
-#     for output in outputs:
-#         prompt = output.prompt
-#         generated_text = output.outputs[0].text
-#         print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
-#     print("-" * 80)
+sampling_params = SamplingParams(temperature=0.6,top_p=0.95)
 
 
-# print("=" * 80)
+def print_outputs(outputs):
+    for output in outputs:
+        prompt = output.prompt
+        generated_text = output.outputs[0].text
+        print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+    print("-" * 80)
 
-# # In this script, we demonstrate how to pass input to the chat method:
 
-# conversation = [
-#     # {
-#     #     "role": "system",
-#     #     "content": "You are a helpful assistant"
-#     # },
-#     {
-#         "role": "user",
-#         "content": "Hello"
-#     },
-#     {
-#         "role": "assistant",
-#         "content": "Hello! How can I assist you today?"
-#     },
-#     {
-#         "role": "user",
-#         "content": "Write an essay about the importance of higher education.",
-#     },
-# ]
-# outputs = llm.chat(conversation,
-#                    sampling_params=sampling_params,
-#                    use_tqdm=False)
-# print_outputs(outputs)
+print("=" * 80)
 
-# pdb.set_trace()
-# a=1
+# In this script, we demonstrate how to pass input to the chat method:
+
+conversation = [
+    # {
+    #     "role": "system",
+    #     "content": "You are a helpful assistant"
+    # },
+    {
+        "role": "user",
+        "content": "Hello"
+    },
+    {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?"
+    },
+    {
+        "role": "user",
+        "content": "Please Write an essay about the importance of higher education.",
+    },
+]
+outputs = llm.chat(conversation,
+                   sampling_params=sampling_params,
+                   use_tqdm=False)
+print_outputs(outputs)
+
+pdb.set_trace()
+a=1
 # # # You can run batch inference with llm.chat API
 # # conversation = [
 # #     {
@@ -114,27 +114,27 @@ import pdb
 # # )
 
 
-conversation = [
+# conversation = [
 
-    {
-        "role": "user",
-        "content": "Hello"
-    },
-    {
-        "role": "assistant",
-        "content": "Hello! How can I assist you today?"
-    },
-    {
-        "role": "user",
-        "content": "Write an essay about the importance of higher education.",
-    },
-]
-import ollama
-response = ollama.chat(
-    model="deepseek-r1:7b",
-    messages=conversation
-    # messages=[
-    #     {"role": "user", "content": "Explain Newton's second law of motion"},
-    # ],
-)
-print(response["message"]["content"])
+#     {
+#         "role": "user",
+#         "content": "Hello"
+#     },
+#     {
+#         "role": "assistant",
+#         "content": "Hello! How can I assist you today?"
+#     },
+#     {
+#         "role": "user",
+#         "content": "Write an essay about the importance of higher education.",
+#     },
+# ]
+# import ollama
+# response = ollama.chat(
+#     model="deepseek-r1:7b",
+#     messages=conversation
+#     # messages=[
+#     #     {"role": "user", "content": "Explain Newton's second law of motion"},
+#     # ],
+# )
+# print(response["message"]["content"])
