@@ -30,7 +30,7 @@ import pdb
 
 from vllm import LLM, SamplingParams
 
-llm = LLM(model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B")#,max_model_len=32768
+llm = LLM(model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",max_model_len=104576)#,max_model_len=32768
 sampling_params = SamplingParams(temperature=0.6)
 
 
