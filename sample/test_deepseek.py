@@ -47,10 +47,10 @@ print("=" * 80)
 # In this script, we demonstrate how to pass input to the chat method:
 
 conversation = [
-    {
-        "role": "system",
-        "content": "You are a helpful assistant"
-    },
+    # {
+    #     "role": "system",
+    #     "content": "You are a helpful assistant"
+    # },
     {
         "role": "user",
         "content": "Hello"
