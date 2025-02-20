@@ -1,5 +1,5 @@
 
-
+import pdb
 # ####support vllm
 # from vllm import LLM, SamplingParams
 
@@ -69,6 +69,8 @@ outputs = llm.chat(conversation,
                    use_tqdm=False)
 print_outputs(outputs)
 
+pdb.set_trace()
+a=1
 # # You can run batch inference with llm.chat API
 # conversation = [
 #     {
