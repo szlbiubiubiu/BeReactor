@@ -423,7 +423,7 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
         # pdb.set_trace()
         current_text=response.choices[0].message.content.split('\n</think>\n\n')[1]
         all_text=all_text+current_text
-        print(response[0]['generated_text'][-1]['content'])
+        print(current_text)
     
     # # #text to audio
     # # pdb.set_trace()
