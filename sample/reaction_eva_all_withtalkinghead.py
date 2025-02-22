@@ -334,6 +334,356 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
                     au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').cuda()
 
+
+from openai import OpenAI
+def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
+    pdb.set_trace()
+    #get emotion from images
+    id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
+    expression=emo_fea['expression']
+    expression_soft=F.softmax(expression,dim=1)
+    valence=emo_fea['valence']
+    arousal=emo_fea['arousal']
+
+
+    pdb.set_trace()
+    result = whisper_model.transcribe(audio_file)
+    print(result["text"])
+    
+    sentences=result["text"].split('.')
+
+    rand_num=torch.randint(0,100,(1,))
+    all_text=''
+    conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words\n"
+    # for i in range(1):
+    #     if i==0:
+    #         chat = [
+    #         {"role": "system", "content": "You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words"},
+    #         {"role": "user", "content": sentences[0]}
+    #             ]
+    #         a=1
+    #     else:
+    #         chat=response[0]['generated_text']
+    #         chat.append(
+    #             # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
+    #             {"role": "user", "content": sentences[i]+". please reply within 10 words"}
+    #         )
+    #     response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
+    #     current_text=response[0]['generated_text'][-1]['content']
+    #     all_text=all_text+current_text
+    #     print(response[0]['generated_text'][-1]['content'])
+    pdb.set_trace()
+    openai_api_key = "None"
+    openai_api_base = "http://0.0.0.0:8000/v1"
+
+    client = OpenAI(
+        api_key=openai_api_key,
+        base_url=openai_api_base,
+    )
+    for i in range(len(sentences)):
+        if i==0:
+            chat = [
+            {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
+            +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
+            
+            # {"role": "system", "content": 
+            # "Please reply with a tone of emotion level:\
+            # Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
+            #                     'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
+            #             'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"},            
+            
+            
+            
+            {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
+            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
+                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
+                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
+                        +'. Remove the emotion number in your reply.)'}
+                ]
+            a=1
+        else:
+            # chat=response[0]['generated_text']
+            chat.append(
+            {"role": "Assistant", "content": current_text})
+            chat.append(
+                # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
+                {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
+            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
+                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
+                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
+                        +'. Remove the emotion number in your reply.)'}#+". please reply within 10 words"}
+            )
+        
+        response = client.chat.completions.create(
+            model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+            messages=chat,
+        )
+        # response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
+        # pdb.set_trace()
+        current_text=response.choices[0].message.content.split('\n</think>\n\n')[1]
+        all_text=all_text+current_text
+        print(response[0]['generated_text'][-1]['content'])
+    
+    # # #text to audio
+    # # pdb.set_trace()
+    # for i in range(len(sentences)):
+    #     if i==0:
+    #         chat = [
+    #         {"role": "system", "content": "We are having an interview. You are a person with a specific personality, subjected to the random seed:."+str(5)+". Please reply within 10 words"},
+    #         {"role": "user", "content": sentences[0]}
+    #             ]
+    #         a=1
+    #         conversation_history += f"User: {sentences[0]}\nAssistant:"
+    #     else:
+    #         # chat=response[0]['generated_text']
+    #         # chat.append(
+    #         #     # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
+    #         #     {"role": "user", "content": sentences[i]+". please reply within 10 words"}
+    #         # )
+    #         conversation_history += f"{response}\n"
+    #         conversation_history += f"User: {sentences[i]}\nAssistant:"
+    #     # conversation_history += f"User: {user_input}\n"
+    #     pdb.set_trace()
+    #     # Generate a response using the pipeline
+    #     response = pipe(conversation_history, max_length=1000)[0]["generated_text"]
+        
+    #     # Extract the new response part (after the user input)
+    #     response = response[len(conversation_history):]
+    #     # all_text=all_text+response
+    #     print(f"Assistant: {response.strip()}")
+
+    #     # # Append LLaMA's response to the conversation history
+    #     # conversation_history += f"LLaMA: {response}\n"
+    
+    # from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    # # Load the Llama 3 model and tokenizer (assuming it's hosted on Hugging Face)
+    # model_name = 'meta-llama/Llama-3'
+    # tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # model = AutoModelForCausalLM.from_pretrained(model_name)
+    # from transformers import LlamaForCausalLM, LlamaTokenizer
+    # tokenizer = LlamaTokenizer.from_pretrained("/path/to/local/llama-3")
+    # model = LlamaForCausalLM.from_pretrained("/path/to/local/llama-3")
+    
+
+    # conversation_history = ""
+
+    # while True:
+    #     # Get user input
+    #     user_input = input("You: ")
+        
+    #     # Append user input to conversation history
+    #     conversation_history += f"User: {user_input}\n"
+        
+    #     # Get LLaMA's response
+    #     response = chat_with_llama(model, tokenizer, conversation_history)
+    #     print(f"LLaMA: {response}")
+        
+    #     # Append the model's response to conversation history
+    #     conversation_history += f"LLaMA: {response}\n"
+    # # wavs = chat.infer(current_text)
+
+
+    # pdb.set_trace()
+    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
+    communicate = edge_tts.Communicate(all_text, VOICE)
+    communicate.save_sync(OUTPUT_audio_FILE)
+    # # message in self.stream()
+    wavs=[]
+    # with open(OUTPUT_audio_FILE, "wb") as file:
+    #     for chunk in communicate.stream_sync():
+    #         if chunk["type"] == "audio":
+    #             # file.write(chunk["data"])
+    #             audio = np.frombuffer(chunk["data"], np.int16).astype(np.float32)*(1/32768.0)
+    #             # wavs.append(chunk["data"])
+    #             wavs.append(audio)
+                
+    #             file.write(chunk["data"])
+    #         elif chunk["type"] == "WordBoundary":
+    #             print(f"WordBoundary: {chunk}")
+    # communicate.save_sync(OUTPUT_FILE)
+    # communicate.save_sync(OUTPUT_audio_FILE)
+    # communicate.save_sync(OUTPUT_FILE)# change to talking head format
+
+    # #audio to talking head, whisper,tiny
+
+    #talking head
+    # wavs=np.frombuffer(wavs[0], dtype=np.float16)
+    # audio = np.frombuffer(data, np.int16).astype(np.float32)*(1/32768.0)
+    # pdb.set_trace()
+    # whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
+    whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
+    whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
+
+    # # #image processing
+    # # # crop_frame = cv2.imread(img_path)
+    # # #detect landmark
+    # img_path='/homes/zs003/test_images/siyang.png'
+    # input_img_list = [img_path, ]
+    # bbox_shift=0
+    # coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    # # with open(crop_coord_save_path, 'wb') as f:
+    # #     pickle.dump(coord_list, f)
+    # input_latent_list = []
+    # for bbox, frame in zip(coord_list, frame_list):
+    #     if bbox == coord_placeholder:
+    #         continue
+    #     x1, y1, x2, y2 = bbox
+    #     # if not args.without_landmark:
+    #     crop_frame = frame[y1:y2, x1:x2]
+    #     # else:
+    #     #     crop_frame = frame
+    #     crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    #     latents = vae.get_latents_for_unet(crop_frame)
+    #     input_latent_list.append(latents)
+    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    # latents = vae.get_latents_for_unet(crop_frame)
+    # input_latent_list=[]
+    # input_latent_list.append(latents)
+
+    
+    # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
+    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
+    # input_img_list[sample]
+    bbox_shift=0
+    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    # with open(crop_coord_save_path, 'wb') as f:
+    #     pickle.dump(coord_list, f)
+    input_latent_list = []
+    pdb.set_trace()
+    for bbox, frame in zip(coord_list, frame_list):
+        frame=np.squeeze(frame)
+        if bbox == coord_placeholder:
+            continue
+        x1, y1, x2, y2 = bbox
+        # if not args.without_landmark:
+        crop_frame = frame[y1:y2, x1:x2]
+        # else:
+        #     crop_frame = frame
+        crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+        latents = vae.get_latents_for_unet(crop_frame)
+        input_latent_list.append(latents)
+    pdb.set_trace()
+    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    # latents = vae.get_latents_for_unet(crop_frame)
+    # input_latent_list=[]
+    # input_latent_list.append(latents)
+
+    # #no crop
+    # pdb.set_trace()
+    # input_latent_list=[]
+    # for single_frame in input_latent:
+    #     # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+    #     latents = vae.get_latents_for_unet_nonorm(single_frame)
+    #     input_latent_list.append(latents)
+
+    #input latent start, directly use latent
+    # input_latent_list=input_latent
+    # input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
+
+    #----
+    #use image----
+    input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    pdb.set_trace()
+    original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
+    
+    laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
+    pdb.set_trace()
+    vae_encode_latents_new=[]
+    for single_latent in original_image_cycle:
+        repeated_latent=laten_repeat * [single_latent]
+        vae_encode_latents_new+=repeated_latent
+    original_image_cycle=vae_encode_latents_new
+    
+    # frame_list_cycle = frame_list + frame_list[::-1]
+    coord_list_cycle = coord_list + coord_list[::-1]
+
+    coord_list_cycle_new=[]
+    for single_coord in coord_list_cycle:
+        repeated_coord=laten_repeat * [single_coord]
+        coord_list_cycle_new+=repeated_coord
+    coord_list_cycle=coord_list_cycle_new
+
+
+    video_num = len(whisper_chunks)
+    # input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
+    # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
+    # pdb.set_trace()
+    timesteps = torch.tensor([0], device=unet.device)
+    # gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
+    gen = datagen_reaction(whisper_chunks,input_latent_list_cycle,batch_size)
+    
+    res_frame_list=[]
+    res_frame_list_latent=[]
+    # pdb.set_trace()
+    for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
+    # for whisper_batch in whisper_chunks:
+        # whisper_batch=whisper_chunks
+        # pdb.set_trace()
+        audio_feature_batch = torch.from_numpy(whisper_batch)
+        audio_feature_batch = audio_feature_batch.to(device=unet.device,
+                                                        dtype=unet.model.dtype) # torch, B, 5*N,384
+        audio_feature_batch = pe(audio_feature_batch)
+        # latent_batch=latents
+        latent_batch = latent_batch.to(dtype=unet.model.dtype)
+        # pdb.set_trace()
+        pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
+        #mask talent
+
+
+        #do not reconstruct images if use reaction framework
+        recon = vae.decode_latents(pred_latents)
+        
+        # pdb.set_trace()
+        for res_frame in recon:
+            res_frame_list.append(res_frame)
+        for res_latent in pred_latents:
+            #mask latent
+            # res_latent_detrans=res_latent*0.5+0.5
+            # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
+            res_frame_list_latent.append(res_latent)
+            # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
+    # return res_frame_list
+
+
+
+
+    print("pad talking image to original video")
+    pdb.set_trace()
+    for i, res_frame in enumerate(tqdm(res_frame_list)):
+        
+        ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
+        # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
+        # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
+        t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
+        bbox=[0,0,t_shape[0],t_shape[1]]
+        x1, y1, x2, y2 = bbox
+        # try:
+        res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+        # pdb.set_trace()
+        # combine_frame = get_image(ori_frame,res_frame,bbox)
+        # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
+        combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
+
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        # pdb.set_trace()
+        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
+        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
+    pdb.set_trace()
+    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+    print(cmd_img2video)
+    os.system(cmd_img2video)
+    
+
+    output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
+    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
+    print(cmd_combine_audio)
+    os.system(cmd_combine_audio)
+    
+    os.remove("temp.mp4")
+    # # shutil.rmtree(result_img_save_path)
+    print(f"result is save to {output_vid_name}")       
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
@@ -915,9 +1265,10 @@ def main(args):
         # pdb.set_trace()
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
-
-            calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe)
+            openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe)     #openai,deepseek
+            # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
+            #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             pdb.set_trace()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
