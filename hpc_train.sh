@@ -9,6 +9,7 @@
 #$ -l gpu_type=ampere   
 ##$ -l cluster=andrena
 ##$ -m se
+#-l rocky
 # bash
 # module load anaconda3/2020.02
 source ~/.bashrc
