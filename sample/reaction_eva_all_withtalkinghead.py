@@ -2,7 +2,7 @@
 
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-
+# deepseek vllm :vllm serve "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B" --max_model 4096 --port 8000 --tensor-parallel-size 2
 """
 Sample new images from a pre-trained Latte.
 """
@@ -337,7 +337,7 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
 
 from openai import OpenAI
 def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True):
     pdb.set_trace()
     #get emotion from images
     id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
