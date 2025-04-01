@@ -1277,6 +1277,7 @@ def main(args):
         all_face_images=[]
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
+            pdb.set_trace()
             batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
                     emo_label,torch.cat(out_samples,dim=0), pipe,vae, unet, pe,num_frame_sp=len(video_data['img']))     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
