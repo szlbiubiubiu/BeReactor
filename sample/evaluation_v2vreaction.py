@@ -339,22 +339,22 @@ from openai import OpenAI
 def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     pdb.set_trace()
-    for step,clip_generated in enumerate(input_latent):
+    # for step,clip_generated in enumerate(input_latent):
 
-        id_feats,emo_fea=encoder_emo.forward_listener(clip_generated)
-        
-        expression=emo_fea['expression']
-        expression_soft_sing=F.softmax(expression,dim=1)
-        valence_sing=emo_fea['valence']
-        arousal_sing=emo_fea['arousal']
-        if step==0:
-            expression_soft=expression_soft_sing
-            valence=valence_sing
-            arousal=arousal_sing
-        else:
-            expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
-            valence=torch.cat((valence,valence_sing),dim=0)
-            arousal=torch.cat((arousal,arousal_sing),dim=0)
+    id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
+    
+    expression=emo_fea['expression']
+    expression_soft_sing=F.softmax(expression,dim=1)
+    valence_sing=emo_fea['valence']
+    arousal_sing=emo_fea['arousal']
+    # if step==0:
+    expression_soft=expression_soft_sing
+    valence=valence_sing
+    arousal=arousal_sing
+        # else:
+        #     expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
+        #     valence=torch.cat((valence,valence_sing),dim=0)
+        #     arousal=torch.cat((arousal,arousal_sing),dim=0)
 
     pdb.set_trace()
     result = whisper_model.transcribe(audio_file)

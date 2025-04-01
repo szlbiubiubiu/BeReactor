@@ -337,7 +337,7 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
 
 from openai import OpenAI
 def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=0):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     pdb.set_trace()
     #get emotion from images
     id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
@@ -647,10 +647,9 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
     # return res_frame_list
 
 
-    pdb.set_trace()
+
     if return_image4emotion:
-        interval_listener=len(res_frame_list)//num_frame_sp
-        return res_frame_list[::interval_listener]
+        return res_frame_list
     print("pad talking image to original video")
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
@@ -1268,7 +1267,7 @@ def main(args):
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
             batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=len(video_data['img']))     #openai,deepseek
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe)     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
