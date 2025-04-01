@@ -352,9 +352,9 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
             valence=valence_sing
             arousal=arousal_sing
         else:
-            expression_soft=torch.cat(expression_soft,expression_soft_sing)
-            valence=torch.cat(valence,valence_sing)
-            arousal=torch.cat(arousal,arousal_sing)
+            expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
+            valence=torch.cat((valence,valence_sing),dim=0)
+            arousal=torch.cat((arousal,arousal_sing),dim=0)
 
     pdb.set_trace()
     result = whisper_model.transcribe(audio_file)
