@@ -648,7 +648,8 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
 
 
 
-
+    if return_image4emotion:
+        return res_frame_list
     print("pad talking image to original video")
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
@@ -1262,13 +1263,14 @@ def main(args):
         # print('save path {}'.format(args.save_video_path))
 
 
-        # pdb.set_trace()
+        all_face_images=[]
         #can consider do not use the decode of vae
         for batch_index in range(len(out_samples)):
-            openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
+            batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
                     emo_label,out_samples[batch_index], pipe,vae, unet, pe)     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
+            all_face_images+=batched_faces
             pdb.set_trace()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
@@ -1279,22 +1281,21 @@ def main(args):
 
 
 
-        #visualize 
-        video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
-        print(video_save_path)
-        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        print('save path {}'.format(args.save_video_path))
+        # #visualize 
+        # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
 
-        video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-        print(video_save_path)
-        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        print('save path {}'.format(args.save_video_path))
-        pdb.set_trace()
-        # Save and display images:
+        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
         # pdb.set_trace()
 
+        pdb.set_trace()
         #get emo feature
         id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)

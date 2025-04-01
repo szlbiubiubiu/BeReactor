@@ -197,3 +197,27 @@ print_highlight(f"Response: {response}")
 #     max_tokens=64,
 # )
 # print(response)
+
+
+##python -m vllm.entrypoints.api_server --model deepseek-ai/DeepSeek-R1-Distill-Llama-8B --max_model 4096 --port 15264 --tensor-parallel-size 2
+
+from openai import OpenAI
+# Set OpenAI's API key and API base to use vLLM's API server.
+openai_api_key = "None"
+openai_api_base = "http://0.0.0.0:8000/v1"
+
+client = OpenAI(
+    api_key=openai_api_key,
+    base_url=openai_api_base,
+)
+
+chat_response = client.chat.completions.create(
+    model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Who are you."},
+        {"role": "Assistant", "content": "I am deepseek."},
+        {"role": "user", "content": "Tell me a joke based on your name."},
+    ]
+)
+print("Chat response:", chat_response)

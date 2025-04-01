@@ -37,6 +37,7 @@ if __name__=='__main__':
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     result_img_save_path='./result_talking/siyang'
     img_path='/homes/zs003/test_images/siyang.png'#siyang.png, superv.jpg
+    process_emotion=True
     #load audio
     #audio to text
     # audio_file="audio.mp3"
@@ -198,6 +199,8 @@ if __name__=='__main__':
             for res_frame in recon:
                 res_frame_list.append(res_frame)
                 # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
+        if process_emotion:
+            return res_frame_list
         print("pad talking image to original video")
         pdb.set_trace()
         for i, res_frame in enumerate(tqdm(res_frame_list)):
