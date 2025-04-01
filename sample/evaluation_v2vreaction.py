@@ -337,7 +337,7 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
 
 from openai import OpenAI
 def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32:
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     pdb.set_trace()
     for step,clip_generated in enumerate(input_latent):
 
