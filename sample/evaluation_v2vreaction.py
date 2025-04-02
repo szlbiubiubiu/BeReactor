@@ -1280,7 +1280,7 @@ def main(args):
         dim_out=out_samples.shape
         all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
                     emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device)
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         pdb.set_trace()
         # for batch_index in range(len(out_samples)):
         #     batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
