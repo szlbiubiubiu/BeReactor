@@ -694,7 +694,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
         # feats = feats.view(b,v,-1)
         if len(generated_listener.shape)==5:
-            id_feats=id_feats.view(b,v,-1)
+            id_feats=id_feats.reshape(b,v,-1)
 
 
             

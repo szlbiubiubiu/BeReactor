@@ -690,7 +690,7 @@ class DiffusionVideoAutoencoder(nn.Module):
     def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
         # pdb.set_trace()
         id=generated_listener
-        if len(id)==5:
+        if len(id.shape)==5:
             b,v,c,w,h=id.shape
             # b,v,c_l,w_l,h_l=lnd.shape
 
@@ -705,7 +705,8 @@ class DiffusionVideoAutoencoder(nn.Module):
         # fea
         # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
         # feats = feats.view(b,v,-1)
-        id_feats=id_feats.view(b,v,-1)
+        if len(id.shape)==5:
+            id_feats=id_feats.reshape(b,v,-1)
 
 
         
