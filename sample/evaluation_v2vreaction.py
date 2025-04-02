@@ -659,7 +659,8 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
     pdb.set_trace()
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
-        return res_frame_list[::]
+        out_images=res_frame_list[::interval_listener]
+        return out_images[:num_frame_sp]
     print("pad talking image to original video")
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
