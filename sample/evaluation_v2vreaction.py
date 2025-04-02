@@ -1289,6 +1289,7 @@ def main(args):
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
             pdb.set_trace()
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
         # print(result["text"])
