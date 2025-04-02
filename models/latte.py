@@ -678,6 +678,9 @@ class DiffusionVideoAutoencoder(nn.Module):
             # b,v,c_l,w_l,h_l=lnd.shape
 
             id=id.reshape(b*v,c,w,h)
+        elif len(id)==4:
+            b,c,w,h=id.shape
+            
         # b,v,c,w,h=id.shape
         # # b,v,c_l,w_l,h_l=lnd.shape
 
@@ -690,15 +693,19 @@ class DiffusionVideoAutoencoder(nn.Module):
         # fea
         # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
         # feats = feats.view(b,v,-1)
-        id_feats=id_feats.view(b,v,-1)
+        if len(id)==5:
+            id_feats=id_feats.view(b,v,-1)
 
 
-        
+            
 
-        # if len(feats.shape)==3:
-        #     feats=torch.nn.functional.avg_pool2d(feats, (feats.shape[1], 1), stride=(feats.shape[1], 1)).squeeze()
-        if id_feats is not None:
-            id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1)).squeeze()
+            # if len(feats.shape)==3:
+            #     feats=torch.nn.functional.avg_pool2d(feats, (feats.shape[1], 1), stride=(feats.shape[1], 1)).squeeze()
+            if id_feats is not None:
+                id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1)).squeeze()
+        elif len(id)==4:
+                id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[0], 1), stride=(id_feats.shape[0], 1)).squeeze()
+
         # if return_emo:
         # pdb.set_trace()
         # self.emo_net.eval()
