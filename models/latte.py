@@ -687,7 +687,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # id=id.reshape(b*v,c,w,h)
         # lnd=lnd.view(b*v,c_l,w_l,h_l)
 
-        # pdb.set_trace()
+        pdb.set_trace()
         id_feats = self.idnet(id)  # [B, 512]
         # lnd_feats = self.lndnet(id) # [B, 102]
         # fea
