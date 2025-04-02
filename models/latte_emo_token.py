@@ -690,10 +690,13 @@ class DiffusionVideoAutoencoder(nn.Module):
     def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
         # pdb.set_trace()
         id=generated_listener
-        b,v,c,w,h=id.shape
-        # b,v,c_l,w_l,h_l=lnd.shape
+        if len(id)==5:
+            b,v,c,w,h=id.shape
+            # b,v,c_l,w_l,h_l=lnd.shape
 
-        id=id.reshape(b*v,c,w,h)
+            id=id.reshape(b*v,c,w,h)
+        
+
         # lnd=lnd.view(b*v,c_l,w_l,h_l)
 
         # pdb.set_trace()
