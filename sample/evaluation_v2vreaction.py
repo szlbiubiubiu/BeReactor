@@ -1277,13 +1277,16 @@ def main(args):
         all_face_images=[]
         #can consider do not use the decode of vae
         dim_out=out_samples.shape
-        for batch_index in range(len(out_samples)):
-            batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
+        all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
                     emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
-            # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
-            #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
-            all_face_images+=batched_faces
-            pdb.set_trace()
+        pdb.set_trace()
+        # for batch_index in range(len(out_samples)):
+        #     batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
+        #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
+        #     # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
+        #     #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
+        #     all_face_images+=batched_faces
+        #     pdb.set_trace()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
         # print(result["text"])
