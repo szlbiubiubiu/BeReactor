@@ -335,7 +335,76 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
                     au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').cuda()
 
 
+
 from openai import OpenAI
+import openai
+def evaluate_LLM(dialogue: str):
+# def evaluate_dialogue_realism(dialogue: str) -> dict:
+    """
+    Evaluates the realism of a dialogue using an LLM with chain-of-thought prompting.
+    
+    Args:
+        dialogue (str): The dialogue text to evaluate.
+    
+    Returns:
+        dict: A dictionary containing the chain-of-thought reasoning and final realism score.
+    """
+    # Construct a prompt with clear instructions and examples.
+    prompt = (
+        "You are a dialogue evaluation expert. Your task is to assess the realism of a given dialogue. "
+        "Realism includes factors such as coherence, natural language usage, contextual relevance, and emotional nuance. "
+        "Please follow these steps:\n\n"
+        "1. Analyze the dialogue text and explain step-by-step your reasoning regarding its realism. "
+        "Consider the flow, tone, and whether it sounds like a human conversation.\n"
+        "2. Based on your analysis, provide a final realism score on a scale from 1 (not realistic) to 5 (highly realistic).\n\n"
+        "Dialogue:\n"
+        f"'''{dialogue}'''\n\n"
+        "Please output your answer in JSON format as follows:\n"
+        "{\n"
+        '  "chain_of_thought": "Your step-by-step reasoning here...",\n'
+        '  "realism_score": X\n'
+        "}\n"
+    )
+    client = OpenAI(
+    # defaults to os.environ.get("OPENAI_API_KEY")
+    api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa",
+    base_url="https://api.chatanywhere.tech/v1"
+    # base_url="https://api.chatanywhere.org/v1"
+    )
+    response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # or your preferred model
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2,  # lower temperature for more deterministic responses
+        max_tokens=500,
+        n=1,
+        stop=None,
+        )
+    # # Call the ChatCompletion endpoint with a chain-of-thought prompt
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-4",  # or your preferred model
+    #     messages=[
+    #         {"role": "system", "content": "You are a helpful assistant."},
+    #         {"role": "user", "content": prompt}
+    #     ],
+    #     temperature=0.2,  # lower temperature for more deterministic responses
+    #     max_tokens=500,
+    #     n=1,
+    #     stop=None,
+    # )
+    pdb.set_trace()
+    # Parse the response content (assuming the output is valid JSON)
+    answer = response.choices[0].message.content.strip()
+    try:
+        import json
+        result = json.loads(answer)
+    except json.JSONDecodeError:
+        # If JSON parsing fails, return the raw answer
+        result = {"raw_output": answer}
+    
+    return result
 def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     pdb.set_trace()
@@ -433,7 +502,11 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
         current_text=response.choices[0].message.content.split('\n</think>\n\n')[1]
         all_text=all_text+current_text
         print(current_text)
-    
+    #add final text
+    chat.append(
+            {"role": "Assistant", "content": current_text})
+    score=evaluate_LLM(chat)
+    pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
     # for i in range(len(sentences)):
@@ -1160,6 +1233,8 @@ def main(args):
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     for step, video_data in enumerate(loader):
+        if step>0:
+            break
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
