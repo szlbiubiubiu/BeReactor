@@ -459,6 +459,7 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
         api_key=openai_api_key,
         base_url=openai_api_base,
     )
+    dialogue=[]
     for i in range(len(sentences)):
         if i==0:
             chat = [
@@ -479,6 +480,10 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
                         +'. Remove the emotion number in your reply.)'}
                 ]
+            dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
+            +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
+            
+            {"role": "user", "content": sentences[0]}]
             a=1
         else:
             # chat=response[0]['generated_text']
@@ -492,6 +497,9 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
                         +'. Remove the emotion number in your reply.)'}#+". please reply within 10 words"}
             )
+            dialogue.append(
+            {"role": "Assistant", "content": current_text})
+            dialogue.append({"role": "user", "content": sentences[i]})
         
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
@@ -505,7 +513,7 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
     #add final text
     chat.append(
             {"role": "Assistant", "content": current_text})
-    score=evaluate_LLM(chat)
+    score=evaluate_LLM(dialogue)
     pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
