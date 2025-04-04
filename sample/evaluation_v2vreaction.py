@@ -390,12 +390,16 @@ def evaluate_LLM(dialogue: str):
         "1. Analyze the dialogue text and explain step-by-step your reasoning regarding its realism. "
         "Consider the flow, tone, and whether it sounds like a human conversation.\n"
         "2. Based on your analysis, provide a final realism score on a scale from 1 (not realistic) to 5 (highly realistic).\n\n"
+        "3. Based on your analysis, provide a sentiment analysis by choosing from 'Neutral, Happy, Sad, Surprise, Fear, Disgust, Anger, Contempt', and give valence and arousal score.\n"
         "Dialogue:\n"
         f"'''{dialogue}'''\n\n"
         "Please output your answer in JSON format as follows:\n"
         "{\n"
         '  "chain_of_thought": "Your step-by-step reasoning here...",\n'
         '  "realism_score": X\n'
+        '  "sentiment analysis": X\n'
+        '  "valence_score": X\n'
+        '  "arousal_score": X\n'
         "}\n"
     )
     client = OpenAI(
@@ -564,7 +568,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     chat.append(
             {"role": "Assistant", "content": current_text})
     score=evaluate_LLM(dialogue)
-    
+    # all_text
+    bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
+    rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
+    bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
     pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
