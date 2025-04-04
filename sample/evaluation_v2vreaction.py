@@ -357,7 +357,8 @@ def calculate_bleu_batch(references, candidates):
 
 # Function to calculate ROUGE for multiple chats
 def calculate_rouge_batch(references, candidates):
-    scorer = rouge_scorer.RougeScorer(['rouge-1', 'rouge-2', 'rouge-l'], use_stemmer=True)
+    # scorer = rouge_scorer.RougeScorer(['rouge-1', 'rouge-2', 'rouge-l'], use_stemmer=True)
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     rouge_list = []
     for ref, cand in zip(references, candidates):
         scores = scorer.score(ref, cand)
