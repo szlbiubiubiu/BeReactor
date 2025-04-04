@@ -467,12 +467,12 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     result = whisper_model.transcribe(audio_file)
     print(result["text"])
     
-    sentences=result["text"].split('.')
+    sentences=result["text"]#.split('.')
 
     listener_result = whisper_model.transcribe(listener_audio_file)#audio_file,listener_audio_path
     print(result["text"])
         
-    listener_reference_sentences=listener_result["text"].split('.')
+    listener_reference_sentences=listener_result["text"]#.split('.')
 
     pdb.set_trace()
     bleu_scores = calculate_bleu_batch(listener_reference_sentences, sentences)
