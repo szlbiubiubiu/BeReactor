@@ -564,8 +564,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     chat.append(
             {"role": "Assistant", "content": current_text})
     score=evaluate_LLM(dialogue)
-    bleu=evaluate_bleu(dialogue,listener_reference_sentences)
-    bleu=evaluate_bleu(dialogue,listener_reference_sentences)
+    
     pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
