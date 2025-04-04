@@ -443,7 +443,7 @@ def evaluate_LLM(dialogue: str):
     #     result = {"raw_output": answer}
     
     return score
-def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
+def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
@@ -469,7 +469,7 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
     
     sentences=result["text"].split('.')
 
-    listener_result = whisper_model.transcribe(audio_file)#audio_file,listener_audio_path
+    listener_result = whisper_model.transcribe(listener_audio_file)#audio_file,listener_audio_path
     print(result["text"])
         
     listener_reference_sentences=listener_result["text"].split('.')
@@ -1184,7 +1184,7 @@ def main(args):
     # device = torch.device("cuda", 0)
     clip_size=32 #64
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
-    listener_audio_file=''
+    listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
     # pdb.set_trace()
     print('check test/val matrix..')
@@ -1418,7 +1418,7 @@ def main(args):
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
-            batched_faces=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
+            batched_faces=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
                     emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
