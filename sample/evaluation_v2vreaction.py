@@ -76,6 +76,7 @@ import cv2
 from tqdm import tqdm
 import copy
 import torch.nn.functional as F
+import re
 #it is single forward function
 
 
@@ -338,8 +339,38 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
 
 from openai import OpenAI
 import openai
+
+import nltk
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from rouge_score import rouge_scorer
+import bert_score
+
+# Function to calculate BLEU for multiple chats
+def calculate_bleu_batch(references, candidates):
+    smoothie = SmoothingFunction().method4
+    bleu_scores = []
+    for ref, cand in zip(references, candidates):
+        score = sentence_bleu([nltk.word_tokenize(ref)], nltk.word_tokenize(cand), smoothing_function=smoothie)
+        bleu_scores.append(score)
+    return bleu_scores
+
+# Function to calculate ROUGE for multiple chats
+def calculate_rouge_batch(references, candidates):
+    scorer = rouge_scorer.RougeScorer(['rouge-1', 'rouge-2', 'rouge-l'], use_stemmer=True)
+    rouge_list = []
+    for ref, cand in zip(references, candidates):
+        scores = scorer.score(ref, cand)
+        rouge_list.append(scores)
+    return rouge_list
+
+# Function to calculate BERTScore for multiple chats
+def calculate_bertscore_batch(references, candidates):
+    P, R, F1 = bert_score.score(candidates, references, lang="en")
+    return F1.tolist()  # Return list of F1 scores for each pair
+
+# def eva_METEOR(dialogue, listener_audio):
+#     reference=dialogue
 def evaluate_LLM(dialogue: str):
-# def evaluate_dialogue_realism(dialogue: str) -> dict:
     """
     Evaluates the realism of a dialogue using an LLM with chain-of-thought prompting.
     
@@ -397,14 +428,19 @@ def evaluate_LLM(dialogue: str):
     pdb.set_trace()
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
-    try:
-        import json
-        result = json.loads(answer)
-    except json.JSONDecodeError:
-        # If JSON parsing fails, return the raw answer
-        result = {"raw_output": answer}
     
-    return result
+    numbers = re.findall(r'\d+', answer.split('\n')[-2])
+    score = [int(num) for num in numbers]
+    if len(score)==1:
+        score=score[0]
+    # try:
+    #     import json
+    #     result = json.loads(answer)
+    # except json.JSONDecodeError:
+    #     # If JSON parsing fails, return the raw answer
+    #     result = {"raw_output": answer}
+    
+    return score
 def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     pdb.set_trace()
@@ -430,6 +466,18 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
     print(result["text"])
     
     sentences=result["text"].split('.')
+
+    listener_result = whisper_model.transcribe(audio_file)#audio_file,listener_audio_path
+    print(result["text"])
+        
+    listener_reference_sentences=listener_result["text"].split('.')
+
+    pdb.set_trace()
+    bleu_scores = calculate_bleu_batch(listener_reference_sentences, sentences)
+    rouge_scores = calculate_rouge_batch(listener_reference_sentences, sentences)
+    bert_scores = calculate_bertscore_batch(listener_reference_sentences, sentences)
+
+
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
@@ -514,6 +562,8 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
     chat.append(
             {"role": "Assistant", "content": current_text})
     score=evaluate_LLM(dialogue)
+    bleu=evaluate_bleu(dialogue,listener_reference_sentences)
+    bleu=evaluate_bleu(dialogue,listener_reference_sentences)
     pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
@@ -1132,7 +1182,7 @@ def main(args):
     # device = torch.device("cuda", 0)
     clip_size=32 #64
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
-
+    listener_audio_file=''
     #
     # pdb.set_trace()
     print('check test/val matrix..')
