@@ -579,11 +579,18 @@ class ReactionDataset_readvideo(data.Dataset):
 
         # ========================= Load Speaker audio clip (listener audio is NEVER needed) ==========================
         listener_audio_clip, speaker_audio_clip = 0, 0
+        speaker_audio_path,listener_audio_path=0, 0
+
         if self.load_audio:
             speaker_audio_path = data[f'{speaker_prefix}_audio_path']
             speaker_audio_clip = extract_audio_features(speaker_audio_path, self._fps, total_length)
             speaker_audio_clip = speaker_audio_clip[cp:cp + self._clip_length*self.interval:self.interval]
-
+            
+            listener_audio_path = data[f'{listener_prefix}_audio_path']
+            listener_audio_clip = extract_audio_features(listener_audio_path, self._fps, total_length)
+            listener_audio_clip = listener_audio_clip[cp:cp + self._clip_length*self.interval:self.interval]
+            
+            # listener_audio_path
 
         # ========================= Load Speaker & Listener emotion ==========================
         listener_emotion, speaker_emotion = 0, 0
@@ -638,8 +645,10 @@ class ReactionDataset_readvideo(data.Dataset):
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
         # pdb.set_trace()
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
-                                'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_emotion': listener_emotion,
-                                'listener_3dmm': listener_3dmm,'listener_reference': listener_reference,
+                                'speaker_3dmm': speaker_3dmm,'speaker_audio_path':speaker_audio_path,
+                                'listener_video_clip': listener_video_clip,'listener_emotion': listener_emotion,
+                                'listener_3dmm': listener_3dmm,'listener_audio_path':listener_audio_path,
+                                'listener_reference': listener_reference,
                                 'speaker_emotion_path':speaker_emotion_path,'listener_emotion_path':listener_emotion_path,
                                 'cp':[cp,cp + self._clip_length*self.interval]}
     def __len__(self):
