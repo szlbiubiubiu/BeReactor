@@ -1427,7 +1427,7 @@ def main(args):
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
             batched_faces=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
-            whisper_model,audio_processor,video_data['speaker_audio_path'],video_data['listener_audio_path'],
+            whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
                     emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
