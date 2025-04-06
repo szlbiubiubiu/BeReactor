@@ -114,7 +114,7 @@ def compute_FRC(args, pred, listener_em, val_test='val'):
         speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_val.npy'))
     else:
         speaker_neighbour_matrix = np.load(os.path.join(args.dataset_path, 'neighbour_emotion_test.npy'))
-
+    #shape 1612
     all_FRC_list = []
     for i in range(pred.shape[1]):
         FRC_list = []
