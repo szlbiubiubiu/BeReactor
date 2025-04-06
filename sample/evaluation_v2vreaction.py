@@ -447,7 +447,8 @@ def evaluate_LLM(dialogue: str):
     #     result = {"raw_output": answer}
     
     return score
-def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
+def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
+    speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
@@ -468,20 +469,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         #     arousal=torch.cat((arousal,arousal_sing),dim=0)
 
     pdb.set_trace()
-    result = whisper_model.transcribe(audio_file)
+    result = whisper_model.transcribe(speaker_audio_path)
     print(result["text"])
     
     sentences=result["text"].split('.')
 
-    listener_result = whisper_model.transcribe(listener_audio_file)#audio_file,listener_audio_path
+    listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
     print(result["text"])
         
     listener_reference_sentences=listener_result["text"].split('.')
 
-    pdb.set_trace()
-    bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
-    rouge_scores = calculate_rouge_batch([listener_result["text"]], [result["text"]])
-    bert_scores = calculate_bertscore_batch([listener_result["text"]], [result["text"]])
+    # pdb.set_trace()
+    # bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
+    # rouge_scores = calculate_rouge_batch([listener_result["text"]], [result["text"]])
+    # bert_scores = calculate_bertscore_batch([listener_result["text"]], [result["text"]])
 
 
 
@@ -1304,7 +1305,7 @@ def main(args):
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
-        pdb.set_trace()
+        # pdb.set_trace()
         torch.manual_seed(0)
         out_samples=None
         # pdb.set_trace()
@@ -1425,7 +1426,8 @@ def main(args):
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
-            batched_faces=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
+            batched_faces=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
+            whisper_model,audio_processor,video_data['speaker_audio_path'],video_data['listener_audio_path'],
                     emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
