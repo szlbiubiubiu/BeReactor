@@ -1064,7 +1064,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
     def __len__(self):
         return self._len
 
-def get_dataset(conf, split, load_audio=False, load_video_s=False, load_video_l=False, load_emotion_s=False,
+def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=False, load_emotion_s=False,
                    load_emotion_l=False, load_3dmm_s=False, load_3dmm_l=False, load_ref=False, repeat_mirrored=True,
                    parallel=False,shuffle=True,drop_last=True):
     assert split in ["train", "val", "test"], "split must be in [train, val, test]"
