@@ -1083,6 +1083,7 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
     #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+    pdb.set_trace()
     dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
                               clip_length=conf.clip_length,
                               load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
