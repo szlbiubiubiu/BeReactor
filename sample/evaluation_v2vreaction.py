@@ -1193,7 +1193,7 @@ def main(args):
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
-    # pdb.set_trace()
+    pdb.set_trace()
     print('check test/val matrix..')
     # if val_test == 'val':
     args.dataset_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/val_test_matrix'
