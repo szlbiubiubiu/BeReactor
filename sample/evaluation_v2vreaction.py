@@ -390,7 +390,7 @@ def evaluate_LLM(dialogue: str):
         "1. Analyze the dialogue text and explain step-by-step your reasoning regarding its realism. "
         "Consider the flow, tone, and whether it sounds like a human conversation.\n"
         "2. Based on your analysis, provide a final realism score on a scale from 1 (not realistic) to 5 (highly realistic).\n\n"
-        "3. Based on your analysis, provide a sentiment analysis by choosing number from 'Neutral(0), Happy(1), Sad(2), Surprise(3), Fear(4), Disgust(5), Anger(6), Contempt(7)', and give valence and arousal score.\n"
+        "3. Based on your analysis, provide a sentiment analysis by choosing number from 'Neutral(0), Happy(1), Sad(2), Surprise(3), Fear(4), Disgust(5), Anger(6), Contempt(7)', and give valence and arousal score(both range from 0-1).\n"
         "Dialogue:\n"
         f"'''{dialogue}'''\n\n"
         "Please output your answer in JSON format as follows:\n"
