@@ -390,7 +390,7 @@ def evaluate_LLM(dialogue: str):
         "1. Analyze the dialogue text and explain step-by-step your reasoning regarding its realism. "
         "Consider the flow, tone, and whether it sounds like a human conversation.\n"
         "2. Based on your analysis, provide a final realism score on a scale from 1 (not realistic) to 5 (highly realistic).\n\n"
-        "3. Based on your analysis, provide a sentiment analysis by providing score of each element from 'Neutral, Happy, Sad, Surprise, Fear, Disgust, Anger, Contempt', and give valence and arousal score.\n"
+        "3. Based on your analysis, provide a sentiment analysis by providing probability of each element from 'Neutral, Happy, Sad, Surprise, Fear, Disgust, Anger, Contempt', and give valence and arousal score.\n"
         "Dialogue:\n"
         f"'''{dialogue}'''\n\n"
         "Please output your answer in JSON format as follows:\n"
@@ -474,10 +474,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     sentences=result["text"].split('.')
 
-    listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
-    print(result["text"])
+    # listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
+    # print(result["text"])
         
-    listener_reference_sentences=listener_result["text"].split('.')
+    # listener_reference_sentences=listener_result["text"].split('.')
 
     # pdb.set_trace()
     # bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
@@ -1193,7 +1193,7 @@ def main(args):
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
-    pdb.set_trace()
+    # pdb.set_trace()
     print('check test/val matrix..')
     # if val_test == 'val':
     args.dataset_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/val_test_matrix'
