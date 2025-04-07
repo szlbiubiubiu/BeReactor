@@ -498,7 +498,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
-    conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words\n"
+    conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words(at least 5 words)\n"
     # for i in range(1):
     #     if i==0:
     #         chat = [
