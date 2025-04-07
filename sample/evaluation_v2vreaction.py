@@ -435,10 +435,20 @@ def evaluate_LLM(dialogue: str):
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
     
-    numbers = re.findall(r'\d+', answer.split('\n')[-2])
-    score = [int(num) for num in numbers]
-    if len(score)==1:
-        score=score[0]
+    arousal_score = re.findall(r'\d+', answer.split('\n')[-2])
+    valence_score = re.findall(r'\d+', answer.split('\n')[-3])
+    sentiment_score = re.findall(r'\d+', answer.split('\n')[-4])
+    realism_score = re.findall(r'\d+', answer.split('\n')[-5])
+    # numbers = re.findall(r'\d+', answer.split('\n')[-2])
+    arousal_score = [int(num) for num in arousal_score]
+    valence_score = [int(num) for num in valence_score]
+    sentiment_score = [int(num) for num in sentiment_score]
+    realism_score = [int(num) for num in realism_score]
+    if len(realism_score)==1:
+        arousal_score=arousal_score[0]
+        valence_score=valence_score[0]
+        sentiment_score=sentiment_score[0]
+        realism_score=realism_score[0]
     # try:
     #     import json
     #     result = json.loads(answer)
@@ -446,7 +456,7 @@ def evaluate_LLM(dialogue: str):
     #     # If JSON parsing fails, return the raw answer
     #     result = {"raw_output": answer}
     
-    return score
+    return realism_score,sentiment_score,valence_score,arousal_score
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
