@@ -1473,6 +1473,7 @@ def main(args):
             all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
             # all_score['all_valence_score']+=scores['valence_score']
             # all_score['all_arousal_score']+=scores['arousal_score']
+            pdb.set_trace()
             all_score['all_bleu_scores']+=scores['bleu_scores']
             all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
