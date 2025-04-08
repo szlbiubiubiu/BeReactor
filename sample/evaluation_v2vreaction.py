@@ -435,20 +435,26 @@ def evaluate_LLM(dialogue: str):
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
     
-    arousal_score = re.findall(r'\d+', answer.split('\n')[-2])
-    valence_score = re.findall(r'\d+', answer.split('\n')[-3])
+    arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
+    valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-3])
     sentiment_score = re.findall(r'\d+', answer.split('\n')[-4])
     realism_score = re.findall(r'\d+', answer.split('\n')[-5])
     # numbers = re.findall(r'\d+', answer.split('\n')[-2])
-    arousal_score = [int(num) for num in arousal_score]
-    valence_score = [int(num) for num in valence_score]
+    arousal_score = [float(num) for num in arousal_score]
+    valence_score = [float(num) for num in valence_score]
     sentiment_score = [int(num) for num in sentiment_score]
+    
     realism_score = [int(num) for num in realism_score]
     if len(realism_score)==1:
         arousal_score=arousal_score[0]
         valence_score=valence_score[0]
         sentiment_score=sentiment_score[0]
         realism_score=realism_score[0]
+
+    sentiment_emb=F.one_hot(sentiment_score,num_classes=10)
+    sentiment_emb[-2]=valence_score
+    sentiment_emb[-1]=arousal_score
+    sentiment_emb=torch.unsqueeze(sentiment_emb,dim=0)
     # try:
     #     import json
     #     result = json.loads(answer)
@@ -456,7 +462,7 @@ def evaluate_LLM(dialogue: str):
     #     # If JSON parsing fails, return the raw answer
     #     result = {"raw_output": answer}
     
-    return realism_score,sentiment_score,valence_score,arousal_score
+    return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
@@ -516,7 +522,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #     current_text=response[0]['generated_text'][-1]['content']
     #     all_text=all_text+current_text
     #     print(response[0]['generated_text'][-1]['content'])
-    pdb.set_trace()
+    # pdb.set_trace()
     openai_api_key = "None"
     openai_api_base = "http://0.0.0.0:8000/v1"
 
@@ -578,11 +584,19 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #add final text
     chat.append(
             {"role": "Assistant", "content": current_text})
-    score=evaluate_LLM(dialogue)
+    realism_score,sentiment_emb=evaluate_LLM(dialogue)
     # all_text
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
+    evaluation_score=dict()
+    evaluation_score['realism_score']=realism_score
+    evaluation_score['sentiment_emb']=sentiment_emb
+    # evaluation_score['valence_score']=valence_score
+    # evaluation_score['arousal_score']=arousal_score
+    evaluation_score['bleu_scores']=bleu_scores
+    evaluation_score['rouge_scores']=rouge_scores
+    evaluation_score['bert_scores']=bert_scores
     pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
@@ -810,7 +824,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
         out_images=res_frame_list[::interval_listener]
-        return out_images[:num_frame_sp]
+        return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
@@ -850,7 +864,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
 
-    pdb.set_trace()
+    # pdb.set_trace()
     #get emotion from images
     id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
     expression=emo_fea['expression']
@@ -859,7 +873,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     arousal=emo_fea['arousal']
 
 
-    pdb.set_trace()
+    # pdb.set_trace()
     result = whisper_model.transcribe(audio_file)
     print(result["text"])
     
@@ -1307,8 +1321,21 @@ def main(args):
     listener_emotion_gt_list=[]
     speaker_emotion_gt_list=[]
     all_listener_emotion_pred_list=[]
+    all_score=dict()
+    all_score['']
+
+    all_score['all_realism_score']=0
+    all_score['all_sentiment_score']=0
+    all_score['all_valence_score']=0
+    all_score['all_arousal_score']=0
+    all_score['all_bleu_scores']=0
+    all_score['all_rouge_scores']=0
+    all_score['all_bert_scores']=0
+
+    all_score['all_sentiment_emb']=torch.zeros([len(dataset),10])
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
+    # double_count=0
     for step, video_data in enumerate(loader):
         if step>0:
             break
@@ -1436,12 +1463,19 @@ def main(args):
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
-            batched_faces=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
+            batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
                     emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
+            all_score['all_realism_score']+=scores['realism_score']
+            all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
+            # all_score['all_valence_score']+=scores['valence_score']
+            # all_score['all_arousal_score']+=scores['arousal_score']
+            all_score['all_bleu_scores']+=scores['bleu_scores']
+            all_score['all_rouge_scores']+=scores['rouge_scores']
+            all_score['all_bert_scores']+=scores['bert_scores']
             pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
@@ -1513,7 +1547,11 @@ def main(args):
     print("-----------------Evaluating Metric-----------------")
 
     # p = args.threads
-    
+    # for key,value in all_score.items():
+    #     print(key,value/len(listener_emotion_pred))
+    pdb.set_trace()
+    language_mse=F.mse(all_score['all_sentiment_emb'],listener_emotion_gt)#check listener_emotion_gt.shape
+    print('language_mse',language_mse)
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
     TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     
@@ -1526,7 +1564,8 @@ def main(args):
     FRDvs = compute_FRDvs(all_listener_emotion_pred.cpu())
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
-        
+    # print('TLCC',TLCC)
+    print("TLCC %.2f; FRC %.2f;FRD %.2f;\n FRDvs %.2f;FRVar %.2f;smse %.2f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
 
 
 if __name__ == "__main__":
