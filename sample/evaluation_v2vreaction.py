@@ -1322,7 +1322,7 @@ def main(args):
     speaker_emotion_gt_list=[]
     all_listener_emotion_pred_list=[]
     all_score=dict()
-    all_score['']
+    # all_score['']
 
     all_score['all_realism_score']=0
     all_score['all_sentiment_score']=0
