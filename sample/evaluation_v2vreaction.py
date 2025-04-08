@@ -1475,7 +1475,7 @@ def main(args):
             # all_score['all_arousal_score']+=scores['arousal_score']
             pdb.set_trace()
             all_score['all_bleu_scores']+=scores['bleu_scores']
-            all_score['all_rouge_scores']+=scores['rouge_scores']
+            # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
             pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
