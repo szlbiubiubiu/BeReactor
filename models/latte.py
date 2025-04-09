@@ -705,7 +705,7 @@ class DiffusionVideoAutoencoder(nn.Module):
             if id_feats is not None:
                 id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1)).squeeze()
         elif len(generated_listener.shape)==4:
-            pdb.set_trace()
+            # pdb.set_trace()
             if id_feats is not None:
                 id_feats = id_feats.mean(dim=0)
                 # torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[0], 1), stride=(id_feats.shape[0], 1)).squeeze()

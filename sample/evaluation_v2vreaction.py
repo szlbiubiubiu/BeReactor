@@ -1101,7 +1101,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
     laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
-    pdb.set_trace()
+    # pdb.set_trace()
     vae_encode_latents_new=[]
     for single_latent in original_image_cycle:
         repeated_latent=laten_repeat * [single_latent]
@@ -1334,8 +1334,8 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     # double_count=0
     for step, video_data in enumerate(loader):
-        if step>0:
-            break
+        # if step>0:
+        #     break
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
@@ -1499,7 +1499,7 @@ def main(args):
         # print('save path {}'.format(args.save_video_path))
         # pdb.set_trace()
 
-        pdb.set_trace()
+        # pdb.set_trace()
         #get emo feature
         id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
@@ -1531,7 +1531,7 @@ def main(args):
         speaker_emotion_gt_list.append(speaker_emo)
         
 
-    pdb.set_trace()
+    # pdb.set_trace()
     listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
     listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
