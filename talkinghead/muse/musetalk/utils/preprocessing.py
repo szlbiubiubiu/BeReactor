@@ -100,7 +100,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
     else:
         frames=img_list
         batch_size_fa = 1
-        pdb.set_trace()
+        # pdb.set_trace()
         # if isinstance(frames[0], torch.Tensor):
         #     batches = [frames[i:i + batch_size_fa].cpu().numpy() for i in range(0, len(frames), batch_size_fa)]
         # else:

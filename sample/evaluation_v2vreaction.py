@@ -447,7 +447,7 @@ def evaluate_LLM(dialogue: str):
         valence_score=valence_score[0]
         sentiment_score=sentiment_score[0]
         realism_score=realism_score[0]
-    pdb.set_trace()
+    # pdb.set_trace()
     sentiment_emb=F.one_hot(torch.tensor(sentiment_score),num_classes=10)
     sentiment_emb[-2]=valence_score
     sentiment_emb[-1]=arousal_score
@@ -594,7 +594,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     evaluation_score['bleu_scores']=bleu_scores[0]
     # evaluation_score['rouge_scores']=rouge_scores
     evaluation_score['bert_scores']=bert_scores[0]
-    pdb.set_trace()
+    # pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
     # for i in range(len(sentences)):
@@ -712,7 +712,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # input_latent_list=[]
     # input_latent_list.append(latents)
 
-    pdb.set_trace()
+    # pdb.set_trace()
     # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
     # input_img_list[sample]
@@ -721,7 +721,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for bbox, frame in zip(coord_list, frame_list):
         frame=np.squeeze(frame)
         if bbox == coord_placeholder:
@@ -734,7 +734,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
         input_latent_list.append(latents)
-    pdb.set_trace()
+    # pdb.set_trace()
     # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # latents = vae.get_latents_for_unet(crop_frame)
     # input_latent_list=[]
@@ -755,11 +755,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #----
     #use image----
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    pdb.set_trace()
+    # pdb.set_trace()
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
     laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
-    pdb.set_trace()
+    # pdb.set_trace()
     vae_encode_latents_new=[]
     for single_latent in original_image_cycle:
         repeated_latent=laten_repeat * [single_latent]
@@ -817,7 +817,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # return res_frame_list
 
 
-    pdb.set_trace()
+    # pdb.set_trace()
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
         out_images=res_frame_list[::interval_listener]
@@ -1470,11 +1470,11 @@ def main(args):
             all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
             # all_score['all_valence_score']+=scores['valence_score']
             # all_score['all_arousal_score']+=scores['arousal_score']
-            pdb.set_trace()
+            # pdb.set_trace()
             all_score['all_bleu_scores']+=scores['bleu_scores']
             # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
-            pdb.set_trace()
+            # pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
