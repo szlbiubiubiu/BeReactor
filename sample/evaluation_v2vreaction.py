@@ -286,10 +286,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     feats=torch.nn.functional.avg_pool2d(feats, (feats.shape[1], 1), stride=(feats.shape[1], 1)).squeeze()
         if id_feats is not None:
             id_feats = torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[1], 1), stride=(id_feats.shape[1], 1)).squeeze()
-        # if return_emo:
-        # pdb.set_trace()
-        # self.emo_net.eval()
-        pdb.set_trace()
+        
         self.emo_net.eval()
         # self.au_net_DISFA.eval()
         # self.au_net_BP4D.eval()
@@ -431,7 +428,7 @@ def evaluate_LLM(dialogue: str):
     #     n=1,
     #     stop=None,
     # )
-    pdb.set_trace()
+    # pdb.set_trace()
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
     
@@ -466,7 +463,7 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
-    pdb.set_trace()
+    # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
     id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
@@ -484,7 +481,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         #     valence=torch.cat((valence,valence_sing),dim=0)
         #     arousal=torch.cat((arousal,arousal_sing),dim=0)
 
-    pdb.set_trace()
+    # pdb.set_trace()
     result = whisper_model.transcribe(speaker_audio_path)
     print(result["text"])
     
