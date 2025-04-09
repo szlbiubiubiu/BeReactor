@@ -528,10 +528,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         base_url=openai_api_base,
     )
     dialogue=[]
+    random_number=torch.randint(0, 100, (1))
     for i in range(len(sentences)):
         if i==0:
             chat = [
-            {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
+            {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
             +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
             
             # {"role": "system", "content": 
@@ -572,6 +573,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
             messages=chat,
+            temperature=0.2,
         )
         # response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         # pdb.set_trace()
