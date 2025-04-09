@@ -1551,7 +1551,7 @@ def main(args):
     # for key,value in all_score.items():
     #     print(key,value/len(listener_emotion_pred))
     pdb.set_trace()
-    language_mse=F.mse(all_score['all_sentiment_emb'],listener_emotion_gt)#check listener_emotion_gt.shape
+    language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
     print('language_mse',language_mse)
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
     TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
