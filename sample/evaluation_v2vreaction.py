@@ -1557,10 +1557,19 @@ def main(args):
     TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     pdb.set_trace()
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-    FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
+    if len(all_listener_emotion_pred)<len(dataset):
+        repeat_times=len(dataset)//len(all_listener_emotion_pred)
+        fake_all_listener_emotion_pred=all_listener_emotion_pred.repeat(repeat_times,1,1,1)
+        fake_listener_emotion_gt=listener_emotion_gt.repeat(repeat_times,1,1)
+        FRC = compute_FRC(args, fake_all_listener_emotion_pred.cpu(), fake_listener_emotion_gt.cpu(), val_test='test')
 
-    # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-    FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
+        # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
+        FRD = compute_FRD(args, fake_all_listener_emotion_pred.cpu(), fake_listener_emotion_gt.cpu(), val_test='test')
+    else:
+        FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
+
+        # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
+        FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
     FRDvs = compute_FRDvs(all_listener_emotion_pred.cpu())
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
