@@ -549,10 +549,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
                         +'. Remove the emotion number in your reply.)'}
                 ]
-            dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
-            +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
+            # dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
+            # +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
             
-            {"role": "user", "content": sentences[0]}]
+            # {"role": "user", "content": sentences[0]}]
             a=1
         else:
             # chat=response[0]['generated_text']
@@ -566,9 +566,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
                         +'. Remove the emotion number in your reply.)'}#+". please reply within 10 words"}
             )
-            dialogue.append(
-            {"role": "Assistant", "content": current_text})
-            dialogue.append({"role": "user", "content": sentences[i]})
+            # dialogue.append(
+            # {"role": "Assistant", "content": current_text})
+            # dialogue.append({"role": "user", "content": sentences[i]})
         
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
@@ -903,7 +903,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         if i==0:
             chat = [
             {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
-            +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
+            +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words( more than 5 words) in each reply"},
             
             # {"role": "system", "content": 
             # "Please reply with a tone of emotion level:\
