@@ -528,7 +528,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         base_url=openai_api_base,
     )
     dialogue=[]
-    random_number=torch.randint(0, 100, (1))
+    random_number=np.random.randint(low=0, high=100)
     for i in range(len(sentences)):
         if i==0:
             chat = [
