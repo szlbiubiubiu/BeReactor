@@ -76,7 +76,7 @@ def datagen_reaction(whisper_chunks,
             delay_frame=0):
     whisper_batch, latent_batch = [], []
     laten_repeat=len(whisper_chunks)//len(vae_encode_latents)
-    pdb.set_trace()
+    # pdb.set_trace()
     vae_encode_latents_new=[]
     for single_latent in vae_encode_latents:
         repeated_latent=laten_repeat * [single_latent]
