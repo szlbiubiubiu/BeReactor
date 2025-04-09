@@ -443,6 +443,7 @@ def evaluate_LLM(dialogue: str):
     
     realism_score = [int(num) for num in realism_score]
     if len(realism_score)==1:
+        pdb.set_trace()
         arousal_score=arousal_score[0]
         valence_score=valence_score[0]
         sentiment_score=sentiment_score[0]
