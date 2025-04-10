@@ -600,7 +600,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         if len(current_text)==1:
             current_tex=current_text[0]
         else:   
-            current_text=current_text[1]
+            current_text=current_text#[1]
         all_text=all_text+current_text
         print(current_text)
     #add final text
