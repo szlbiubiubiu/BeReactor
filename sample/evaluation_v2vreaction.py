@@ -1371,6 +1371,7 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     # double_count=0
     for step, video_data in enumerate(loader):
+        print('current step is:%d, batch_size is :%d', {step,batch_size})
         # if step>0:
         #     break
         # Skip steps until we reach the resumed step
