@@ -538,7 +538,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     random_number=np.random.randint(low=0, high=100)
     
     for i in range(len(sentences)):
-        if i>=6:
+        if i>=8:
             break
         if i==0:
             if len(sentences)!=1:
