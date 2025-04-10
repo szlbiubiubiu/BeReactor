@@ -586,7 +586,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                         +'. Remove the emotion number in your reply.)'},#+". please reply within 10 words"}
             # <| Assistant |><think>\n\n</think>\n\n
             # chat.append(
-            {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
+            # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
             )
             # dialogue.append(
             # {"role": "Assistant", "content": current_text})
@@ -602,9 +602,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # pdb.set_trace()
         current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
         if len(current_text)==1:
-            current_tex=current_text[0]
+            current_tex=current_text#[0]
         else:   
-            current_text=current_text#[1]
+            current_text=current_text[1]
         all_text=all_text+current_text
         print(current_text)
     #add final text
