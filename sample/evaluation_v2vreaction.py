@@ -592,23 +592,25 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             # {"role": "Assistant", "content": current_text})
             # dialogue.append({"role": "user", "content": sentences[i]})
         
-        response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-            messages=chat,
-            temperature=0.2,
-        )
-        pdb.set_trace()
-        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        # pdb.set_trace()
         
+        # pdb.set_trace()
+        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
+        #below is llama3
+        current_text=response.choices[0].message.content#.split('\n</think>\n\n')#[1]
+        # pdb.set_trace()
+
         # #deepseek with thinking tag
+        # response = client.chat.completions.create(
+        #     model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+        #     messages=chat,
+        #     temperature=0.2,
+        # )
         # current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
         # if len(current_text)==1:
         #     current_tex=current_text#[0]
         # else:   
         #     current_text=current_text[1]
-        #below is llama3
-        current_text=response.choices[0].message.content#.split('\n</think>\n\n')#[1]
+        
 
         all_text=all_text+current_text
         print(current_text)
