@@ -593,9 +593,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             # dialogue.append({"role": "user", "content": sentences[i]})
         
         
-        # pdb.set_trace()
+        
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         #below is llama3
+        pdb.set_trace()
         current_text=response.choices[0].message.content#.split('\n</think>\n\n')#[1]
         # pdb.set_trace()
 
