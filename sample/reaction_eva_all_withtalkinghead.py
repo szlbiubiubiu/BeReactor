@@ -419,9 +419,10 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
             model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
             messages=chat,
         )
-        # response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        # pdb.set_trace()
-        current_text=response.choices[0].message.content.split('\n</think>\n\n')[1]
+        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
+        pdb.set_trace()
+        current_text=response.choices[0].message.content.split('\n</think>\n\n')[1]#deepseek
+        current_text=response.choices[0].message.content#llama
         all_text=all_text+current_text
         print(current_text)
     
@@ -1075,10 +1076,10 @@ def main(args):
     ##LLM processing
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device_map="auto")
-    # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=1)
+    pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=1)
 
     ### deepseek
-    pipe = pipeline("text-generation", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", torch_dtype=torch.float16, device=1)
+    # pipe = pipeline("text-generation", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", torch_dtype=torch.float16, device=1)
     
     #initlize chat
     
