@@ -600,11 +600,16 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         pdb.set_trace()
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         # pdb.set_trace()
-        current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
-        if len(current_text)==1:
-            current_tex=current_text#[0]
-        else:   
-            current_text=current_text[1]
+        
+        # #deepseek with thinking tag
+        # current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
+        # if len(current_text)==1:
+        #     current_tex=current_text#[0]
+        # else:   
+        #     current_text=current_text[1]
+        #below is llama3
+        current_text=response.choices[0].message.content#.split('\n</think>\n\n')#[1]
+
         all_text=all_text+current_text
         print(current_text)
     #add final text
