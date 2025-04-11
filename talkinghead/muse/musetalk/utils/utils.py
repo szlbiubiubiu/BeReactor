@@ -87,6 +87,9 @@ def datagen_reaction(whisper_chunks,
     ##expand latent, repeat chanel-->stack on image
     # vae_encode_latents=einops.repeat(vae_encode_latents, 'b c h w ->  b (laten_repeat c)h w', repeat=laten_repeat)
     for i, w in enumerate(whisper_chunks):
+        if len(vae_encode_latents)==0:
+            pdb.set_trace()
+            a=1
         idx = (i+delay_frame)%len(vae_encode_latents)
         latent = vae_encode_latents[idx]
         whisper_batch.append(w)
