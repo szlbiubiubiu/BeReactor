@@ -830,9 +830,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     timesteps = torch.tensor([0], device=unet.device)
     # gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
-    if len(input_latent_list_cycle)==0:
-        pdb.set_trace()
-        a=1
+    # if len(input_latent_list_cycle)==0:
+    #     pdb.set_trace()
+    #     a=1
     gen = datagen_reaction(whisper_chunks,input_latent_list_cycle,batch_size)
     
     res_frame_list=[]
