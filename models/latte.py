@@ -719,8 +719,8 @@ class DiffusionVideoAutoencoder(nn.Module):
             if id_feats is not None:
                 id_feats = id_feats.mean(dim=0)
                 # torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[0], 1), stride=(id_feats.shape[0], 1)).squeeze()
-        if detect_face is not None:
-            
+        if detect_face == True:
+            pdb.set_trace()
             for index,frame in enumerate(id):
                     
                 detected_faces = self.sfd_detector.detect_from_image(frame)#[:, :, ::-1]) #BGR frame
