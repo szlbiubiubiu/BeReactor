@@ -166,7 +166,7 @@ class EmoNet(nn.Module):
         self.resolution = torch.nn.AdaptiveAvgPool2d((256, 256))
 
     def forward(self, x, reset_smoothing=False):
-        # pdb.set_trace()
+        pdb.set_trace()
         if x.shape[-1]!=256:
             
             x=self.resolution(x)

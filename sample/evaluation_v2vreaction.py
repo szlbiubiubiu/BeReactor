@@ -1552,7 +1552,7 @@ def main(args):
         # print('save path {}'.format(args.save_video_path))
         # pdb.set_trace()
 
-        # pdb.set_trace()
+        pdb.set_trace()
         #get emo feature
         id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
@@ -1626,6 +1626,12 @@ def main(args):
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
     # print('TLCC',TLCC)
     print("TLCC %.2f; FRC %.2f;FRD %.2f;\n FRDvs %.2f;FRVar %.2f;smse %.2f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
+
+    #save and load parameter
+    torch.save(all_listener_emotion_pred, "./emo_pred.pt")
+    torch.save(speaker_emotion_gt, "./emo_gt.pt")
+
+    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred.pt")
 
 
 if __name__ == "__main__":
