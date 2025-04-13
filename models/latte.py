@@ -28,6 +28,9 @@ from models.emo_fr_net.au_model import MEFL
 #     print(i)
 
 # the xformers lib allows less memory, faster training and inference
+from face_alignment.detection.sfd.sfd_detector import SFDDetector
+
+
 try:
     import xformers
     import xformers.ops
@@ -535,7 +538,8 @@ class ConvBlock(nn.Module):
         y = x.mean(dim=-1).mean(dim=-1).mean(dim=-1)
         return y
 class DiffusionVideoAutoencoder(nn.Module):
-    def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,au_file_path_bp4d=None,emotion_file_path=None):
+    def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,
+    au_file_path_bp4d=None,emotion_file_path=None, detect_face=True):
         super(DiffusionVideoAutoencoder, self).__init__()
         self.idnet = IDnet(id_file_path).requires_grad_(False)#don't have to modify resolution
         # self.idnet.eval()
@@ -563,10 +567,15 @@ class DiffusionVideoAutoencoder(nn.Module):
             # self.au_net_BP4D.eval()
         if emotion_file_path is not None:
             #input resolution is 256
+            pdb.set_trace()
             self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
             self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
             # self.emo_net.eval()
-    def forward(self, id,listener_ref=None, lnd=None, emo_cond=None, return_id_feats=False,return_emo=False,expression=False):
+        if detect_face is not None:
+            device = "cuda:0"
+            self.sfd_detector = SFDDetector(device)
+    def forward(self, id,listener_ref=None, lnd=None, emo_cond=None, return_id_feats=False,
+                return_emo=False,expression=False, detect_face=False):
         # pdb.set_trace()
         # if emo_cond is not None:
         #     listener_ref=emo_cond['listener_ref']
@@ -599,6 +608,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         video_input=id.permute(0,2,1,3,4)
         encode_fea=self.encode_video(video_input) #[b,128]
         # pdb.set_trace()
+        
         id_feats,emo_fea,au_disfa,au_bp4d=self.forward_listener(id)
         id=id.reshape(b*v,c,w,h)
         lnd=lnd.reshape(b*v,c_l,w_l,h_l)
@@ -670,7 +680,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # if return_id_feats:
         #     return feats, id_feats
         # return feats
-    def forward_listener(self, generated_listener,emo_cond=None,return_emo=False):
+    def forward_listener(self, generated_listener,emo_cond=None,return_emo=False,detect_face=False):
         # pdb.set_trace()
         id=generated_listener
         if len(generated_listener.shape)==5:
@@ -709,14 +719,14 @@ class DiffusionVideoAutoencoder(nn.Module):
             if id_feats is not None:
                 id_feats = id_feats.mean(dim=0)
                 # torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[0], 1), stride=(id_feats.shape[0], 1)).squeeze()
+        if detect_face is not None:
+            
+            for index,frame in enumerate(id):
+                    
+                detected_faces = self.sfd_detector.detect_from_image(frame)#[:, :, ::-1]) #BGR frame
+                id[index]=detected_faces
 
-        # if return_emo:
-        # pdb.set_trace()
-        # self.emo_net.eval()
-        # pdb.set_trace()
-        # self.emo_net.eval()
-        # self.au_net_DISFA.eval()
-        # self.au_net_BP4D.eval()
+        
         emo_fea=self.emo_net(id)
         
         # expression_soft=F.softmax(emo_fea,dim=1)

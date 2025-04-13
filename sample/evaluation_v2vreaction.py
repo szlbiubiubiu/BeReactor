@@ -1554,7 +1554,7 @@ def main(args):
 
         pdb.set_trace()
         #get emo feature
-        id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images)
+        id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)
         # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
