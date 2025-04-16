@@ -740,11 +740,11 @@ class DiffusionVideoAutoencoder(nn.Module):
                 # crop_frame = cv2.resize(cropped_face,(256,256),interpolation = cv2.INTER_LANCZOS4)
                 # id[index]=detected_faces
 
-            pdb.set_trace()
+            # pdb.set_trace()
             emo_fea=self.emo_net(emo_id)
         else:
             emo_fea=self.emo_net(id)
-        
+        pdb.set_trace()
         # expression_soft=F.softmax(emo_fea,dim=1)
         # emo_fea
         # self.au_net_DISFA.eval()
