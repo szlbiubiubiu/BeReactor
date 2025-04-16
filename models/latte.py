@@ -723,22 +723,24 @@ class DiffusionVideoAutoencoder(nn.Module):
         if detect_face == True:
             pdb.set_trace()
             detect_face=self.sfd_detector.detect_from_batch(128*(id/2+0.5))
+            emo_id=torch.zeros_like(id)
             for index,frame in enumerate(id):
                     
                 # detected_faces = self.sfd_detector.detect_from_image(frame)#[:, :, ::-1]) #BGR frame
                 
                 # for each f
-                x_min, y_min, x_max, y_max = detect_face[index]
+                x_min, y_min, x_max, y_max,confidence = detect_face[index][0]
                 
-                cropped_face = frame[:,y_min:y_max, x_min:x_max]
+                cropped_face = frame[:,np.int(y_min):np.int(y_max), np.int(x_min):np.int(x_max)]
                 # else:
                 #     crop_frame = frame
                 
                 resized_frame=self.resolution(cropped_face)
+                emo_id[index]=resized_frame
                 # crop_frame = cv2.resize(cropped_face,(256,256),interpolation = cv2.INTER_LANCZOS4)
                 # id[index]=detected_faces
 
-        
+            pdb.set_trace()
         emo_fea=self.emo_net(id)
         
         # expression_soft=F.softmax(emo_fea,dim=1)
