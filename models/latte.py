@@ -574,6 +574,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         if detect_face is not None:
             device = "cuda:0"
             self.sfd_detector = SFDDetector(device)
+        self.resolution = torch.nn.AdaptiveAvgPool2d((256, 256))
     def forward(self, id,listener_ref=None, lnd=None, emo_cond=None, return_id_feats=False,
                 return_emo=False,expression=False):
         # pdb.set_trace()
@@ -721,10 +722,21 @@ class DiffusionVideoAutoencoder(nn.Module):
                 # torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[0], 1), stride=(id_feats.shape[0], 1)).squeeze()
         if detect_face == True:
             pdb.set_trace()
+            detect_face=self.sfd_detector.detect_from_batch(128*(id/2+0.5))
             for index,frame in enumerate(id):
                     
-                detected_faces = self.sfd_detector.detect_from_image(frame)#[:, :, ::-1]) #BGR frame
-                id[index]=detected_faces
+                # detected_faces = self.sfd_detector.detect_from_image(frame)#[:, :, ::-1]) #BGR frame
+                
+                # for each f
+                x_min, y_min, x_max, y_max = detect_face[index]
+                
+                cropped_face = frame[:,y_min:y_max, x_min:x_max]
+                # else:
+                #     crop_frame = frame
+                
+                resized_frame=self.resolution(cropped_face)
+                # crop_frame = cv2.resize(cropped_face,(256,256),interpolation = cv2.INTER_LANCZOS4)
+                # id[index]=detected_faces
 
         
         emo_fea=self.emo_net(id)
