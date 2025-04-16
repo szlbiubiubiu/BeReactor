@@ -741,7 +741,9 @@ class DiffusionVideoAutoencoder(nn.Module):
                 # id[index]=detected_faces
 
             pdb.set_trace()
-        emo_fea=self.emo_net(id)
+            emo_fea=self.emo_net(emo_id)
+        else:
+            emo_fea=self.emo_net(id)
         
         # expression_soft=F.softmax(emo_fea,dim=1)
         # emo_fea
