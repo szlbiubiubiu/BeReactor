@@ -741,7 +741,8 @@ class DiffusionVideoAutoencoder(nn.Module):
                 # id[index]=detected_faces
 
             # pdb.set_trace()
-            emo_fea=self.emo_net(emo_id[:,::-1,:,:])
+            # torch.from_numpy(emo_id.numpy()[:,::-1, :, :].copy())
+            emo_fea=self.emo_net(torch.from_numpy(emo_id.numpy()[:,::-1, :, :].copy()))
             pdb.set_trace()
         else:
             emo_fea=self.emo_net(id)
