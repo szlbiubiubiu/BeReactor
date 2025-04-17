@@ -908,7 +908,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     os.remove("temp.mp4")
     # # shutil.rmtree(result_img_save_path)
-    print(f"result is save to {output_vid_name}")       
+    print(f"result is save to {output_vid_name}")      
+
+    # if return_image4emotion:
+    #return emotion image
+    interval_listener=len(res_frame_list)//num_frame_sp
+    out_images=res_frame_list[::interval_listener]
+    return out_images[:num_frame_sp],evaluation_score 
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
