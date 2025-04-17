@@ -569,7 +569,10 @@ class DiffusionVideoAutoencoder(nn.Module):
             #input resolution is 256
             pdb.set_trace()
             self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
-            self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
+            state_dict = torch.load(emotion_file_path, map_location="cpu")
+            state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+            self.emo_net.load_state_dict(state_dict,strict=True)
+            # self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
             self.emo_net.eval()
         if detect_face is not None:
             device = "cuda:0"

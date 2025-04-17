@@ -869,7 +869,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # return res_frame_list
 
 
-    # pdb.set_trace()
+    pdb.set_trace()
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
         out_images=res_frame_list[::interval_listener]
