@@ -721,7 +721,7 @@ class DiffusionVideoAutoencoder(nn.Module):
                 id_feats = id_feats.mean(dim=0)
                 # torch.nn.functional.avg_pool2d(id_feats, (id_feats.shape[0], 1), stride=(id_feats.shape[0], 1)).squeeze()
         if detect_face == True:
-            pdb.set_trace()
+            # pdb.set_trace()
             detect_face=self.sfd_detector.detect_from_batch(128*(id/2+0.5))
             emo_id=torch.zeros_like(id)
             for index,frame in enumerate(id):
