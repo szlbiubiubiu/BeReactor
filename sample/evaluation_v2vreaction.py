@@ -1534,7 +1534,7 @@ def main(args):
             # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
             # pdb.set_trace()
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
         # print(result["text"])
