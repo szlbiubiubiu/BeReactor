@@ -52,6 +52,7 @@ from models.model_irse import IDnet
 from models.basenet import LNDnet
 from models.seg_model_2 import BGnet
 from models.emo_net import EmoNet
+from models.emo_fr_net.au_model import MEFL
 import torch.nn.functional as Func
 from metric import *   #import evaluation metric
 import pdb
@@ -248,14 +249,15 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
-        # if au_file_path_disfa is not None:
-        #     # pdb.set_trace()
-        #     self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
-        #     # self.au_net_DISFA.load_state_dict(torch.load(au_file_path_disfa, map_location='cuda')['state_dict'])
-        #     # self.au_net_DISFA.eval()
-        #     self.au_net_BP4D=MEFL.MEFARG(num_classes=12,backbone='resnet18').requires_grad_(False) #num_classes: 12   neighbor_num: 4
-        #     # self.au_net_BP4D.load_state_dict(torch.load(au_file_path_bp4d, map_location='cuda')['state_dict'])
-        #     # self.au_net_BP4D.eval()
+        pdb.set_trace()
+        if au_file_path_disfa is not None:
+            # pdb.set_trace()
+            self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
+            self.au_net_DISFA.load_state_dict(torch.load(au_file_path_disfa, map_location='cuda')['state_dict'])
+            # self.au_net_DISFA.eval()
+            self.au_net_BP4D=MEFL.MEFARG(num_classes=12,backbone='resnet18').requires_grad_(False) #num_classes: 12   neighbor_num: 4
+            self.au_net_BP4D.load_state_dict(torch.load(au_file_path_bp4d, map_location='cuda')['state_dict'])
+            # self.au_net_BP4D.eval()
         if emotion_file_path is not None:
             #input resolution is 256
             self.emo_net=EmoNet(n_expression=8).requires_grad_(False)#what is the resolution#.to(device)()
@@ -301,12 +303,13 @@ class DiffusionVideoAutoencoder(nn.Module):
         
         # # expression_soft=F.softmax(emo_fea,dim=1)
         # # emo_fea
-        # # self.au_net_DISFA.eval()
-        # # self.au_net_BP4D.eval()
+        # self.au_net_DISFA.eval()
+        # self.au_net_BP4D.eval()
         # au_disfa=self.au_net_DISFA(id)[0]
         # au_bp4d=self.au_net_BP4D(id)[0]
 
-
+        au_disfa=self.au_net_DISFA(id)[0]
+        au_bp4d=self.au_net_BP4D(id)[0]
 
         # if listener_ref != None and past_emo!=None:
         #     #1 get listener id
@@ -331,7 +334,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     # #au loss
         #     # au_loss= mean_flat((au-emo_label[:,:,:15])**2)
         #     # emo_loss= mean_flat((emo-emo_label[:,:,15:])**2)
-        return id_feats,emo_fea#,au_disfa,au_bp4d
+        return id_feats,emo_fea,au_disfa,au_bp4d
 
 pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
@@ -490,7 +493,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
-    id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent)
     pdb.set_trace()
     expression=emo_fea['expression']
     expression_soft_sing=F.softmax(expression,dim=1)
@@ -928,7 +931,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     # pdb.set_trace()
     #get emotion from images
-    id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent)
     expression=emo_fea['expression']
     expression_soft=F.softmax(expression,dim=1)
     valence=emo_fea['valence']
@@ -1567,8 +1570,8 @@ def main(args):
 
         pdb.set_trace()
         #get emo feature
-        id_feats,emo_fea=encoder_emo.forward_listener(all_face_images)
-        id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images)
+        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)
         # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
