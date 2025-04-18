@@ -484,7 +484,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # for step,clip_generated in enumerate(input_latent):
 
     id_feats,emo_fea=encoder_emo.forward_listener(input_latent)
-    
+    pdb.set_trace()
     expression=emo_fea['expression']
     expression_soft_sing=F.softmax(expression,dim=1)
     valence_sing=emo_fea['valence']
