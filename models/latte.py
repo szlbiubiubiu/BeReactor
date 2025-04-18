@@ -574,9 +574,7 @@ class DiffusionVideoAutoencoder(nn.Module):
             state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
             self.emo_net.load_state_dict(state_dict,strict=True)
             # self.emo_net.load_state_dict(torch.load(emotion_file_path, map_location='cuda'),strict=True)
-            for param in self.emo_net.parameters():
-                print(param.data)
-            pdb.set_trace()
+            
             self.emo_net.eval()
         if detect_face is not None:
             device = "cuda:0"
@@ -748,7 +746,8 @@ class DiffusionVideoAutoencoder(nn.Module):
                 # id[index]=detected_faces
 
             # pdb.set_trace()
-            emo_fea=self.emo_net(emo_id)
+            with torch.no_grad():
+                emo_fea=self.emo_net(emo_id)
             pdb.set_trace()
         else:
             emo_fea=self.emo_net(id)
