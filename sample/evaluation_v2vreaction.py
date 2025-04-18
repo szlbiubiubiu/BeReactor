@@ -138,7 +138,7 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
         #talking head
         # wavs=np.frombuffer(wavs[0], dtype=np.float16)
         # audio = np.frombuffer(data, np.int16).astype(np.float32)*(1/32768.0)
-        pdb.set_trace()
+        # pdb.set_trace()
         # whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
         whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
         whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
@@ -197,7 +197,7 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
                 res_frame_list.append(res_frame)
                 # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
         print("pad talking image to original video")
-        pdb.set_trace()
+        # pdb.set_trace()
         for i, res_frame in enumerate(tqdm(res_frame_list)):
             bbox = coord_list_cycle[i%(len(coord_list_cycle))]
             ori_frame = copy.deepcopy(frame_list_cycle[i%(len(frame_list_cycle))])
@@ -209,7 +209,7 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
             # pdb.set_trace()
             cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-        pdb.set_trace()
+        # pdb.set_trace()
         cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
         print(cmd_img2video)
         os.system(cmd_img2video)
@@ -249,7 +249,7 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
-        pdb.set_trace()
+        # pdb.set_trace()
         if au_file_path_disfa is not None:
             # pdb.set_trace()
             self.au_net_DISFA=MEFL.MEFARG(num_classes=8).requires_grad_(False)# resnet
@@ -494,7 +494,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # for step,clip_generated in enumerate(input_latent):
 
     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent)
-    pdb.set_trace()
+    # pdb.set_trace()
     expression=emo_fea['expression']
     expression_soft_sing=F.softmax(expression,dim=1)
     valence_sing=emo_fea['valence']
@@ -879,7 +879,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # return res_frame_list
 
 
-    pdb.set_trace()
+    # pdb.set_trace()
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
         out_images=res_frame_list[::interval_listener]
@@ -1568,7 +1568,7 @@ def main(args):
         # print('save path {}'.format(args.save_video_path))
         # pdb.set_trace()
 
-        pdb.set_trace()
+        # pdb.set_trace()
         #get emo feature
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
