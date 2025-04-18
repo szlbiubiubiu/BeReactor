@@ -263,9 +263,16 @@ class DiffusionVideoAutoencoder(nn.Module):
             # self.emo_net.eval()
     def forward_listener(self, generated_listener,clip_leng=32,emo_cond=None,return_emo=False):
         # pdb.set_trace()
+        
+
         id=generated_listener
-        # clip_leng
-        b,c,w,h=id.shape
+        if len(generated_listener.shape)==5:
+            b,v,c,w,h=id.shape
+            # b,v,c_l,w_l,h_l=lnd.shape
+
+            id=id.reshape(b*v,c,w,h)
+        elif len(generated_listener.shape)==4:
+            b,c,w,h=id.shape
         # b,v,c_l,w_l,h_l=lnd.shape
 
         # id=id.view(b*v,c,w,h)
@@ -400,21 +407,21 @@ def evaluate_LLM(dialogue: str):
         "}\n"
     )
     # sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2
-    client = OpenAI(
-    # defaults to os.environ.get("OPENAI_API_KEY")
-    api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
-    base_url="https://api.chatanywhere.tech/v1"
-    # base_url="https://api.chatanywhere.org/v1"
-    )
     # client = OpenAI(
     # # defaults to os.environ.get("OPENAI_API_KEY")
-    # api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
+    # api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
     # base_url="https://api.chatanywhere.tech/v1"
     # # base_url="https://api.chatanywhere.org/v1"
     # )
+    client = OpenAI(
+    # defaults to os.environ.get("OPENAI_API_KEY")
+    api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
+    base_url="https://api.chatanywhere.tech/v1"
+    # base_url="https://api.chatanywhere.org/v1"
+    )
     response = client.chat.completions.create(
-            # model="gpt-3.5-turbo",  # or your preferred model
-            model="gpt-4o-mini-ca",
+            model="gpt-3.5-turbo",  # or your preferred model
+            # model="gpt-4o-mini-ca",
             # model="gpt-3.5-turbo-ca",
             
         messages=[
