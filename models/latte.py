@@ -15,6 +15,7 @@ import numpy as np
 from einops import rearrange, repeat
 from timm.models.vision_transformer import Mlp, PatchEmbed
 import torch.nn.functional as Func
+import torch.nn.functional as F
 from timm.layers import  DropPath
 
 import pdb
@@ -739,8 +740,8 @@ class DiffusionVideoAutoencoder(nn.Module):
                 cropped_face = frame[:,np.int(y_min):np.int(y_max), np.int(x_min):np.int(x_max)]
                 # else:
                 #     crop_frame = frame
-                
-                resized_frame=self.resolution(cropped_face)
+                resized_frame = F.interpolate(cropped_face, size=(256, 256), mode='bilinear', align_corners=False)
+                # resized_frame=self.resolution(cropped_face)
                 emo_id[index]=resized_frame
                 # crop_frame = cv2.resize(cropped_face,(256,256),interpolation = cv2.INTER_LANCZOS4)
                 # id[index]=detected_faces
