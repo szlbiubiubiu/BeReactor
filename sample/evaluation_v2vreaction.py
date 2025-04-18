@@ -277,7 +277,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # fea
         # feats = self.linear(torch.cat([id_feats, lnd_feats], dim=1))   # [B, 512]
         # feats = feats.view(b,v,-1)
-        id_feats=id_feats.view(b//clip_leng,clip_leng,-1)
+        id_feats=id_feats.reshape(b//clip_leng,clip_leng,-1)
 
 
         
@@ -1560,6 +1560,7 @@ def main(args):
 
         pdb.set_trace()
         #get emo feature
+        id_feats,emo_fea=encoder_emo.forward_listener(all_face_images)
         id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)
