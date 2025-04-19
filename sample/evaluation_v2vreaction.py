@@ -410,21 +410,21 @@ def evaluate_LLM(dialogue: str):
         "}\n"
     )
     # sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2
-    # client = OpenAI(
-    # # defaults to os.environ.get("OPENAI_API_KEY")
-    # api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
-    # base_url="https://api.chatanywhere.tech/v1"
-    # # base_url="https://api.chatanywhere.org/v1"
-    # )
     client = OpenAI(
     # defaults to os.environ.get("OPENAI_API_KEY")
-    api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
+    api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
     base_url="https://api.chatanywhere.tech/v1"
     # base_url="https://api.chatanywhere.org/v1"
     )
+    # client = OpenAI(
+    # # defaults to os.environ.get("OPENAI_API_KEY")
+    # api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
+    # base_url="https://api.chatanywhere.tech/v1"
+    # # base_url="https://api.chatanywhere.org/v1"
+    # )
     response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # or your preferred model
-            # model="gpt-4o-mini-ca",
+            # model="gpt-3.5-turbo",  # or your preferred model
+            model="gpt-4o-mini-ca",
             # model="gpt-3.5-turbo-ca",
             
         messages=[
