@@ -495,10 +495,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1'))).to(torch.device('cuda:0'))
     # pdb.set_trace()
-    expression=emo_fea['expression']
+    expression=emo_fea['expression'].to(torch.device('cuda:0'))
     expression_soft_sing=F.softmax(expression,dim=1)
-    valence_sing=emo_fea['valence']
-    arousal_sing=emo_fea['arousal']
+    valence_sing=emo_fea['valence'].to(torch.device('cuda:0'))
+    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:0'))
     # if step==0:
     expression_soft=expression_soft_sing
     valence=valence_sing
@@ -558,7 +558,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     random_number=np.random.randint(low=0, high=100)
     
     for i in range(len(sentences)):
-        if i>=8:
+        if i>=6:
             break
         if i==0:
             if len(sentences)!=1:
@@ -1570,7 +1570,7 @@ def main(args):
 
         # pdb.set_trace()
         #get emo feature
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1'))).to(torch.device('cuda:0'))
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)
