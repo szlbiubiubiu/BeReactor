@@ -490,7 +490,7 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
-    # pdb.set_trace()
+    pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1'))).to(torch.device('cuda:0'))
