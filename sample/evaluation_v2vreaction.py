@@ -1403,8 +1403,8 @@ def main(args):
     # double_count=0
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        # if step>0:
-        #     break
+        if step>0:
+            break
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
@@ -1594,8 +1594,9 @@ def main(args):
         emo=torch.reshape(emo,[b,-1,10])
         current_emo=torch.cat([emo,au],dim=-1)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         #get emo label from listener image
+        listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
@@ -1612,7 +1613,8 @@ def main(args):
         #
         # pdb.set_trace()
         listener_emotion_pred_list.append(current_emo.cpu())
-        listener_emotion_gt_list.append(emo_label.cpu())
+        listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
+        # listener_emotion_gt_list.append(emo_label.cpu())
         speaker_emotion_gt_list.append(speaker_emo)
         
 
