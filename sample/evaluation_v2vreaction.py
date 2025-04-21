@@ -1597,7 +1597,7 @@ def main(args):
         # pdb.set_trace()
         #get emo label from listener image
         listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
         au=torch.reshape(au,[b,-1,15])
