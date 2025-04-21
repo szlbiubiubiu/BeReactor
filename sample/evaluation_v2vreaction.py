@@ -1594,6 +1594,21 @@ def main(args):
         emo=torch.reshape(emo,[b,-1,10])
         current_emo=torch.cat([emo,au],dim=-1)
 
+        pdb.set_trace()
+        #get emo label from listener image
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
+
+        #
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
         #
         # pdb.set_trace()
         listener_emotion_pred_list.append(current_emo.cpu())
