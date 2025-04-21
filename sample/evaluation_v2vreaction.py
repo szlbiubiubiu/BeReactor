@@ -410,18 +410,18 @@ def evaluate_LLM(dialogue: str):
         "}\n"
     )
     # sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2
-    # client = OpenAI(
-    # # defaults to os.environ.get("OPENAI_API_KEY")
-    # api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
-    # base_url="https://api.chatanywhere.tech/v1"
-    # # base_url="https://api.chatanywhere.org/v1"
-    # )
     client = OpenAI(
     # defaults to os.environ.get("OPENAI_API_KEY")
-    api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
+    api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
     base_url="https://api.chatanywhere.tech/v1"
     # base_url="https://api.chatanywhere.org/v1"
     )
+    # client = OpenAI(
+    # # defaults to os.environ.get("OPENAI_API_KEY")
+    # api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
+    # base_url="https://api.chatanywhere.tech/v1"
+    # # base_url="https://api.chatanywhere.org/v1"
+    # )
     response = client.chat.completions.create(
             # model="gpt-3.5-turbo",  # or your preferred model
             model="gpt-4o-mini-ca",
@@ -1403,8 +1403,8 @@ def main(args):
     # double_count=0
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        if step>0:
-            break
+        # if step>0:
+        #     break
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
@@ -1597,7 +1597,7 @@ def main(args):
         # pdb.set_trace()
         #get emo label from listener image
         listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
         au=torch.reshape(au,[b,-1,15])
