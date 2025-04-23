@@ -1449,7 +1449,10 @@ def main(args):
 
 
         for index_clip in range((video_data['img'].shape)[1]//clip_size):
-            
+            if len(listener_ref)<=32:
+                pdb.set_trace()
+                a=1
+            pdb.set_trace()
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)#[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
