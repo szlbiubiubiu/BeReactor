@@ -1454,8 +1454,11 @@ def main(args):
             #     a=1
             
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)#[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            pdb.set_trace()
+            listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
+            if listener_ref.shape[1]<32:
+                pdb.set_trace()
+                a=1
+            # pdb.set_trace()
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             original_x=x
