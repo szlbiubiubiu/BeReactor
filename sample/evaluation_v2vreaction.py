@@ -714,7 +714,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # # wavs = chat.infer(current_text)
 
 
-    # pdb.set_trace()
+    pdb.set_trace()
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
     communicate.save_sync(OUTPUT_audio_FILE)
@@ -1406,8 +1406,8 @@ def main(args):
     # double_count=0
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        # if step>0:
-        #     break
+        if step<280:
+            continue
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
