@@ -574,7 +574,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             else:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words)"},
                 {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
@@ -714,7 +714,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # # wavs = chat.infer(current_text)
 
 
-    pdb.set_trace()
+    # pdb.set_trace()
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
     communicate.save_sync(OUTPUT_audio_FILE)
@@ -1406,8 +1406,8 @@ def main(args):
     # double_count=0
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        if step<280:
-            continue
+        # if step<280:
+        #     continue
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
