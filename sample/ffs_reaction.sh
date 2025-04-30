@@ -11,5 +11,5 @@ export CUDA_VISIBLE_DEVICES=4,5
 OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=4,5 torchrun --nnodes=1 --nproc_per_node=1  \
 sample/reaction_eva_all_withtalkinghead.py --save_video_path ./test
 
-CUDA_VISIBLE_DEVICES=3,2 torchrun --nnodes=1 --nproc_per_node=1  \
+CUDA_VISIBLE_DEVICES=2,1 torchrun --nnodes=1 --nproc_per_node=1  \
 sample/evaluation_v2vreaction.py --save_video_path ./test
