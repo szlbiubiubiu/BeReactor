@@ -18,7 +18,7 @@ def react_parse_arg():
     # Param
     if 'sbg'  in platform.node() or 'rdg' in platform.node():
         # parser.add_argument('--real-dataset-path', default="/data/scratch/acw569/face_react/", type=str, help="dataset path")
-        parser.add_argument('--real-dataset-path', default="/data/scratch/acw569/face_react/from_hengde", type=str, help="dataset path")
+        parser.add_argument('--real-dataset-path', default="/data/scratch/acw569/face_react/new_reaction_2024data", type=str, help="dataset path")
 
     else:
         parser.add_argument('--real-dataset-path', default="/import/nobackup_mmv_ioannisp/zs003/face_react/face_final_v2", type=str, help="dataset path")
