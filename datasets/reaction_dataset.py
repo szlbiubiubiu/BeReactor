@@ -984,7 +984,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
                 img = self._transform(img)
                 clip.append(img.unsqueeze(0))
             listener_video_clip = torch.cat(clip, dim=0)
-
+        pdb.set_trace()
         listener_align_video_clip = 0
         if self.load_video_l:
             # clip = []
