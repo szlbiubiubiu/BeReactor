@@ -559,6 +559,7 @@ class ReactionDataset_readvideo(data.Dataset):
             speaker_video_clip = torch.cat(clip, dim=0)
         # listener video clip only needed for val/test
         listener_video_clip = 0
+        pdb.set_trace()
         if self.load_video_l:
             # clip = []
             # for img_path in img_paths:
@@ -1090,16 +1091,16 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
     #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     # pdb.set_trace()
-    # dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
-    #                           clip_length=conf.clip_length,
-    #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
-    #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
-    dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+    dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
                               clip_length=conf.clip_length,
                               load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
                               load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+    # dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+    #                           clip_length=conf.clip_length,
+    #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
+    #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     return dataset
 # def get_dataloader_split(conf, dataset,split, load_audio=False, load_video_s=False, load_video_l=False, load_emotion_s=False,
 #                    load_emotion_l=False, load_3dmm_s=False, load_3dmm_l=False, load_ref=False, repeat_mirrored=True,
