@@ -17,4 +17,4 @@ source ~/.bashrc
 conda activate latte_new
 
 # CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --nproc_per_node=2 train.py
-CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --nproc_per_node=1 --MASTER_PORT=25641 train.py
+CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --nproc_per_node=1 --master-port=25641 train.py
