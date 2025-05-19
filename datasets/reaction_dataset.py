@@ -720,12 +720,18 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
         # self._3dmm_path = os.path.join(self._data_path, '3D_FV_files')
         # self.reaction_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
         if 'sbg'  in platform.node() or 'dg' in platform.node():
-            self._audio_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
+            # self._audio_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
+            # # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
+            # self._video_path = '/data/scratch/acw569/face_react/new_crop'
+            # self.aligned_video_path=os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')
+            # self._emotion_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
+            # self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+            self._audio_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
-            self._video_path = '/data/scratch/acw569/face_react/new_crop'
-            self.aligned_video_path=os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')
-            self._emotion_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
-            self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+            self._video_path = '/data/scratch/acw569/face_react/new_reaction_2024data/cropped_face'
+            self._emotion_path = os.path.join('/data/scratch/acw569/face_react/nåew_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
+            self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+        
         else:
             self.emo_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
         
@@ -985,7 +991,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
                 img = self._transform(img)
                 clip.append(img.unsqueeze(0))
             listener_video_clip = torch.cat(clip, dim=0)
-        pdb.set_trace()
+        # pdb.set_trace()
         listener_align_video_clip = 0
         if self.load_video_l:
             # clip = []
