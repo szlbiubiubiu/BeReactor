@@ -731,7 +731,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
             
             self._video_path = '/data/scratch/acw569/face_react/new_reaction_2024data/cropped_face'
             self.aligned_video_path=self._video_path
-            self._emotion_path = os.path.join('/data/scratch/acw569/face_react/nåew_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
+            self._emotion_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
             self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
         
         else:
