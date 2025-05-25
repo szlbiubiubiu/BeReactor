@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from .model import BiSeNet
 import torchvision.transforms as transforms
+import platform
 
 class FaceParsing():
     def __init__(self):
@@ -14,10 +15,18 @@ class FaceParsing():
 
     def model_init(self, 
     
-    # resnet_path='./models/face-parse-bisent/resnet18-5c106cde.pth', 
-    #                model_pth='./models/face-parse-bisent/79999_iter.pth'
-                   resnet_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth', 
-                   model_pth='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'):
+    resnet_path='./models/face-parse-bisent/resnet18-5c106cde.pth', 
+                   model_pth='./models/face-parse-bisent/79999_iter.pth'
+                #    resnet_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth', 
+                #    model_pth='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
+                   ):
+        if 'sbg'  in platform.node() or 'dg' in platform.node():
+            resnet_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth', 
+            model_pth='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
+        else:
+
+            resnet_path='./talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth', 
+            model_pth='./talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
         net = BiSeNet(resnet_path)
         if torch.cuda.is_available():
             net.cuda()
