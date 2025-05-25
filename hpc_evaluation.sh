@@ -20,4 +20,4 @@ conda activate latte_new
 # sample/reaction_eva_all_withtalkinghead.py --save_video_path ./test
 
 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --nproc_per_node=1  \
-sample/evaluation_v2vreaction.py --save_video_path ./test
+sample/evaluation_v2vreaction.py --save_video_path --masterport 4000 ./test
