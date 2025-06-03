@@ -37,7 +37,6 @@ if __name__=='__main__':
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     result_img_save_path='./result_talking/siyang'
     img_path='/homes/zs003/test_images/siyang.png'#siyang.png, superv.jpg
-    process_emotion=True
     #load audio
     #audio to text
     # audio_file="audio.mp3"
