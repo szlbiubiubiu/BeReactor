@@ -559,7 +559,7 @@ class ReactionDataset_readvideo(data.Dataset):
             speaker_video_clip = torch.cat(clip, dim=0)
         # listener video clip only needed for val/test
         listener_video_clip = 0
-        pdb.set_trace()
+        # pdb.set_trace()
         if self.load_video_l:
             # clip = []
             # for img_path in img_paths:
