@@ -1125,19 +1125,19 @@ def main(args):
 
 
     
-    sampler = DistributedSampler(
-    dataset,
-    num_replicas=dist.get_world_size(),
-    rank=0,
-    shuffle=True,
-    seed=args.global_seed
-    )
+    # sampler = DistributedSampler(
+    # dataset,
+    # num_replicas=dist.get_world_size(),
+    # rank=0,
+    # shuffle=True,
+    # seed=args.global_seed
+    # )
     batch_size=int(args.local_batch_size)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=False,
-        sampler=sampler,
+        sampler=None,
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=True
