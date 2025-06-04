@@ -1688,12 +1688,12 @@ def main(args):
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
     # print('TLCC',TLCC)
-    print("TLCC %.2f; FRC %.2f;FRD %.2f;\n FRDvs %.2f;FRVar %.2f;smse %.2f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
+    print("TLCC: %.2f; FRC: %.2f;FRD: %.2f;\n FRDvs: %.2f;FRVar: %.2f;smse: %.2f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
 
     #save and load parameter
     torch.save(all_listener_emotion_pred, "./emo_pred.pt")
-    torch.save(speaker_emotion_gt, "./emo_gt.pt")
-    torch.save(listener_emotion_gt, "./emo_gt.pt")
+    torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
+    torch.save(listener_emotion_gt, "./listener_emo_gt.pt")
     torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred.pt")
 
 
