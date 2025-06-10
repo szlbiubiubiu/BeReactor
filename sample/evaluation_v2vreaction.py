@@ -495,7 +495,7 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
-    # pdb.set_trace()
+    pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
@@ -1688,7 +1688,7 @@ def main(args):
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
     # print('TLCC',TLCC)
-    print("TLCC: %.2f; FRC: %.2f;FRD: %.2f;\n FRDvs: %.2f;FRVar: %.2f;smse: %.2f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
+    print("TLCC: %.4f; FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
 
     #save and load parameter
     torch.save(all_listener_emotion_pred, "./emo_pred.pt")
