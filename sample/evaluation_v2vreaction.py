@@ -1614,13 +1614,13 @@ def main(args):
         emo=torch.reshape(emo,[b,-1,10])
         current_emo=torch.cat([emo,au],dim=-1)
 
-        pdb.set_trace()
-        #get emo label from listener image
-        if all_face_images.shape[0]!=listener_ref.shape[0]:
-            listener_emotion_pred_list.append(current_emo.cpu())
-            listener_emotion_gt_list.append(emo_label.cpu())
-            speaker_emotion_gt_list.append(speaker_emo)
-            continue
+        # pdb.set_trace()
+        # #get emo label from listener image
+        # if all_face_images.shape[0]!=listener_ref.shape[0]:
+        #     listener_emotion_pred_list.append(current_emo.cpu())
+        #     listener_emotion_gt_list.append(emo_label.cpu())
+        #     speaker_emotion_gt_list.append(speaker_emo)
+        #     continue
         listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
