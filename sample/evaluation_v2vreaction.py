@@ -1614,7 +1614,7 @@ def main(args):
         emo=torch.reshape(emo,[b,-1,10])
         current_emo=torch.cat([emo,au],dim=-1)
 
-        # pdb.set_trace()
+        pdb.set_trace()
         #get emo label from listener image
         if all_face_images.shape[0]!=listener_ref.shape[0]:
             listener_emotion_pred_list.append(current_emo.cpu())
