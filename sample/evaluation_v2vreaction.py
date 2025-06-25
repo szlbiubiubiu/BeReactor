@@ -1669,8 +1669,16 @@ def main(args):
     realism_score=all_score['all_realism_score']/len(listener_emotion_gt)
     bleu_scores=all_score['all_bleu_scores']/len(listener_emotion_gt)
     bert_scores=all_score['all_bert_scores']/len(listener_emotion_gt)
+    print('realism_score',realism_score)
+    print('bleu_scores',bleu_scores)
+    print('bert_scores',bert_scores)
+    #save and load parameter
+    torch.save(all_listener_emotion_pred, "./emo_pred.pt")
+    torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
+    torch.save(listener_emotion_gt, "./listener_emo_gt.pt")
+    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred.pt")
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-    TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
+    # TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     # pdb.set_trace()
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
     if len(all_listener_emotion_pred)<len(dataset):
@@ -1693,11 +1701,7 @@ def main(args):
     # print('TLCC',TLCC)
     print("TLCC: %.4f; FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
 
-    #save and load parameter
-    torch.save(all_listener_emotion_pred, "./emo_pred.pt")
-    torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
-    torch.save(listener_emotion_gt, "./listener_emo_gt.pt")
-    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred.pt")
+    
 
 
 if __name__ == "__main__":
