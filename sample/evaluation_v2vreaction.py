@@ -1612,7 +1612,8 @@ def main(args):
         arousal=emo_fea['arousal']
         emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
         emo=torch.reshape(emo,[b,-1,10])
-        current_emo=torch.cat([emo,au],dim=-1)
+        current_emo=emo#torch.cat([emo,au],dim=-1)
+        # current_emo=torch.cat([emo,au],dim=-1)
 
         # pdb.set_trace()
         # #get emo label from listener image
@@ -1634,7 +1635,9 @@ def main(args):
         arousal=emo_fea['arousal']
         emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
         emo=torch.reshape(emo,[b,-1,10])
-        listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+        listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
+        # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+
         #
         # pdb.set_trace()
         listener_emotion_pred_list.append(current_emo.cpu())
