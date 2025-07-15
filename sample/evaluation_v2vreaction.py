@@ -1563,6 +1563,12 @@ def main(args):
             all_score['all_bleu_scores']+=scores['bleu_scores']
             # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
+            video_ = batched_faces.clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+            video_save_path = os.path.join(args.save_video_path, 'generated_' + str(step)+'.mp4')
+            print(video_save_path)
+            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            pdb.set_trace()
+            print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
@@ -1571,7 +1577,15 @@ def main(args):
 
         # sentences=result["text"].split('.')
 
+        #visualize 
+        
 
+        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
+        # pdb.set_trace()
 
 
         # #visualize 

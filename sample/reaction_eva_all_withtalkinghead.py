@@ -648,8 +648,8 @@ def openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
 
 
 
-    if return_image4emotion:
-        return res_frame_list
+    # if return_image4emotion:
+    #     return res_frame_list
     print("pad talking image to original video")
     pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
@@ -1125,19 +1125,19 @@ def main(args):
 
 
     
-    # sampler = DistributedSampler(
-    # dataset,
-    # num_replicas=dist.get_world_size(),
-    # rank=0,
-    # shuffle=True,
-    # seed=args.global_seed
-    # )
+    sampler = DistributedSampler(
+    dataset,
+    num_replicas=dist.get_world_size(),
+    rank=0,
+    shuffle=True,
+    seed=args.global_seed
+    )
     batch_size=int(args.local_batch_size)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=False,
-        sampler=None,
+        sampler=sampler,
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=True
