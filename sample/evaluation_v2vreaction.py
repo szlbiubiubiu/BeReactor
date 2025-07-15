@@ -1563,7 +1563,8 @@ def main(args):
             all_score['all_bleu_scores']+=scores['bleu_scores']
             # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
-            video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
+            # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
+            video_ = np.asarray(batched_faces)
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(step)+'.mp4')
             print(video_save_path)
             print(video_.shape)
