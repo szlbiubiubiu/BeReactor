@@ -1563,7 +1563,7 @@ def main(args):
             all_score['all_bleu_scores']+=scores['bleu_scores']
             # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
-            video_ = batched_faces.clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+            video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(step)+'.mp4')
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
