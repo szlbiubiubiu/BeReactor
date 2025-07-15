@@ -1566,6 +1566,7 @@ def main(args):
             video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(step)+'.mp4')
             print(video_save_path)
+            print(video_.shape)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
             pdb.set_trace()
             print('save path {}'.format(args.save_video_path))
