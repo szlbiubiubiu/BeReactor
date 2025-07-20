@@ -570,7 +570,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             if len(sentences)!=1:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 20 words in each reply, each response should be different from previous reply"},
                 {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
@@ -580,7 +580,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             else:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words)"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words), don't generate repeat content"},
                 {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
