@@ -1739,14 +1739,14 @@ def main(args):
             all_score['all_bleu_scores']+=scores['bleu_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
            
-    #        #faces
-    #         all_face_images+=batched_faces
+           #faces
+            all_face_images+=batched_faces
     #         video_ = np.asarray(batched_faces)[:,:,:,::-1]
     #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
     #         print(video_save_path)
     #         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
 
-    #     all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
     #     # #generate talking head
     #     # result = whisper_model.transcribe(audio_file)
     #     # print(result["text"])
@@ -1812,33 +1812,33 @@ def main(args):
     #     #     listener_emotion_gt_list.append(emo_label.cpu())
     #     #     speaker_emotion_gt_list.append(speaker_emo)
     #     #     continue
-    #     listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-    #     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
-    #     au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
-    #     au=torch.reshape(au,[b,-1,15])
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
 
     #     #
-    #     expression=emo_fea['expression']
-    #     expression_soft=Func.softmax(expression,dim=1)
-    #     valence=emo_fea['valence']
-    #     arousal=emo_fea['arousal']
-    #     emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
-    #     emo=torch.reshape(emo,[b,-1,10])
-    #     listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
-    #     # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
+        # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
     #     #
     #     # pdb.set_trace()
     #     listener_emotion_pred_list.append(current_emo.cpu())
-    #     listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
+        listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
     #     # listener_emotion_gt_list.append(emo_label.cpu())
     #     speaker_emotion_gt_list.append(speaker_emo)
         
 
     # # pdb.set_trace()
     # listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
-    # listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
+    listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
     # speaker_emotion_gt=torch.cat(speaker_emotion_gt_list, dim = 0)
 
