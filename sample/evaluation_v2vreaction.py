@@ -429,8 +429,8 @@ def evaluate_LLM(dialogue: str):
     # )
     response = client.chat.completions.create(
             # model="gpt-3.5-turbo",  # or your preferred model
-            model="gpt-4o-mini-ca",
-            # model="gpt-3.5-turbo-ca",
+            # model="gpt-4o-mini-ca",
+            model="gpt-3.5-turbo-ca",
             
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
