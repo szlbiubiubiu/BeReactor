@@ -1746,7 +1746,9 @@ def main(args):
     #         print(video_save_path)
     #         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
 
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images.cpu())[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+
     #     # #generate talking head
     #     # result = whisper_model.transcribe(audio_file)
     #     # print(result["text"])
