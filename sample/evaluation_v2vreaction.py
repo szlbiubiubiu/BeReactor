@@ -1746,7 +1746,7 @@ def main(args):
     #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
     #         print(video_save_path)
     #         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-
+        print(np.asarray(all_face_images).shape)
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images.cpu())[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
 
