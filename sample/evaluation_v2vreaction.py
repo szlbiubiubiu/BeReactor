@@ -1813,7 +1813,7 @@ def main(args):
     #     #     speaker_emotion_gt_list.append(speaker_emo)
     #     #     continue
         # listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-        listener_ref_4emo=listener_ref.reshape(dim_out[1],3,256,256)
+        listener_ref_4emo=listener_ref.reshape(dim_out[0]*dim_out[1],3,256,256)
 
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
