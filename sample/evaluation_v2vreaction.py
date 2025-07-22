@@ -1740,7 +1740,7 @@ def main(args):
             all_score['all_bert_scores']+=scores['bert_scores']
            
            #faces
-            all_face_images+=batched_faces.cpu()
+            all_face_images+=[batched_faces]#.cpu()
     #         video_ = np.asarray(batched_faces)[:,:,:,::-1]
     #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
     #         print(video_save_path)
