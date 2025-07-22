@@ -1111,7 +1111,7 @@ def openai_deepseek_talkinghead_genall_llmonly(audio_file,listener_audio_file,wh
     #         out_images=res_frame_list[::interval_listener]
     #     return out_images[:num_frame_sp],evaluation_score
     num_frame_sp=32
-    return input_latent[:num_frame_sp],evaluation_score 
+    return [input_latent[:num_frame_sp]],evaluation_score 
 
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
@@ -1740,7 +1740,7 @@ def main(args):
             all_score['all_bert_scores']+=scores['bert_scores']
            
            #faces
-            all_face_images+=[batched_faces]#.cpu()
+            all_face_images+=batched_faces#.cpu()
     #         video_ = np.asarray(batched_faces)[:,:,:,::-1]
     #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
     #         print(video_save_path)
