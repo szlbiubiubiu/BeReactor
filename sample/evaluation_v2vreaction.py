@@ -1728,7 +1728,7 @@ def main(args):
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
-            openai_deepseek_talkinghead_genall_llmonly
+            # openai_deepseek_talkinghead_genall_llmonly
             # openai_deepseek_talkinghead_genall
             batched_faces,scores=openai_deepseek_talkinghead_genall_llmonly(audio_file,listener_audio_file,
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
@@ -1740,14 +1740,14 @@ def main(args):
             all_score['all_bert_scores']+=scores['bert_scores']
            
            #faces
-            all_face_images+=batched_faces
+            all_face_images+=batched_faces.cpu()
     #         video_ = np.asarray(batched_faces)[:,:,:,::-1]
     #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
     #         print(video_save_path)
     #         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
 
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images.cpu())[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
-        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images.cpu())[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
 
     #     # #generate talking head
     #     # result = whisper_model.transcribe(audio_file)
