@@ -13,7 +13,7 @@ pretrained:
 # model config: 
 # model: Latte-XL/2
 # model: Latte-S/2
-model: Latte-S/8 #emo_Latte-S/4 #Latte-S/4, Latte-S/2
+model: Latte-B/4 #emo_Latte-S/4 #Latte-S/4, Latte-S/2
 num_frames: 32 #32 #16
 image_size: 256 # choices=[256, 512]
 # num_sampling_steps: 250
