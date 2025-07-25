@@ -429,8 +429,8 @@ def evaluate_LLM(dialogue: str):
     # )
     response = client.chat.completions.create(
             # model="gpt-3.5-turbo",  # or your preferred model
-            # model="gpt-4o-mini-ca",
-            model="gpt-3.5-turbo-ca",
+            model="gpt-4o-mini-ca",
+            # model="gpt-3.5-turbo-ca",
             
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -570,7 +570,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             if len(sentences)!=1:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 20 words in each reply, each response should be different from previous reply"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
                 {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
@@ -580,7 +580,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             else:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words), don't generate repeat content"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words)"},
                 {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
@@ -935,183 +935,6 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     interval_listener=len(res_frame_list)//num_frame_sp
     out_images=res_frame_list[::interval_listener]
     return out_images[:num_frame_sp],evaluation_score 
-def openai_deepseek_talkinghead_genall_llmonly(audio_file,listener_audio_file,whisper_model,audio_processor,
-    speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
-    # pdb.set_trace()
-    # for step,clip_generated in enumerate(input_latent):
-
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
-    # pdb.set_trace()
-    expression=emo_fea['expression'].to(torch.device('cuda:0'))
-    expression_soft_sing=F.softmax(expression,dim=1)
-    valence_sing=emo_fea['valence'].to(torch.device('cuda:0'))
-    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:0'))
-    # if step==0:
-    expression_soft=expression_soft_sing
-    valence=valence_sing
-    arousal=arousal_sing
-        # else:
-        #     expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
-        #     valence=torch.cat((valence,valence_sing),dim=0)
-        #     arousal=torch.cat((arousal,arousal_sing),dim=0)
-
-    # pdb.set_trace()
-    result = whisper_model.transcribe(speaker_audio_path)
-    print(result["text"])
-    
-    sentences=result["text"].split('.')
-
-    listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
-    # print(result["text"])
-        
-    listener_reference_sentences=listener_result["text"].split('.')
-
-    # pdb.set_trace()
-    # bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
-    # rouge_scores = calculate_rouge_batch([listener_result["text"]], [result["text"]])
-    # bert_scores = calculate_bertscore_batch([listener_result["text"]], [result["text"]])
-
-
-
-    rand_num=torch.randint(0,100,(1,))
-    all_text=''
-    conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words(at least 6 words)\n"
-    # for i in range(1):
-    #     if i==0:
-    #         chat = [
-    #         {"role": "system", "content": "You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words"},
-    #         {"role": "user", "content": sentences[0]}
-    #             ]
-    #         a=1
-    #     else:
-    #         chat=response[0]['generated_text']
-    #         chat.append(
-    #             # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-    #             {"role": "user", "content": sentences[i]+". please reply within 10 words"}
-    #         )
-    #     response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-    #     current_text=response[0]['generated_text'][-1]['content']
-    #     all_text=all_text+current_text
-    #     print(response[0]['generated_text'][-1]['content'])
-    # pdb.set_trace()
-    openai_api_key = "None"
-    openai_api_base = "http://0.0.0.0:8000/v1"
-
-    client = OpenAI(
-        api_key=openai_api_key,
-        base_url=openai_api_base,
-    )
-    dialogue=[]
-    random_number=np.random.randint(low=0, high=100)
-    
-    for i in range(len(sentences)):
-        if i>=5:
-            break
-        if i==0:
-            if len(sentences)!=1:
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-                {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'}
-                ]
-            else:
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words)"},
-                {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'}
-                ]
-            # {"role": "system", "content": 
-            # "Please reply with a tone of emotion level:\
-            # Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
-            #                     'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
-            #             'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"},            
-            
-            
-            
-            
-            # dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
-            # +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            
-            # {"role": "user", "content": sentences[0]}]
-            a=1
-        else:
-            # chat=response[0]['generated_text']
-            chat.append(
-            {"role": "Assistant", "content": current_text})
-            chat.append(
-                # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-                {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'},#+". please reply within 10 words"}
-            # <| Assistant |><think>\n\n</think>\n\n
-            # chat.append(
-            # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
-            )
-            # dialogue.append(
-            # {"role": "Assistant", "content": current_text})
-            # dialogue.append({"role": "user", "content": sentences[i]})
-        
-        
-        
-        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        #below is llama3
-        # pdb.set_trace()
-        current_text=response[0]['generated_text'][-1]['content']
-        # pdb.set_trace()
-
-        # #deepseek with thinking tag
-        # response = client.chat.completions.create(
-        #     model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-        #     messages=chat,
-        #     temperature=0.2,
-        # )
-        # current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
-        # if len(current_text)==1:
-        #     current_tex=current_text#[0]
-        # else:   
-        #     current_text=current_text[1]
-        
-
-        all_text=all_text+current_text
-        print(current_text)
-    #add final text
-    chat.append(
-            {"role": "Assistant", "content": current_text})
-    realism_score,sentiment_emb=evaluate_LLM(dialogue)
-    # all_text
-    bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
-    rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
-    bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
-    evaluation_score=dict()
-    evaluation_score['realism_score']=realism_score
-    evaluation_score['sentiment_emb']=sentiment_emb
-    # evaluation_score['valence_score']=valence_score
-    # evaluation_score['arousal_score']=arousal_score
-    evaluation_score['bleu_scores']=bleu_scores[0]
-    # evaluation_score['rouge_scores']=rouge_scores
-    evaluation_score['bert_scores']=bert_scores[0]
-    
-    # # pdb.set_trace()
-    # if return_image4emotion:
-    #     interval_listener=len(res_frame_list)//num_frame_sp
-    #     if interval_listener==0:
-    #         out_images=res_frame_list
-    #     else:
-    #         out_images=res_frame_list[::interval_listener]
-    #     return out_images[:num_frame_sp],evaluation_score
-    num_frame_sp=32
-    return input_latent[:num_frame_sp],evaluation_score 
 
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
@@ -1728,99 +1551,102 @@ def main(args):
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
-            openai_deepseek_talkinghead_genall_llmonly
-            # openai_deepseek_talkinghead_genall
-            batched_faces,scores=openai_deepseek_talkinghead_genall_llmonly(audio_file,listener_audio_file,
+            batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
                     emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
-           #process audio
+            # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
+            #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
+            all_face_images+=batched_faces
             all_score['all_realism_score']+=scores['realism_score']
             all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
+            # all_score['all_valence_score']+=scores['valence_score']
+            # all_score['all_arousal_score']+=scores['arousal_score']
+            # pdb.set_trace()
             all_score['all_bleu_scores']+=scores['bleu_scores']
+            # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
-           
-    #        #faces
-    #         all_face_images+=batched_faces
-    #         video_ = np.asarray(batched_faces)[:,:,:,::-1]
-    #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
-    #         print(video_save_path)
-    #         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
+            video_ = np.asarray(batched_faces)[:,:,:,::-1]
+            video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
+            print(video_save_path)
+            # print(video_.shape)
+            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            # pdb.set_trace()
+            # print('save path {}'.format(args.save_video_path))
+            # pdb.set_trace()
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        # #generate talking head
+        # result = whisper_model.transcribe(audio_file)
+        # print(result["text"])
 
-    #     all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
-    #     # #generate talking head
-    #     # result = whisper_model.transcribe(audio_file)
-    #     # print(result["text"])
+        # sentences=result["text"].split('.')
 
-    #     # sentences=result["text"].split('.')
-
-    #     #visualize 
+        #visualize 
         
 
-    #     # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-    #     # print(video_save_path)
-    #     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # print('save path {}'.format(args.save_video_path))
-    #     # pdb.set_trace()
+        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
+        # pdb.set_trace()
 
 
-    #     # #visualize 
-    #     # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
-    #     # print(video_save_path)
-    #     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # print('save path {}'.format(args.save_video_path))
+        # #visualize 
+        # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
 
-    #     # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-    #     # print(video_save_path)
-    #     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # print('save path {}'.format(args.save_video_path))
-    #     # pdb.set_trace()
+        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
+        # pdb.set_trace()
 
-    #     # pdb.set_trace()
-    #     #get emo feature
-    #     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
-    #     # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
-    #     # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
-    #     # id=id.reshape(b*v,c,w,h)
-    #     # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
+        # pdb.set_trace()
+        #get emo feature
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
+        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
+        # id=id.reshape(b*v,c,w,h)
+        # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
         
-    #     # # pdb.set_trace()
-    #     # self.idnet.eval()
-    #     # id_feats = self.idnet(id)  # [B, 512]
+        # # pdb.set_trace()
+        # self.idnet.eval()
+        # id_feats = self.idnet(id)  # [B, 512]
 
-    #     #emo_feature
-    #     # pdb.set_trace()
-    #     au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
-    #     au=torch.reshape(au,[b,-1,15])
+        #emo_feature
+        # pdb.set_trace()
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
 
-    #     #
-    #     expression=emo_fea['expression']
-    #     expression_soft=Func.softmax(expression,dim=1)
-    #     valence=emo_fea['valence']
-    #     arousal=emo_fea['arousal']
-    #     emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
-    #     emo=torch.reshape(emo,[b,-1,10])
-    #     current_emo=emo#torch.cat([emo,au],dim=-1)
-    #     # current_emo=torch.cat([emo,au],dim=-1)
+        #
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        current_emo=emo#torch.cat([emo,au],dim=-1)
+        # current_emo=torch.cat([emo,au],dim=-1)
 
-    #     # pdb.set_trace()
-    #     # #get emo label from listener image
-    #     # if all_face_images.shape[0]!=listener_ref.shape[0]:
-    #     #     listener_emotion_pred_list.append(current_emo.cpu())
-    #     #     listener_emotion_gt_list.append(emo_label.cpu())
-    #     #     speaker_emotion_gt_list.append(speaker_emo)
-    #     #     continue
-        # listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-        listener_ref_4emo=listener_ref.reshape(dim_out[0]*dim_out[1],3,256,256)
-
+        # pdb.set_trace()
+        # #get emo label from listener image
+        # if all_face_images.shape[0]!=listener_ref.shape[0]:
+        #     listener_emotion_pred_list.append(current_emo.cpu())
+        #     listener_emotion_gt_list.append(emo_label.cpu())
+        #     speaker_emotion_gt_list.append(speaker_emo)
+        #     continue
+        listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
         au=torch.reshape(au,[b,-1,15])
 
-    #     #
+        #
         expression=emo_fea['expression']
         expression_soft=Func.softmax(expression,dim=1)
         valence=emo_fea['valence']
@@ -1830,31 +1656,31 @@ def main(args):
         listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
         # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
-    #     #
-    #     # pdb.set_trace()
-    #     listener_emotion_pred_list.append(current_emo.cpu())
+        #
+        # pdb.set_trace()
+        listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
-    #     # listener_emotion_gt_list.append(emo_label.cpu())
-    #     speaker_emotion_gt_list.append(speaker_emo)
+        # listener_emotion_gt_list.append(emo_label.cpu())
+        speaker_emotion_gt_list.append(speaker_emo)
         
 
-    # # pdb.set_trace()
-    # listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
+    # pdb.set_trace()
+    listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
     listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
-    # speaker_emotion_gt=torch.cat(speaker_emotion_gt_list, dim = 0)
+    speaker_emotion_gt=torch.cat(speaker_emotion_gt_list, dim = 0)
 
-    # all_listener_emotion_pred_list.append(listener_emotion_pred.unsqueeze(1))
-    # all_listener_emotion_pred = torch.cat(all_listener_emotion_pred_list, dim=1)
-    # # if not os.path.exists(args.save_video_path):
-    # #     os.makedirs(args.save_video_path)
+    all_listener_emotion_pred_list.append(listener_emotion_pred.unsqueeze(1))
+    all_listener_emotion_pred = torch.cat(all_listener_emotion_pred_list, dim=1)
+    # if not os.path.exists(args.save_video_path):
+    #     os.makedirs(args.save_video_path)
 
-    # print("-----------------Evaluating Metric-----------------")
+    print("-----------------Evaluating Metric-----------------")
 
-    # # p = args.threads
-    # # for key,value in all_score.items():
-    # #     print(key,value/len(listener_emotion_pred))
-    # # pdb.set_trace()
+    # p = args.threads
+    # for key,value in all_score.items():
+    #     print(key,value/len(listener_emotion_pred))
+    # pdb.set_trace()
     language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
     print('language_mse',language_mse)
     # pdb.set_trace()
@@ -1869,29 +1695,29 @@ def main(args):
     torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
     torch.save(listener_emotion_gt, "./listener_emo_gt.pt")
     torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred.pt")
-    # # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-    # # TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
-    # # pdb.set_trace()
-    # # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-    # if len(all_listener_emotion_pred)<len(dataset):
-    #     repeat_times=len(dataset)//len(all_listener_emotion_pred)
-    #     fake_all_listener_emotion_pred=all_listener_emotion_pred.repeat(repeat_times,1,1,1)
-    #     fake_listener_emotion_gt=listener_emotion_gt.repeat(repeat_times,1,1)
-    #     FRC = compute_FRC(args, fake_all_listener_emotion_pred.cpu(), fake_listener_emotion_gt.cpu(), val_test='test')
+    # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
+    # TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
+    # pdb.set_trace()
+    # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
+    if len(all_listener_emotion_pred)<len(dataset):
+        repeat_times=len(dataset)//len(all_listener_emotion_pred)
+        fake_all_listener_emotion_pred=all_listener_emotion_pred.repeat(repeat_times,1,1,1)
+        fake_listener_emotion_gt=listener_emotion_gt.repeat(repeat_times,1,1)
+        FRC = compute_FRC(args, fake_all_listener_emotion_pred.cpu(), fake_listener_emotion_gt.cpu(), val_test='test')
 
-    #     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-    #     FRD = compute_FRD(args, fake_all_listener_emotion_pred.cpu(), fake_listener_emotion_gt.cpu(), val_test='test')
-    # else:
-    #     FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
+        # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
+        FRD = compute_FRD(args, fake_all_listener_emotion_pred.cpu(), fake_listener_emotion_gt.cpu(), val_test='test')
+    else:
+        FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
-    #     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-    #     FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
+        # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
+        FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
-    # FRDvs = compute_FRDvs(all_listener_emotion_pred.cpu())
-    # FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
-    # smse  = compute_s_mse(all_listener_emotion_pred.cpu())
-    # # print('TLCC',TLCC)
-    # print("TLCC: %.4f; FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
+    FRDvs = compute_FRDvs(all_listener_emotion_pred.cpu())
+    FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
+    smse  = compute_s_mse(all_listener_emotion_pred.cpu())
+    # print('TLCC',TLCC)
+    print("TLCC: %.4f; FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
 
     
 
