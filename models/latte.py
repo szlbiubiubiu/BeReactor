@@ -394,7 +394,7 @@ class Latte(nn.Module):
             # pdb.set_trace()
             if self.training is True:
                 original_x=self.sp_drop_operation(original_x,training=self.training)
-                listener_ref=self.lis_drop_operation(listener_ref,training=self.training)
+                # listener_ref=self.lis_drop_operation(listener_ref,training=self.training)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
             # facial_cond=self.feat_drop_operation(facial_cond,training=self.training)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
@@ -557,8 +557,10 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()
-        self.sp_drop=DropPath(0.5)
-        self.lis_drop=DropPath(0.5)
+        # self.sp_drop=DropPath(0.5)
+        # self.lis_drop=DropPath(0.5)
+        self.sp_drop=feature_drop_emb(0.1)
+        self.lis_drop=feature_drop_emb(0.1)
         if au_file_path_disfa is not None:
             # pdb.set_trace()
             self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
@@ -640,6 +642,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         current_emo=torch.cat([au,emo],dim=-1)
 
         lisenter_ref_id= self.idnet(listener_ref[:,0,:,:,:])
+        lisenter_ref_id=self.lis_drop(lisenter_ref_id,training=self.training)
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         # pdb.set_trace()
         # lis_drop
