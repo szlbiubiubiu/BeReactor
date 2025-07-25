@@ -1470,7 +1470,7 @@ def main(args):
             if listener_ref.shape[1]<32:
                 pdb.set_trace()
                 a=1
-            b=listener_ref[::-1]
+            b=torch.flip(listener_ref,[0])
             print(b.shape)
             pdb.set_trace()
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
