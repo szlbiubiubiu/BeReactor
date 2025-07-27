@@ -1467,12 +1467,13 @@ def main(args):
             
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
+            listener_ref=torch.flip(listener_ref,[0])
             if listener_ref.shape[1]<32:
                 pdb.set_trace()
                 a=1
-            b=torch.flip(listener_ref,[0])
-            print(b.shape)
-            pdb.set_trace()
+            # b=torch.flip(listener_ref,[0])
+            # print(b.shape)
+            # pdb.set_trace()
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             original_x=x
@@ -1576,6 +1577,7 @@ def main(args):
             # pdb.set_trace()
             # print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
+        pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
