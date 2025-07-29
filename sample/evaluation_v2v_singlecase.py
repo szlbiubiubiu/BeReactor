@@ -1424,7 +1424,7 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
         # pdb.set_trace()
-        torch.manual_seed(1)
+        torch.manual_seed(2)
         out_samples=None
         # pdb.set_trace()
         if args.use_fp16:
