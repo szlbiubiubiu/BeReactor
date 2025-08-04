@@ -1467,7 +1467,8 @@ def main(args):
             
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            listener_ref=torch.flip(listener_ref,[0])
+            print(listener_ref.shape)
+            # listener_ref=torch.flip(listener_ref,[0])
             if listener_ref.shape[1]<32:
                 pdb.set_trace()
                 a=1
