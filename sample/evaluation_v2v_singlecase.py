@@ -1467,8 +1467,8 @@ def main(args):
             
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            print(listener_ref.shape)
-            print(video_data['listener_audio_path'])
+            # print(listener_ref.shape)
+            # print(video_data['listener_audio_path'])
             # listener_ref=torch.flip(listener_ref,[0])
             if listener_ref.shape[1]<32:
                 pdb.set_trace()
@@ -1579,6 +1579,7 @@ def main(args):
             # pdb.set_trace()
             # print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
+        continue
         pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
