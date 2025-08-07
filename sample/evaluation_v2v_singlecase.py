@@ -1439,7 +1439,7 @@ def main(args):
         # Setup classifier-free guidance:
         # z = torch.cat([z, z], 0)
         if using_cfg:
-            pdb.set_trace()
+            # pdb.set_trace()
             ###original classifier free guidance
             # z = torch.cat([z, z], 0)
             # y = torch.randint(0, args.num_classes, (1,), device=device)
