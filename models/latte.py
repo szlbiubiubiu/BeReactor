@@ -391,8 +391,9 @@ class Latte(nn.Module):
             y_spatial = repeat(y, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             y_temp = repeat(y, 'n d -> (n c) d', c=self.pos_embed.shape[1])
         elif self.extras == 3:
-            # pdb.set_trace()
+            # 
             if self.training is True:
+                pdb.set_trace()
                 original_x=self.sp_drop_operation(original_x,training=self.training)
                 listener_ref=self.lis_drop_operation(listener_ref,training=self.training)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
