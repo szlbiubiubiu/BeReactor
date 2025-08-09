@@ -393,7 +393,7 @@ class Latte(nn.Module):
         elif self.extras == 3:
             # 
             if self.training is True:
-                pdb.set_trace()
+                # pdb.set_trace()
                 original_x=self.sp_drop_operation(original_x,training=self.training)
                 listener_ref=self.lis_drop_operation(listener_ref,training=self.training)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
