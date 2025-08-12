@@ -15,6 +15,5 @@ opencv-python
 tslearn
 openai-whisper
 piper-tts
-llama 3.1
 musetalk
 timm
