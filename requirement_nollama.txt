@@ -1,0 +1,20 @@
+timm
+diffusers[torch]==0.24.0
+accelerate
+tensorboard
+einops
+transformers
+av
+scikit-image
+decord
+pandas
+imageio-ffmpeg
+omegaconf
+soundfile
+opencv-python
+tslearn
+openai-whisper
+piper-tts
+llama 3.1
+musetalk
+timm
