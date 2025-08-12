@@ -454,9 +454,17 @@ class Latte(nn.Module):
         # pdb.set_trace()
         half = x[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
+
+        #for condition, copy and set to zero
+        half_x = original_x[: len(x) // 2]
+        combined_originalx = torch.cat([half_x, half_x], dim=0)
+
+        half_listener_ref = listener_ref[: len(x) // 2]
+        combined_listener_ref = torch.cat([half_listener_ref, torch.zeros_like(half_listener_ref)], dim=0)
         if use_fp16:
             combined = combined.to(dtype=torch.float16)
-        model_out = self.forward(combined, t,original_x=original_x,listener_ref=listener_ref, y=y, use_fp16=use_fp16, text_embedding=text_embedding)
+        model_out = self.forward(combined, t,original_x=combined_originalx,listener_ref=combined_listener_ref, y=y, use_fp16=use_fp16, text_embedding=text_embedding)
+        pdb.set_trace()
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
