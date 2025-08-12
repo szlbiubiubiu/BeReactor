@@ -464,7 +464,7 @@ class Latte(nn.Module):
         if use_fp16:
             combined = combined.to(dtype=torch.float16)
         model_out = self.forward(combined, t,original_x=combined_originalx,listener_ref=combined_listener_ref, y=y, use_fp16=use_fp16, text_embedding=text_embedding)
-        pdb.set_trace()
+        # pdb.set_trace()
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
