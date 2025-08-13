@@ -15,5 +15,3 @@ opencv-python
 tslearn
 openai-whisper
 piper-tts
-musetalk
-timm
