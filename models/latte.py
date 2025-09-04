@@ -570,8 +570,8 @@ class DiffusionVideoAutoencoder(nn.Module):
         self.encode_video=ConvBlock()
         # self.sp_drop=DropPath(0.5)
         # self.lis_drop=DropPath(0.5)
-        self.sp_drop=feature_drop_emb(0.1)
-        self.lis_drop=feature_drop_emb(0.1)
+        self.sp_drop=feature_drop_emb(0.2)
+        self.lis_drop=feature_drop_emb(0.2)
         if au_file_path_disfa is not None:
             # pdb.set_trace()
             self.au_net_DISFA=MEFL.MEFARG(num_classes=8,backbone='resnet18').requires_grad_(False)# resnet
