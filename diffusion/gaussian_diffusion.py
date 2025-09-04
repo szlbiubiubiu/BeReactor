@@ -813,7 +813,7 @@ class GaussianDiffusion:
                     x_t=x_t,
                     t=t,
                     clip_denoised=False,
-                    original_x=original_x,listener_ref=listener_ref
+                    # original_x=original_x,listener_ref=listener_ref,## original without this, But I think I should use it
                 )["output"]
                 if self.loss_type == LossType.RESCALED_MSE:
                     # Divide by 1000 for equivalence with initial implementation.
