@@ -563,8 +563,8 @@ class DiffusionVideoAutoencoder(nn.Module):
         self.emo_proj=nn.Sequential(nn.Linear(25,128),
                                     nn.Dropout(p=0.5)
                                     )
-        self.id_proj=nn.Sequential(nn.Linear(512,64),
-                                    nn.Dropout(p=0.5)
+        self.id_proj=nn.Sequential(nn.Linear(512,128),#64-128
+                                    # nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()
@@ -657,7 +657,9 @@ class DiffusionVideoAutoencoder(nn.Module):
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         # pdb.set_trace()
         # lis_drop
-        feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
+        # feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
+        #         encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 512]
+        feats = self.linear(torch.cat([self.emo_proj(current_emo).mean(-2),
                 encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 512]
         # feats = feats.reshape(b,v,-1)
         # id_feats=id_feats.reshape(b,v,-1)
