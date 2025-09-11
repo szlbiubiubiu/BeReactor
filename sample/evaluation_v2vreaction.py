@@ -1478,7 +1478,7 @@ def main(args):
             #classifier free guidance, change half to zero
             # pdb.set_trace()
             # listener_ref=torch.flip(listener_ref, dims=(0,))
-            x=torch.flip(x, dims=(0,))
+            # x=torch.flip(x, dims=(0,))
             if using_cfg:
                 x_uncon=torch.zeros_like(x)
                 listener_ref_uncon=torch.zeros_like(listener_ref)
@@ -1516,7 +1516,7 @@ def main(args):
                     original_x=x,listener_ref=listener_ref,
                 )
             # pdb.set_trace()
-            print(samples.shape)
+            # print(samples.shape)
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
             if using_cfg:
@@ -1727,7 +1727,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/reaction/0250000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/reaction/previous/0240000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
