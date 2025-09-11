@@ -1546,68 +1546,69 @@ def main(args):
         all_face_images=[]
         #can consider do not use the decode of vae
         dim_out=out_samples.shape
-        # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
-        #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
-        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
-        # pdb.set_trace()
-        for batch_index in range(len(out_samples)):
-            batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
-            whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
-            # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
-            #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
-            all_face_images+=batched_faces
-            all_score['all_realism_score']+=scores['realism_score']
-            all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
-            # all_score['all_valence_score']+=scores['valence_score']
-            # all_score['all_arousal_score']+=scores['arousal_score']
-            # pdb.set_trace()
-            all_score['all_bleu_scores']+=scores['bleu_scores']
-            # all_score['all_rouge_scores']+=scores['rouge_scores']
-            all_score['all_bert_scores']+=scores['bert_scores']
-            # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
-            video_ = np.asarray(batched_faces)[:,:,:,::-1]
-            video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
-            print(video_save_path)
-            # print(video_.shape)
-            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-            # pdb.set_trace()
-            # print('save path {}'.format(args.save_video_path))
-            # pdb.set_trace()
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
-        # #generate talking head
-        # result = whisper_model.transcribe(audio_file)
-        # print(result["text"])
+        # # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
+        # #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
+        # # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        # # pdb.set_trace()
+        # for batch_index in range(len(out_samples)):
+        #     batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
+        #     whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
+        #             emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
+        #     # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
+        #     #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
+        #     all_face_images+=batched_faces
+        #     all_score['all_realism_score']+=scores['realism_score']
+        #     all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
+        #     # all_score['all_valence_score']+=scores['valence_score']
+        #     # all_score['all_arousal_score']+=scores['arousal_score']
+        #     # pdb.set_trace()
+        #     all_score['all_bleu_scores']+=scores['bleu_scores']
+        #     # all_score['all_rouge_scores']+=scores['rouge_scores']
+        #     all_score['all_bert_scores']+=scores['bert_scores']
+        #     # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
+        #     video_ = np.asarray(batched_faces)[:,:,:,::-1]
+        #     video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
+        #     print(video_save_path)
+        #     # print(video_.shape)
+        #     imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        #     # pdb.set_trace()
+        #     # print('save path {}'.format(args.save_video_path))
+        #     # pdb.set_trace()
+        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        # # #generate talking head
+        # # result = whisper_model.transcribe(audio_file)
+        # # print(result["text"])
 
-        # sentences=result["text"].split('.')
-
-        #visualize 
-        
-
-        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
-        # pdb.set_trace()
-
+        # # sentences=result["text"].split('.')
 
         # #visualize 
-        # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
+        
 
-        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
-        # pdb.set_trace()
+        # # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # # print(video_save_path)
+        # # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # # print('save path {}'.format(args.save_video_path))
+        # # pdb.set_trace()
 
-        # pdb.set_trace()
-        #get emo feature
+
+        # # #visualize 
+        # # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
+        # # print(video_save_path)
+        # # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # # print('save path {}'.format(args.save_video_path))
+
+        # # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # # print(video_save_path)
+        # # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # # print('save path {}'.format(args.save_video_path))
+        # # pdb.set_trace()
+
+        # # pdb.set_trace()
+        # #get emo feature
+        all_face_images=out_samples
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
