@@ -270,19 +270,19 @@ class DiffusionVideoAutoencoder(nn.Module):
         
 
         id=generated_listener
-        if len(generated_listener.shape)==5:
-            b,v,c,w,h=id.shape
-            # b,v,c_l,w_l,h_l=lnd.shape
+        # if len(generated_listener.shape)==5:
+        #     b,v,c,w,h=id.shape
+        #     # b,v,c_l,w_l,h_l=lnd.shape
 
-            id=id.reshape(b*v,c,w,h)
-        elif len(generated_listener.shape)==4:
-            b,c,w,h=id.shape
+        #     id=id.reshape(b*v,c,w,h)
+        # elif len(generated_listener.shape)==4:
+        #     b,c,w,h=id.shape
         # b,v,c_l,w_l,h_l=lnd.shape
 
         # id=id.view(b*v,c,w,h)
         # lnd=lnd.view(b*v,c_l,w_l,h_l)
-        print(id.shape)
-        pdb.set_trace()
+
+        # pdb.set_trace()
         id_feats = self.idnet(id)  # [B, 512]
         # lnd_feats = self.lndnet(id) # [B, 102]
         # fea
