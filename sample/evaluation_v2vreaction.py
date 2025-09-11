@@ -1609,7 +1609,12 @@ def main(args):
 
         # # pdb.set_trace()
         # #get emo feature
-        all_face_images=out_samples
+        b,v,c,w,h=out_samples.shape
+        # b,v,c_l,w_l,h_l=lnd.shape
+
+        all_face_images=out_samples.reshape(b*v,c,w,h)
+        b,c,w,h=all_face_images.shape
+        # all_face_images=out_samples
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
