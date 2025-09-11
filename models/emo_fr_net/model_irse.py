@@ -59,7 +59,7 @@ class IDnet(Module):
 			param.requires_grad_(False)
 
 	def forward(self, x):
-		# self.backbone.eval()
+		self.backbone.eval()
 		if x.shape[2] != 256:
 			x = self.pool(x)
 		x = x[:, :, 35:223, 32:220]  # Crop interesting region
