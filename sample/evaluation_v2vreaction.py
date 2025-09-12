@@ -1547,7 +1547,7 @@ def main(args):
         # print(video_save_path)
         # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         # print('save path {}'.format(args.save_video_path))
-        # all_face_images=[]
+        all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
         # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
