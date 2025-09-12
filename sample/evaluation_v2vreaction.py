@@ -1563,14 +1563,14 @@ def main(args):
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
-            all_score['all_realism_score']+=scores['realism_score']
-            all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
-            # all_score['all_valence_score']+=scores['valence_score']
-            # all_score['all_arousal_score']+=scores['arousal_score']
-            # pdb.set_trace()
-            all_score['all_bleu_scores']+=scores['bleu_scores']
-            # all_score['all_rouge_scores']+=scores['rouge_scores']
-            all_score['all_bert_scores']+=scores['bert_scores']
+            # all_score['all_realism_score']+=scores['realism_score']
+            # all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
+            # # all_score['all_valence_score']+=scores['valence_score']
+            # # all_score['all_arousal_score']+=scores['arousal_score']
+            # # pdb.set_trace()
+            # all_score['all_bleu_scores']+=scores['bleu_scores']
+            # # all_score['all_rouge_scores']+=scores['rouge_scores']
+            # all_score['all_bert_scores']+=scores['bert_scores']
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             video_ = np.asarray(batched_faces)[:,:,:,::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
