@@ -722,6 +722,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # pdb.set_trace()
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
+    os.remove(OUTPUT_audio_FILE)
     communicate = edge_tts.Communicate(all_text, VOICE)
     # pdb.set_trace()
     communicate.save_sync(OUTPUT_audio_FILE)
