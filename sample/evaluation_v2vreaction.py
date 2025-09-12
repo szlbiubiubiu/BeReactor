@@ -1688,19 +1688,16 @@ def main(args):
 
     print("-----------------Evaluating Metric-----------------")
 
-    # p = args.threads
-    # for key,value in all_score.items():
-    #     print(key,value/len(listener_emotion_pred))
-    # pdb.set_trace()
-    language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
-    print('language_mse',language_mse)
-    # pdb.set_trace()
-    realism_score=all_score['all_realism_score']/len(listener_emotion_gt)
-    bleu_scores=all_score['all_bleu_scores']/len(listener_emotion_gt)
-    bert_scores=all_score['all_bert_scores']/len(listener_emotion_gt)
-    print('realism_score',realism_score)
-    print('bleu_scores',bleu_scores)
-    print('bert_scores',bert_scores)
+    
+    # language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
+    # print('language_mse',language_mse)
+    # # pdb.set_trace()
+    # realism_score=all_score['all_realism_score']/len(listener_emotion_gt)
+    # bleu_scores=all_score['all_bleu_scores']/len(listener_emotion_gt)
+    # bert_scores=all_score['all_bert_scores']/len(listener_emotion_gt)
+    # print('realism_score',realism_score)
+    # print('bleu_scores',bleu_scores)
+    # print('bert_scores',bert_scores)
     #save and load parameter
     torch.save(all_listener_emotion_pred, "./emo_pred.pt")
     torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
