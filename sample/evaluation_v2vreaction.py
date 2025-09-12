@@ -724,7 +724,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
     if os.path.exists(OUTPUT_audio_FILE):
         os.remove(OUTPUT_audio_FILE)
-    communicate = edge_tts.Communicate(all_text, VOICE)
+    communicate = edge_tts.Communicate(all_text, VOICE,proxy='http://127.0.0.1:7890')
     # pdb.set_trace()
     communicate.save_sync(OUTPUT_audio_FILE)
     # # message in self.stream()
