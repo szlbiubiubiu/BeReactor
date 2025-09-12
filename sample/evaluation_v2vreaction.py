@@ -1418,6 +1418,7 @@ def main(args):
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     # double_count=0
+    torch.manual_seed(0)
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
         # if step<280:
@@ -1426,7 +1427,7 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
         # pdb.set_trace()
-        torch.manual_seed(0)
+        
         out_samples=None
         # pdb.set_trace()
         if args.use_fp16:
@@ -1544,11 +1545,11 @@ def main(args):
         # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         # print('save path {}'.format(args.save_video_path))
 
-        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample_' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
+        video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        video_save_path = os.path.join(args.save_video_path, 'sample_' + str(step)+'.mp4')
+        print(video_save_path)
+        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        print('save path {}'.format(args.save_video_path))
         all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
