@@ -947,7 +947,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
     
-    os.remove("{result_img_save_path}/temp.mp4")
+    os.remove(f"{result_img_save_path}/temp.mp4")
     shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
     pdb.set_trace()
