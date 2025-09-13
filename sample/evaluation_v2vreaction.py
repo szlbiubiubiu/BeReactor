@@ -950,7 +950,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # os.remove(f"{result_img_save_path}/temp.mp4")
     shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
-    pdb.set_trace()
+    # pdb.set_trace()
     # if return_image4emotion:
     #return emotion image
     interval_listener=len(res_frame_list)//num_frame_sp
