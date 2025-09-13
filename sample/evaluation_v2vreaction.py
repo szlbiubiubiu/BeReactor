@@ -782,6 +782,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # pdb.set_trace()
     # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
+
+    video_ = ((input_latent* 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    video_save_path = os.path.join(args.save_video_path, 'sample_test_beforecrop' + str(batch_index)+'.mp4')
+    # print(video_save_path)
+    imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+    print('save path {}'.format(args.save_video_path))
+
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
     # input_img_list[sample]
     bbox_shift=0
@@ -789,6 +796,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
+    croped_image=[]
     # pdb.set_trace()
     for bbox, frame in zip(coord_list, frame_list):
         frame=np.squeeze(frame)
@@ -801,7 +809,14 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         #     crop_frame = frame
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
+        croped_image.append(crop_frame)
         input_latent_list.append(latents)
+    croped_image=torch.cat(croped_image,dim=0)
+    video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    video_save_path = os.path.join(args.save_video_path, 'sample_test_aftercrop' + str(batch_index)+'.mp4')
+    # print(video_save_path)
+    imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+    print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
     # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # latents = vae.get_latents_for_unet(crop_frame)
@@ -1545,22 +1560,28 @@ def main(args):
         # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         # print('save path {}'.format(args.save_video_path))
 
-        video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        video_save_path = os.path.join(args.save_video_path, 'sample_' + str(step)+'.mp4')
-        print(video_save_path)
-        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        print('save path {}'.format(args.save_video_path))
+        
         all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
+        print(dim_out)
         # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
         #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
+            
+            #save videos before RF
+            video_ = ((out_samples[batch_index] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+            video_save_path = os.path.join(args.save_video_path, 'sample_' + str(len(out_samples)*step+batch_index)+'.mp4')
+            # print(video_save_path)
+            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            print('save path {}'.format(args.save_video_path))
+            
+
             batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
