@@ -1100,6 +1100,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # pdb.set_trace()
     OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(0)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
+    if not os.path.exists(result_img_save_path):
+        os.mkdir(result_img_save_path)
     communicate.save_sync(OUTPUT_audio_FILE)
     # # message in self.stream()
     wavs=[]
