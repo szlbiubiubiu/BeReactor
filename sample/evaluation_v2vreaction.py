@@ -809,9 +809,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         #     crop_frame = frame
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
-        croped_image.append(crop_frame)
+        croped_image.append(torch.tensor(crop_frame))
         input_latent_list.append(latents)
-    croped_image=np.concatenate(croped_image,axis=0)
+    croped_image=torch.cat(croped_image,axis=0).to(dtype=torch.uint8).cpu().contiguous()
     # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
     video_save_path = os.path.join(args.save_video_path, 'sample_test_aftercrop' + str(batch_index)+'.mp4')
     # print(video_save_path)
