@@ -943,7 +943,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
     output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index)+'.mp4')
-    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
+    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i {result_img_save_path}/temp.mp4 {output_vid_name}"
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
     
@@ -1098,7 +1098,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
 
     # pdb.set_trace()
-    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
+    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(0)+'.wav'
     communicate = edge_tts.Communicate(all_text, VOICE)
     communicate.save_sync(OUTPUT_audio_FILE)
     # # message in self.stream()
