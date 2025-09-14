@@ -1290,9 +1290,9 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
     print(cmd_img2video)
     os.system(cmd_img2video)
-    
+    # + str(batch_index)+'.mp4'
 
-    output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
+    output_vid_name = os.path.join(result_img_save_path,"final_video_"+ str(batch_index)+'.mp4')
     cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
