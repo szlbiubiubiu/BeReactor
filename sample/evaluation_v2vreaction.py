@@ -900,7 +900,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
-            res_frame_list_tensor.append(torch.tensor(res_frame.copy()))
+            res_frame_list_tensor.append(torch.unsqueeze(torch.tensor(res_frame.copy()),dim=0))
         for res_latent in pred_latents:
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
