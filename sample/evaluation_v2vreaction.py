@@ -939,6 +939,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # pdb.set_trace()
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+    # cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+
     print(cmd_img2video)
     os.system(cmd_img2video)
     
@@ -951,7 +953,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     os.system(cmd_combine_audio)
     
     # os.remove("./temp.mp4")
-    shutil.rmtree(result_img_save_path)
+    # shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
     # pdb.set_trace()
     # if return_image4emotion:
