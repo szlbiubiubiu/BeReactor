@@ -903,7 +903,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
             # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
-            res_frame_list_latent.append(res_latent)
+            res_frame_list_latent.append(torch.tensor(res_latent))
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # return res_frame_list
 
@@ -924,6 +924,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             out_images=res_frame_list[::interval_listener]
         return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
+    print('len(res_frame_list)=',len(res_frame_list))
     # pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
