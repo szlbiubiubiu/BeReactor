@@ -877,6 +877,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     res_frame_list=[]
     res_frame_list_latent=[]
+    res_frame_list_tensor=[]
     # pdb.set_trace()
     for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
     # for whisper_batch in whisper_chunks:
@@ -899,15 +900,16 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
+            res_frame_list_tensor.append(torch.tensor(res_frame))
         for res_latent in pred_latents:
             #mask latent
             # res_latent_detrans=res_latent*0.5+0.5
             # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
-            res_frame_list_latent.append(torch.tensor(res_latent))
+            res_frame_list_latent.append(res_latent)
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # return res_frame_list
 
-    croped_image=torch.cat(res_frame_list,dim=0).to(dtype=torch.uint8).cpu().contiguous()
+    croped_image=torch.cat(res_frame_list_tensor,dim=0).to(dtype=torch.uint8).cpu().contiguous()
     # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
     video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index)+'.mp4')
     # print(video_save_path)
