@@ -496,7 +496,7 @@ def evaluate_LLM(dialogue: str):
     return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
-    speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=8,
+    speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
