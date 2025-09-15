@@ -842,7 +842,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     #----
     #use image----
-    input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
     # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
     # pdb.set_trace()
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
@@ -856,7 +856,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     original_image_cycle=vae_encode_latents_new
     
     # frame_list_cycle = frame_list + frame_list[::-1]
-    coord_list_cycle = coord_list + coord_list[::-1]
+    # coord_list_cycle = coord_list + coord_list[::-1]
+    coord_list_cycle = coord_list #+ coord_list[::-1]
 
     coord_list_cycle_new=[]
     for single_coord in coord_list_cycle:
