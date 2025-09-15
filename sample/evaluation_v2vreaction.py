@@ -935,8 +935,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
         t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
-        bbox=[0,0,t_shape[0],t_shape[1]]
+        # bbox=[0,0,t_shape[0],t_shape[1]]
+        bbox=t_shape
         x1, y1, x2, y2 = bbox
+        
         # try:
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
         # pdb.set_trace()
