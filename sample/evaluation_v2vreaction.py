@@ -786,11 +786,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
 
-    video_ = ((input_latent* 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    video_save_path = os.path.join(args.save_video_path, 'sample_test_beforecrop' + str(batch_index)+'.mp4')
-    print(video_.shape)
-    imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    print('save path {}'.format(args.save_video_path))
+    # video_ = ((input_latent* 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    # video_save_path = os.path.join(args.save_video_path, 'sample_test_beforecrop' + str(batch_index)+'.mp4')
+    # print(video_.shape)
+    # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+    # print('save path {}'.format(args.save_video_path))
 
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
     # input_img_list[sample]
@@ -815,13 +815,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         croped_image.append(torch.unsqueeze(torch.tensor(crop_frame),dim=0))
         input_latent_list.append(latents)
     print(crop_frame.shape)
-    croped_image=torch.cat(croped_image,dim=0).to(dtype=torch.uint8).cpu().contiguous()
-    # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    video_save_path = os.path.join(args.save_video_path, 'sample_test_aftercrop' + str(batch_index)+'.mp4')
-    # print(video_save_path)
-    print(croped_image.shape)
-    imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
-    print('save path {}'.format(args.save_video_path))
+    # croped_image=torch.cat(croped_image,dim=0).to(dtype=torch.uint8).cpu().contiguous()
+    # # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    # video_save_path = os.path.join(args.save_video_path, 'sample_test_aftercrop' + str(batch_index)+'.mp4')
+    # # print(video_save_path)
+    # print(croped_image.shape)
+    # imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
+    # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
     # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # latents = vae.get_latents_for_unet(crop_frame)
@@ -911,13 +911,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # return res_frame_list
 
-    croped_image=torch.cat(res_frame_list_tensor,dim=0).to(dtype=torch.uint8).cpu().contiguous()
-    # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index)+'.mp4')
-    # print(video_save_path)
-    print(croped_image.shape)
-    imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
-    print('save path {}'.format(args.save_video_path))
+    # croped_image=torch.cat(res_frame_list_tensor,dim=0).to(dtype=torch.uint8).cpu().contiguous()
+    # # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    # video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index)+'.mp4')
+    # # print(video_save_path)
+    # print(croped_image.shape)
+    # imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
+    # print('save path {}'.format(args.save_video_path))
 
     # pdb.set_trace()
     if return_image4emotion:
@@ -1596,12 +1596,12 @@ def main(args):
         # pdb.set_trace()
         for batch_index in range(len(out_samples)):
             
-            #save videos before RF
-            video_ = ((out_samples[batch_index] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-            video_save_path = os.path.join(args.save_video_path, 'sample_' + str(len(out_samples)*step+batch_index)+'.mp4')
-            # print(video_save_path)
-            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-            print('save path {}'.format(args.save_video_path))
+            # #save videos before RF
+            # video_ = ((out_samples[batch_index] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+            # video_save_path = os.path.join(args.save_video_path, 'sample_' + str(len(out_samples)*step+batch_index)+'.mp4')
+            # # print(video_save_path)
+            # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            # print('save path {}'.format(args.save_video_path))
             
 
             batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
@@ -1610,23 +1610,24 @@ def main(args):
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
-            # all_score['all_realism_score']+=scores['realism_score']
-            # all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
-            # # all_score['all_valence_score']+=scores['valence_score']
-            # # all_score['all_arousal_score']+=scores['arousal_score']
-            # # pdb.set_trace()
-            # all_score['all_bleu_scores']+=scores['bleu_scores']
-            # # all_score['all_rouge_scores']+=scores['rouge_scores']
-            # all_score['all_bert_scores']+=scores['bert_scores']
+            all_score['all_realism_score']+=scores['realism_score']
+            all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
+            # all_score['all_valence_score']+=scores['valence_score']
+            # all_score['all_arousal_score']+=scores['arousal_score']
+            # pdb.set_trace()
+            all_score['all_bleu_scores']+=scores['bleu_scores']
+            # all_score['all_rouge_scores']+=scores['rouge_scores']
+            all_score['all_bert_scores']+=scores['bert_scores']
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
-            video_ = np.asarray(batched_faces)[:,:,:,::-1]
-            video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
-            print(video_save_path)
-            # print(video_.shape)
-            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-            # pdb.set_trace()
-            # print('save path {}'.format(args.save_video_path))
-            # pdb.set_trace()
+            
+            
+            # video_ = np.asarray(batched_faces)[:,:,:,::-1]
+            # video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
+            # print(video_save_path)
+            # # print(video_.shape)
+            # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            
+
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
@@ -1737,15 +1738,15 @@ def main(args):
     print("-----------------Evaluating Metric-----------------")
 
     
-    # language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
-    # print('language_mse',language_mse)
-    # # pdb.set_trace()
-    # realism_score=all_score['all_realism_score']/len(listener_emotion_gt)
-    # bleu_scores=all_score['all_bleu_scores']/len(listener_emotion_gt)
-    # bert_scores=all_score['all_bert_scores']/len(listener_emotion_gt)
-    # print('realism_score',realism_score)
-    # print('bleu_scores',bleu_scores)
-    # print('bert_scores',bert_scores)
+    language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
+    print('language_mse',language_mse)
+    # pdb.set_trace()
+    realism_score=all_score['all_realism_score']/len(listener_emotion_gt)
+    bleu_scores=all_score['all_bleu_scores']/len(listener_emotion_gt)
+    bert_scores=all_score['all_bert_scores']/len(listener_emotion_gt)
+    print('realism_score',realism_score)
+    print('bleu_scores',bleu_scores)
+    print('bert_scores',bert_scores)
     #save and load parameter
     torch.save(all_listener_emotion_pred, "./emo_pred.pt")
     torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
