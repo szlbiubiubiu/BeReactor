@@ -654,8 +654,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
     evaluation_score=dict()
-    # evaluation_score['realism_score']=realism_score
-    # evaluation_score['sentiment_emb']=sentiment_emb
+    evaluation_score['realism_score']=realism_score
+    evaluation_score['sentiment_emb']=sentiment_emb
 
     evaluation_score['bleu_scores']=bleu_scores[0]
 
