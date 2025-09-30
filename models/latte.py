@@ -661,8 +661,10 @@ class DiffusionVideoAutoencoder(nn.Module):
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         # pdb.set_trace()
         # lis_drop
+        print(listener_video_clip_last.shape)
         if listener_video_clip_last is not None:
-            lisenter_encode_fea=self.encode_video_listener(listener_video_clip_last)
+            video_input_listner_last=listener_video_clip_last.permute(0,2,1,3,4)
+            lisenter_encode_fea=self.encode_video_listener(video_input_listner_last)
             feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+128+64=512] #
         else:
