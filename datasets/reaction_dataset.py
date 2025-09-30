@@ -963,6 +963,8 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
         # img_paths = sorted(img_paths, key=cmp_to_key(lambda a, b: int(a[:-4]) - int(b[:-4])))
         # pdb.set_trace()
         cp = random.randint(0, total_length - 1 - self._clip_length*self.interval) if (self._clip_length*self.interval) < total_length else 0
+        last_cp= cp if (cp<=self._clip_length*self.interval) else cp-self._clip_length*self.interval
+
         # cp=0
         # img_paths = img_paths[cp: cp + self._clip_length]
 
@@ -1013,6 +1015,16 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
                 img = self._transform(img)
                 clip.append(img.unsqueeze(0))
             listener_video_clip = torch.cat(clip, dim=0)
+
+            for i in range(last_cp,last_cp + self._clip_length*self.interval,self.interval):
+            # for i in range(cp,cp + self._clip_length):
+                # the video reader will handle seeking and skipping in the most efficient manner
+                frame = vr[i]
+                # print(frame.shape)
+                img=Image.fromarray(frame.asnumpy())
+                img = self._transform(img)
+                clip.append(img.unsqueeze(0))
+            listener_video_clip_last = torch.cat(clip, dim=0)
         # pdb.set_trace()
         listener_align_video_clip = 0
         if self.load_video_l:
@@ -1101,7 +1113,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
         # pdb.set_trace()
         return {'img': speaker_video_clip,'speaker_align_video_clip':speaker_align_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_align_video_clip':listener_align_video_clip,
-                                'listener_emotion': listener_emotion,
+                                'listener_video_clip_last':listener_video_clip_last,'listener_emotion': listener_emotion,
                                 'listener_3dmm': listener_3dmm,'listener_reference': listener_reference,
                                 'speaker_emotion_path':speaker_emotion_path,'listener_emotion_path':listener_emotion_path,
                                 'cp':[cp,cp + self._clip_length*self.interval]}
