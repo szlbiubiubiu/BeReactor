@@ -665,6 +665,8 @@ class DiffusionVideoAutoencoder(nn.Module):
         if listener_video_clip_last is not None:
             video_input_listner_last=listener_video_clip_last.permute(0,2,1,3,4)
             lisenter_encode_fea=self.encode_video_listener(video_input_listner_last)
+            print(encode_fea.shape.shape)
+            print(lisenter_encode_fea.shape)
             feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+128+64=512] #
         else:
