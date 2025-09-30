@@ -369,6 +369,7 @@ class Latte(nn.Module):
                 y=None, 
                 original_x=None,
                 listener_ref=None,
+                listener_video_clip_last=None,
                 text_embedding=None, 
                 use_fp16=False):
         """
@@ -398,7 +399,7 @@ class Latte(nn.Module):
                 # pdb.set_trace()
                 original_x=self.sp_drop_operation(original_x,training=self.training)
                 listener_ref=self.lis_drop_operation(listener_ref,training=self.training)
-            facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref)
+            facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last)
             # facial_cond=self.feat_drop_operation(facial_cond,training=self.training)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
@@ -558,7 +559,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # self.idnet.eval()
         # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
         self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
-        self.linear = nn.Linear(384, 384)#model s:384, model B: 768
+        self.linear = nn.Linear(384, 512)#model s:384, model B: 768 #With listener 512
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
         self.emo_proj=nn.Sequential(nn.Linear(25,128),
                                     nn.Dropout(p=0.5)
@@ -568,6 +569,7 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()
+        self.encode_video_listener=ConvBlock()
         # self.sp_drop=DropPath(0.5)
         # self.lis_drop=DropPath(0.5)
         self.sp_drop=feature_drop_emb(0.2)
@@ -595,7 +597,7 @@ class DiffusionVideoAutoencoder(nn.Module):
             device = "cuda:0"
             self.sfd_detector = SFDDetector(device)
         self.resolution = torch.nn.AdaptiveAvgPool2d((256, 256))
-    def forward(self, id,listener_ref=None, lnd=None, emo_cond=None, return_id_feats=False,
+    def forward(self, id,listener_ref=None, listener_video_clip_last=None, lnd=None, emo_cond=None, return_id_feats=False,
                 return_emo=False,expression=False):
         # pdb.set_trace()
         # if emo_cond is not None:
@@ -652,13 +654,21 @@ class DiffusionVideoAutoencoder(nn.Module):
         emo=torch.reshape(emo,[b,-1,10])
         current_emo=torch.cat([au,emo],dim=-1)
 
+
+       
         lisenter_ref_id= self.idnet(listener_ref[:,0,:,:,:])
         # lisenter_ref_id=self.lis_drop(lisenter_ref_id,training=self.training)
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         # pdb.set_trace()
         # lis_drop
-        feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
-                encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 512]
+        if listener_video_clip_last:
+            lisenter_encode_fea=self.encode_video_listener(listener_video_clip_last)
+            feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
+                encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+128+64=512] #
+        else:
+            feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
+                encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384]
+
         # feats = self.linear(torch.cat([self.emo_proj(current_emo).mean(-2),
         #         encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 512]
         # feats = feats.reshape(b,v,-1)

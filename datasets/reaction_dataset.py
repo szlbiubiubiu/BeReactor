@@ -538,6 +538,7 @@ class ReactionDataset_readvideo(data.Dataset):
         # img_paths = sorted(img_paths, key=cmp_to_key(lambda a, b: int(a[:-4]) - int(b[:-4])))
         # pdb.set_trace()
         cp = random.randint(0, total_length - 1 - self._clip_length*self.interval) if (self._clip_length*self.interval) < total_length else 0
+        last_cp= cp if (cp<=self._clip_length*self.interval) else cp-self._clip_length*self.interval
         # cp=0
         # img_paths = img_paths[cp: cp + self._clip_length]
 
@@ -565,6 +566,7 @@ class ReactionDataset_readvideo(data.Dataset):
             speaker_video_clip = torch.cat(clip, dim=0)
         # listener video clip only needed for val/test
         listener_video_clip = 0
+        listener_video_clip_last = 0
         # pdb.set_trace()
         if self.load_video_l:
             # clip = []
@@ -589,6 +591,17 @@ class ReactionDataset_readvideo(data.Dataset):
                 img = self._transform(img)
                 clip.append(img.unsqueeze(0))
             listener_video_clip = torch.cat(clip, dim=0)
+
+            for i in range(last_cp,last_cp + self._clip_length*self.interval,self.interval):
+            # for i in range(cp,cp + self._clip_length):
+                # the video reader will handle seeking and skipping in the most efficient manner
+                frame = vr[i]
+                # print(frame.shape)
+                img=Image.fromarray(frame.asnumpy())
+                img = self._transform(img)
+                clip.append(img.unsqueeze(0))
+            listener_video_clip_last = torch.cat(clip, dim=0)
+            
 
         # ========================= Load Speaker audio clip (listener audio is NEVER needed) ==========================
         listener_audio_clip, speaker_audio_clip = 0, 0
@@ -659,7 +672,8 @@ class ReactionDataset_readvideo(data.Dataset):
         # pdb.set_trace()
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'speaker_audio_path':speaker_audio_path,
-                                'listener_video_clip': listener_video_clip,'listener_emotion': listener_emotion,
+                                'listener_video_clip': listener_video_clip, 'listener_video_clip_last':listener_video_clip_last,
+                                'listener_emotion': listener_emotion,
                                 'listener_3dmm': listener_3dmm,'listener_audio_path':listener_audio_path,
                                 'listener_reference': listener_reference,
                                 'speaker_emotion_path':speaker_emotion_path,'listener_emotion_path':listener_emotion_path,
@@ -1105,18 +1119,37 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
     #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     # pdb.set_trace()
+
+
+    '''those are for 2024'''
     dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
                               clip_length=conf.clip_length,
                               load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
                               load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     
-    # #this is for training
+    # #this is for 2024 training
     # dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
     #                           clip_length=conf.clip_length,
     #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
     #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+
+    #
+    '''those are for 2025'''
+    dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+                              clip_length=conf.clip_length,
+                              load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
+                              load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+    
+    '''this is for training'''
+    # dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+    #                           clip_length=conf.clip_length,
+    #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
+    #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+
     return dataset
 # def get_dataloader_split(conf, dataset,split, load_audio=False, load_video_s=False, load_video_l=False, load_emotion_s=False,
 #                    load_emotion_l=False, load_3dmm_s=False, load_3dmm_l=False, load_ref=False, repeat_mirrored=True,
