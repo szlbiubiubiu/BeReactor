@@ -497,7 +497,7 @@ def evaluate_LLM(dialogue: str):
 
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
@@ -1626,11 +1626,11 @@ def main(args):
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             
             
-            # video_ = np.asarray(batched_faces)[:,:,:,::-1]
-            # video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
-            # print(video_save_path)
-            # # print(video_.shape)
-            # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            video_ = np.asarray(batched_faces)[:,:,:,::-1]
+            video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
+            print(video_save_path)
+            # print(video_.shape)
+            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
             
 
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
