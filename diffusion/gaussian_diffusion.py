@@ -744,7 +744,9 @@ class GaussianDiffusion:
         return {"output": output, "pred_xstart": out["pred_xstart"]}
 
     def training_losses(self, model, x_start, t, model_kwargs=None, 
-            original_x=None,listener_ref=None,listener_video_clip_last=None,emo_label_forregression=None,vae=None,emo_label=None, noise=None):
+            original_x=None,listener_ref=None,
+            listener_video_clip_last=None,sp_audio_clip=None,
+            emo_label_forregression=None,vae=None,emo_label=None, noise=None):
         """
         Compute training losses for a single timestep.
         :param model: the model to evaluate loss on.
@@ -776,7 +778,8 @@ class GaussianDiffusion:
             if self.loss_type == LossType.RESCALED_KL:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
-            model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,**model_kwargs)
+            model_output = model(x_t, t,original_x=original_x,listener_ref=listener_ref, 
+                    listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip,**model_kwargs)
             emo_loss=0
             # if emo_label_forregression is not None:
 

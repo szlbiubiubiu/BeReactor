@@ -241,6 +241,7 @@ def main(args):
             listener_ref=video_data['listener_align_video_clip'].to(device, non_blocking=True)#video_data['listener_video_clip'].to(device, non_blocking=True)
             emo_label_forregression=video_data['listener_emotion'].to(device, non_blocking=True)
             listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)
+            sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
             # x = video_data['img'].to(device, non_blocking=True)
             # listener_ref=video_data['speaker_video_clip'].to(device, non_blocking=True)
             emo_label=video_data['speaker_emotion'].to(device, non_blocking=True)
@@ -266,7 +267,8 @@ def main(args):
             t = torch.randint(0, diffusion.num_timesteps, (x.shape[0],), device=device)
             # pdb.set_trace()
             loss_dict = diffusion.training_losses(model, x, t, model_kwargs,
-                original_x=video_data['img'].to(device, non_blocking=True),listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+                original_x=video_data['img'].to(device, non_blocking=True),listener_ref=listener_ref,
+                listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip,
                 vae=vae,emo_label=emo_label,emo_label_forregression=emo_label_forregression)
             # loss_dict = diffusion.training_losses(model, x, t, model_kwargs,
             #     original_x=video_data['img'].to(device, non_blocking=True),listener_ref=listener_ref,
