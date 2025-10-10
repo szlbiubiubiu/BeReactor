@@ -1235,7 +1235,7 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
         self.shared_att=Multi_CrossAttention(128,128,head_num=4)#input is  sp_facial, sp_audio, li_facial_past
         # 定义多头注意力模块
         self.shared_att = nn.MultiheadAttention(embed_dim=128, num_heads=4, batch_first=True)
-
+        self.att_linear=nn.Linear(128,64)
         
 
         
@@ -1349,7 +1349,7 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             audio_feat=self.audio_proj(speaker_Audio).mean(dim=1)
             print(audio_feat.shape)
             shared_feat,attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=lisenter_encode_fea.unsqueeze(1),value=audio_feat.unsqueeze(1))
-            shared_feat=shared_feat.squeeze()
+            shared_feat=self.att_linear(shared_feat.squeeze())
             # attn_output, attn_weights = cross_attention(query=query, key=key, value=value)
             encode_fea=self.enc_proj_sec(encode_fea)
             lisenter_encode_fea=self.enc_proj_listener_sec(lisenter_encode_fea)
