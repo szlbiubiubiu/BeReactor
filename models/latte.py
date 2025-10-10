@@ -406,7 +406,7 @@ class Latte(nn.Module):
                 original_x=self.sp_drop_operation(original_x,training=self.training)
                 listener_ref=self.lis_drop_operation(listener_ref,training=self.training)
             facial_cond,hidden_stats,id_feats,listener_id_feats=self.facial_condition(original_x,listener_ref=listener_ref,
-                    listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip)
+                    listener_video_clip_last=listener_video_clip_last,speaker_Audio=sp_audio_clip)
             # facial_cond=self.feat_drop_operation(facial_cond,training=self.training)
             facial_spatial = repeat(facial_cond, 'n d -> (n c) d', c=self.temp_embed.shape[1]) 
             facial_temp = repeat(facial_cond, 'n d -> (n c) d', c=self.pos_embed.shape[1])
