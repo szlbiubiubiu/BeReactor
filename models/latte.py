@@ -1233,7 +1233,11 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
                                     )
         '''end second projection'''
         self.shared_att=Multi_CrossAttention(128,128,head_num=4)#input is  sp_facial, sp_audio, li_facial_past
+        # 定义多头注意力模块
+        self.shared_att = nn.MultiheadAttention(embed_dim=128, num_heads=4, batch_first=True)
+
         
+
         
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()  #output is 128
@@ -1344,8 +1348,9 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             print(speaker_Audio.shape)
             audio_feat=self.audio_proj(speaker_Audio)
             
-            shared_feat=self.shared_att(x=encode_fea,y=lisenter_encode_fea,z=audio_feat)
+            shared_feat=self.shared_att(query=encode_fea,key=lisenter_encode_fea,value=audio_feat)
 
+            # attn_output, attn_weights = cross_attention(query=query, key=key, value=value)
             encode_fea=self.enc_proj_sec(encode_fea)
             lisenter_encode_fea=self.enc_proj_listener_sec(lisenter_encode_fea)
             audio_feat=self.audio_proj_sec(audio_feat)
