@@ -1348,7 +1348,7 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             
             audio_feat=self.audio_proj(speaker_Audio).mean(dim=1)
             print(audio_feat.shape)
-            shared_feat,attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=lisenter_encode_fea.unsqueeze(1),value=audio_feat.unsqueeze(1))
+            shared_feat.squeeze(),attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=lisenter_encode_fea.unsqueeze(1),value=audio_feat.unsqueeze(1))
 
             # attn_output, attn_weights = cross_attention(query=query, key=key, value=value)
             encode_fea=self.enc_proj_sec(encode_fea)
