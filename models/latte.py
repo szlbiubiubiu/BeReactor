@@ -1347,7 +1347,7 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             '''multi-modality fusion'''
             
             audio_feat=self.audio_proj(speaker_Audio).mean(dim=1)
-            print(audio_feat.shape)
+            # print(audio_feat.shape)
             shared_feat,attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=lisenter_encode_fea.unsqueeze(1),value=audio_feat.unsqueeze(1))
             shared_feat=self.att_linear(shared_feat.squeeze())
             # attn_output, attn_weights = cross_attention(query=query, key=key, value=value)
@@ -1356,12 +1356,12 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             audio_feat=self.audio_proj_sec(audio_feat)
 
             '''fusion end'''
-            # print(encode_fea.shape)
-            # print(lisenter_encode_fea.shape)
-            print('shared_feat',shared_feat.shape)
-            print('encode_fea',encode_fea.shape)
-            print('lisenter_encode_fea',lisenter_encode_fea.shape)
-            print('lisenter_ref_id',lisenter_ref_id.shape)
+            # # print(encode_fea.shape)
+            # # print(lisenter_encode_fea.shape)
+            # print('shared_feat',shared_feat.shape)
+            # print('encode_fea',encode_fea.shape)
+            # print('lisenter_encode_fea',lisenter_encode_fea.shape)
+            # print('lisenter_ref_id',lisenter_ref_id.shape)
             feats = self.linear(torch.cat([shared_feat,
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
         else:
