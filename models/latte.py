@@ -30,7 +30,7 @@ from models.emo_fr_net.au_model import MEFL
 
 # the xformers lib allows less memory, faster training and inference
 from face_alignment.detection.sfd.sfd_detector import SFDDetector
-
+from math import sqrt
 
 try:
     import xformers
