@@ -1346,7 +1346,7 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
 
             '''multi-modality fusion'''
             print(speaker_Audio.shape)
-            audio_feat=self.audio_proj(speaker_Audio)
+            audio_feat=self.audio_proj(speaker_Audio).mean(dim=1)
             
             shared_feat=self.shared_att(query=encode_fea,key=lisenter_encode_fea,value=audio_feat)
 
