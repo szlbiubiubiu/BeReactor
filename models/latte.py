@@ -1215,7 +1215,7 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
                                     nn.LayerNorm(64, eps=1e-6)
                                     # nn.Dropout(p=0.5)
                                     )
-        self.audio_proj=nn.Linear(128, 128)
+        self.audio_proj=nn.Linear(78, 128)
 
 
         '''second projection'''
