@@ -1358,6 +1358,10 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             '''fusion end'''
             # print(encode_fea.shape)
             # print(lisenter_encode_fea.shape)
+            print('shared_feat',shared_feat.shape)
+            print('encode_fea',encode_fea.shape)
+            print('lisenter_encode_fea',lisenter_encode_fea.shape)
+            print('lisenter_ref_id',lisenter_ref_id.shape)
             feats = self.linear(torch.cat([shared_feat,
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
         else:
