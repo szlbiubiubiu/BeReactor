@@ -1219,15 +1219,15 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
 
 
         '''second projection'''
-        self.enc_proj=nn.Sequential(nn.Linear(128,128),
+        self.enc_proj_sec=nn.Sequential(nn.Linear(128,128),
                                     # nn.Dropout(p=0.5)
                                     nn.LayerNorm(128, eps=1e-6)
                                     )
-        self.enc_proj_listener=nn.Sequential(nn.Linear(128,128),
+        self.enc_proj_listener_sec=nn.Sequential(nn.Linear(128,128),
                                     # nn.Dropout(p=0.5)
                                     nn.LayerNorm(128, eps=1e-6)
                                     )
-        self.audio_proj=self.enc_proj=nn.Sequential(nn.Linear(128,128),
+        self.audio_proj_sec=self.enc_proj=nn.Sequential(nn.Linear(128,128),
                                     # nn.Dropout(p=0.5)
                                     nn.LayerNorm(128, eps=1e-6)
                                     )
@@ -1346,9 +1346,9 @@ class DiffusionVideoAutoencoder_v3(nn.Module):
             
             shared_feat=self.shared_att(x=encode_fea,y=lisenter_encode_fea,z=audio_feat)
 
-            encode_fea=self.enc_proj(encode_fea)
-            lisenter_encode_fea=self.enc_proj_listener(lisenter_encode_fea)
-            audio_feat=self.audio_proj(audio_feat)
+            encode_fea=self.enc_proj_sec(encode_fea)
+            lisenter_encode_fea=self.enc_proj_listener_sec(lisenter_encode_fea)
+            audio_feat=self.audio_proj_sec(audio_feat)
 
             '''fusion end'''
             # print(encode_fea.shape)
