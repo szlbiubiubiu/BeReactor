@@ -399,7 +399,7 @@ class GaussianDiffusion:
         denoised_fn=None,
         cond_fn=None,
         model_kwargs=None,
-        original_x=None,listener_ref=None,listener_video_clip_last=None
+        original_x=None,listener_ref=None,listener_video_clip_last=None,sp_audio_clip=None
     ):
         """
         Sample x_{t-1} from the model at the given timestep.
@@ -424,7 +424,7 @@ class GaussianDiffusion:
             clip_denoised=clip_denoised,
             denoised_fn=denoised_fn,
             model_kwargs=model_kwargs,
-            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip
         )
         noise = th.randn_like(x)
         nonzero_mask = (
@@ -446,7 +446,7 @@ class GaussianDiffusion:
         model_kwargs=None,
         device=None,
         progress=False,
-        original_x=None,listener_ref=None,listener_video_clip_last=None,
+        original_x=None,listener_ref=None,listener_video_clip_last=None,sp_audio_clip=None
     ):
         """
         Generate samples from the model.
@@ -477,7 +477,7 @@ class GaussianDiffusion:
             model_kwargs=model_kwargs,
             device=device,
             progress=progress,
-            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip
         ):
             final = sample
         return final["sample"]
@@ -493,7 +493,7 @@ class GaussianDiffusion:
         model_kwargs=None,
         device=None,
         progress=False,
-        original_x=None,listener_ref=None,listener_video_clip_last=None
+        original_x=None,listener_ref=None,listener_video_clip_last=None,sp_audio_clip=None
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -528,7 +528,7 @@ class GaussianDiffusion:
                     denoised_fn=denoised_fn,
                     cond_fn=cond_fn,
                     model_kwargs=model_kwargs,
-                    original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+                    original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip
                 )
                 yield out
                 img = out["sample"]
