@@ -1512,6 +1512,7 @@ def main(args):
             x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
+            sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
             if listener_ref.shape[1]<32:
                 pdb.set_trace()
                 a=1
@@ -1556,12 +1557,14 @@ def main(args):
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
                     sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,#torch.flip(listener_ref, dims=(0,))
+                    original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+                    sp_audio_clip=sp_audio_clip#torch.flip(listener_ref, dims=(0,))
                 )
             elif args.sample_method == 'ddpm':
                 samples = diffusion.p_sample_loop(
                     sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
                     original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+                    sp_audio_clip=sp_audio_clip
                 )
             # pdb.set_trace()
             # print(samples.shape)

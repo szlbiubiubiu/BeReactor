@@ -256,7 +256,7 @@ class GaussianDiffusion:
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
     def p_mean_variance(self, model, x, t, clip_denoised=True, denoised_fn=None, original_x=None,
-            listener_ref=None,listener_video_clip_last=None, model_kwargs=None):
+            listener_ref=None,listener_video_clip_last=None, sp_audio_clip=None,model_kwargs=None):
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
@@ -285,7 +285,8 @@ class GaussianDiffusion:
         # pdb.set_trace()
         # model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
         try:
-            model_output = model(x, t,original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last, **model_kwargs)
+            model_output = model(x, t,original_x=original_x,listener_ref=listener_ref,
+                listener_video_clip_last=listener_video_clip_last, sp_audio_clip=sp_audio_clip,**model_kwargs)
         except:
             # print('error occurs')
             model_output = model(x, t, **model_kwargs)
@@ -542,7 +543,7 @@ class GaussianDiffusion:
         cond_fn=None,
         model_kwargs=None,
         eta=0.0,
-        original_x=None,listener_ref=None,listener_video_clip_last=None
+        original_x=None,listener_ref=None,listener_video_clip_last=None,sp_audio_clip=None
     ):
         """
         Sample x_{t-1} from the model using DDIM.
@@ -555,7 +556,7 @@ class GaussianDiffusion:
             clip_denoised=clip_denoised,
             denoised_fn=denoised_fn,
             model_kwargs=model_kwargs,
-            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last
+            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip
         )
         if cond_fn is not None:
             out = self.condition_score(cond_fn, out, x, t, model_kwargs=model_kwargs)
@@ -633,7 +634,7 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         eta=0.0,
-        original_x=None,listener_ref=None,listener_video_clip_last=None
+        original_x=None,listener_ref=None,listener_video_clip_last=None,sp_audio_clip=None
     ):
         """
         Generate samples from the model using DDIM.
@@ -651,7 +652,8 @@ class GaussianDiffusion:
             device=device,
             progress=progress,
             eta=eta,
-            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=None
+            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=None,
+            sp_audio_clip=None
         ):
             final = sample
         return final["sample"]
@@ -668,7 +670,7 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         eta=0.0,
-        original_x=None,listener_ref=None,listener_video_clip_last=None
+        original_x=None,listener_ref=None,listener_video_clip_last=None,sp_audio_clip=None
     ):
         """
         Use DDIM to sample from the model and yield intermediate samples from
@@ -703,7 +705,7 @@ class GaussianDiffusion:
                     cond_fn=cond_fn,
                     model_kwargs=model_kwargs,
                     eta=eta,
-                    original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=None
+                    original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=None,sp_audio_clip=sp_audio_clip
                 )
                 yield out
                 img = out["sample"]
