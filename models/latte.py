@@ -246,8 +246,8 @@ class conditional_zero_masking(nn.Module):
             mask_both = (random_probs >= T2) & (random_probs < T3)
             if mask_both.any():
                 print('drop_both, random_probs',random_probs)
-                print('mask_image_only=',mask_image_only)
-                print('mask_embedding_only=',mask_embedding_only)
+                print('mask_both=',mask_both)
+                # print('mask_embedding_only=',mask_embedding_only)
                 masked_image[mask_both] = 0
                 masked_listener_past[mask_both]=0
                 masked_embedding[mask_both] = 0
