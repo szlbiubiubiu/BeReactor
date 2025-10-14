@@ -228,16 +228,16 @@ class conditional_zero_masking(nn.Module):
             # unsqueeze_(-1, -1, -1) 是为了让布尔张量能正确地广播到 image 的维度 [batch, c, w, h]
             # 但更简单的方法是直接使用: masked_image[mask_image_only] = 0
             if mask_image_only.any():
-                print('drop_videp, random_probs',random_probs)
-                print('mask_image_only=',mask_image_only)
+                # print('drop_videp, random_probs',random_probs)
+                # print('mask_image_only=',mask_image_only)
                 # image 的形状是 [B, C, W, H]，只需要 B 上的索引
                 masked_image[mask_image_only] = 0
                 masked_listener_past[mask_image_only]=0
             # 2. 概率在 [T1, T2]: 对 embedding 的当前 batch 置零
             mask_embedding_only = (random_probs >= T1) & (random_probs < T2)
             if mask_embedding_only.any():
-                print('drop_embd, random_probs',random_probs)
-                print('mask_embedding_only=',mask_embedding_only)
+                # print('drop_embd, random_probs',random_probs)
+                # print('mask_embedding_only=',mask_embedding_only)
                 # embedding 的形状是 [B, D]，只需要 B 上的索引
                 masked_embedding[mask_embedding_only] = 0
                 
@@ -245,8 +245,8 @@ class conditional_zero_masking(nn.Module):
             # 注意: T3 <= 1.0，所以这里使用 < T3
             mask_both = (random_probs >= T2) & (random_probs < T3)
             if mask_both.any():
-                print('drop_both, random_probs',random_probs)
-                print('mask_both=',mask_both)
+                # print('drop_both, random_probs',random_probs)
+                # print('mask_both=',mask_both)
                 # print('mask_embedding_only=',mask_embedding_only)
                 masked_image[mask_both] = 0
                 masked_listener_past[mask_both]=0
