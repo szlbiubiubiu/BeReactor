@@ -248,8 +248,8 @@ class conditional_zero_masking(nn.Module):
                 print('drop_both, random_probs',random_probs)
                 print('mask_image_only=',mask_image_only)
                 print('mask_embedding_only=',mask_embedding_only)
-                masked_image[mask_image_only] = 0
-                masked_listener_past[mask_image_only]=0
+                masked_image[mask_both] = 0
+                masked_listener_past[mask_both]=0
                 masked_embedding[mask_both] = 0
 
             # 4. 概率在 [T3, 1]: 都不置零 (保持原值, 因为我们从 clone() 开始)
