@@ -1746,7 +1746,7 @@ class DiffusionVideoAutoencoder_v4(nn.Module):
         # if drop_image_embed==1:
         #     lisenter_ref_id=torch.zeros_like(lisenter_ref_id)
         '''drop video and id'''
-        id,listener_video_clip_last,lisenter_ref_id=self.both_drop(id,listener_video_clip_last,lisenter_ref_id)
+        id,listener_video_clip_last,lisenter_ref_id=self.both_drop(id,listener_video_clip_last,lisenter_ref_id,training=self.training)
 
         video_input=id.permute(0,2,1,3,4)
         # if drop_video==1:
