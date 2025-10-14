@@ -206,8 +206,8 @@ class conditional_zero_masking(nn.Module):
         # '''
         if training:
             T1=self.v_dropout_prob
-            T2=self.i_drop_rate + self.t_drop_rate
-            T3=self.i_drop_rate + self.t_drop_rate+self.both_drop_prob
+            T2=self.i_drop_rate + self.id_drop_prob
+            T3=self.i_drop_rate + self.id_drop_prob+self.both_drop_prob
             batch_size = image.size(0)
             
             # 为每个 batch 元素生成一个在 [0, 1) 上的随机概率
