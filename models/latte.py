@@ -229,6 +229,7 @@ class conditional_zero_masking(nn.Module):
             # 但更简单的方法是直接使用: masked_image[mask_image_only] = 0
             if mask_image_only.any():
                 print('drop_videp, random_probs',random_probs)
+                print('mask_image_only=',mask_image_only)
                 # image 的形状是 [B, C, W, H]，只需要 B 上的索引
                 masked_image[mask_image_only] = 0
                 masked_listener_past[mask_image_only]=0
@@ -236,6 +237,7 @@ class conditional_zero_masking(nn.Module):
             mask_embedding_only = (random_probs >= T1) & (random_probs < T2)
             if mask_embedding_only.any():
                 print('drop_embd, random_probs',random_probs)
+                print('mask_embedding_only=',mask_embedding_only)
                 # embedding 的形状是 [B, D]，只需要 B 上的索引
                 masked_embedding[mask_embedding_only] = 0
                 
@@ -244,6 +246,8 @@ class conditional_zero_masking(nn.Module):
             mask_both = (random_probs >= T2) & (random_probs < T3)
             if mask_both.any():
                 print('drop_both, random_probs',random_probs)
+                print('mask_image_only=',mask_image_only)
+                print('mask_embedding_only=',mask_embedding_only)
                 masked_image[mask_image_only] = 0
                 masked_listener_past[mask_image_only]=0
                 masked_embedding[mask_both] = 0
