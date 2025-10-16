@@ -25,6 +25,7 @@ from decord import cpu, gpu
 from torch import distributed
 import platform
 from pathlib import Path
+import hydra
 class Transform(object):
     def __init__(self, img_size=256, crop_size=224):#align with unet 256 resolution
         self.img_size = img_size
