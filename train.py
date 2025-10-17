@@ -43,6 +43,8 @@ from utils import (clip_grad_norm_, create_logger, update_ema,
 import numpy as np
 from transformers import T5EncoderModel, T5Tokenizer
 from models.autoencoder.vqgan import VQEncoderInterface, VQDecoderInterface
+#if reaction 2025, use hydra
+import hydra
 #################################################################################
 #                                  Training Loop                                #
 #################################################################################
@@ -56,7 +58,8 @@ def count_model_parameters(model: torch.nn.Module):
     trainable_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
     rest_count = sum(p.numel() for p in model.parameters() if not p.requires_grad)
     return trainable_count, rest_count, trainable_count + rest_count
-
+@hydra.main(
+    version_base=None, config_path='configs/reaction2025', config_name='hydra2025')
 def main(args):
 
     assert torch.cuda.is_available(), "Training currently requires at least one GPU."
