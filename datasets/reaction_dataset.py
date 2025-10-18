@@ -1399,6 +1399,7 @@ class ReactionDataset_2025(data.Dataset):
                 listener_video_clip = torch.stack(clip, dim=0)
 
                 #load listener past clip
+                vr = VideoReader(video_path, ctx=cpu(0))
                 for i in range(last_cp, last_cp + self._clip_length):
                     if i >= len(vr):
                         break
