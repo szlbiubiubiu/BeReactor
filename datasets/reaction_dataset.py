@@ -1438,6 +1438,7 @@ class ReactionDataset_2025(data.Dataset):
             if self.load_3dmm_l:
                 params_path = os.fspath(Path(self._3dmm_dir) / listener_path.with_suffix('.npy'))
                 params = torch.FloatTensor(np.load(params_path)).squeeze()
+                print('self.load_3dmm_s',self.load_3dmm_s)
                 assert self.load_3dmm_s, "Loading speaker's 3dmm is required for listener's 3dmm at the moment"
                 params = params[cp: cp + self._clip_length]
                 listener_params_clip = self._transform_3dmm(params)[0]
