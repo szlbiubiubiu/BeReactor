@@ -1130,7 +1130,7 @@ class ReactionDataset_2025(data.Dataset):
                  target_size: int = 224,
                  crop_size: int = 224,
                  fps: int = 30,
-                 audio_feature_type: str = 'wav2vec',
+                 audio_feature_type: str = 'mfcc',
                  load_video_s: bool = False,
                  load_video_l: bool = False,
                  load_audio: bool = True,
