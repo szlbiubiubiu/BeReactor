@@ -1215,13 +1215,22 @@ class ReactionDataset_2025(data.Dataset):
         self.listener_path_list = listener_path_list.copy()
         self.gt_path_list = gt_path_list.copy()
 
-        mean_face_path = os.path.join(hydra.utils.get_original_cwd(), 'external/FaceVerse/mean_face.npy')
+        # mean_face_path = os.path.join(hydra.utils.get_original_cwd(), 'external/FaceVerse/mean_face.npy')
+        # self.mean_face = torch.FloatTensor(
+        #     np.load(mean_face_path).astype(np.float32)).view(1, 1, -1)
+        # std_face_path = os.path.join(hydra.utils.get_original_cwd(), 'external/FaceVerse/std_face.npy')
+        # self.std_face = torch.FloatTensor(
+        #     np.load(std_face_path).astype(np.float32)).view(1, 1, -1)
+
+        mean_face_path = os.path.join(hos.getcwd(), 'external/FaceVerse/mean_face.npy')
         self.mean_face = torch.FloatTensor(
             np.load(mean_face_path).astype(np.float32)).view(1, 1, -1)
-        std_face_path = os.path.join(hydra.utils.get_original_cwd(), 'external/FaceVerse/std_face.npy')
+        std_face_path = os.path.join(os.getcwd(), 'external/FaceVerse/std_face.npy')
         self.std_face = torch.FloatTensor(
             np.load(std_face_path).astype(np.float32)).view(1, 1, -1)
 
+
+        
         self.normalize_3dmm = normalize_3dmm
         if normalize_3dmm == 'standard':
             self._transform_3dmm = transforms.Lambda(lambda e: (e - self.mean_face) / self.std_face)
