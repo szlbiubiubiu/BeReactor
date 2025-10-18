@@ -1222,7 +1222,7 @@ class ReactionDataset_2025(data.Dataset):
         # self.std_face = torch.FloatTensor(
         #     np.load(std_face_path).astype(np.float32)).view(1, 1, -1)
 
-        mean_face_path = os.path.join(hos.getcwd(), 'external/FaceVerse/mean_face.npy')
+        mean_face_path = os.path.join(os.getcwd(), 'external/FaceVerse/mean_face.npy')
         self.mean_face = torch.FloatTensor(
             np.load(mean_face_path).astype(np.float32)).view(1, 1, -1)
         std_face_path = os.path.join(os.getcwd(), 'external/FaceVerse/std_face.npy')
