@@ -1438,7 +1438,6 @@ class ReactionDataset_2025(data.Dataset):
             if self.load_3dmm_l:
                 params_path = os.fspath(Path(self._3dmm_dir) / listener_path.with_suffix('.npy'))
                 params = torch.FloatTensor(np.load(params_path)).squeeze()
-                print('self.load_3dmm_s',self.load_3dmm_s)
                 assert self.load_3dmm_s, "Loading speaker's 3dmm is required for listener's 3dmm at the moment"
                 params = params[cp: cp + self._clip_length]
                 listener_params_clip = self._transform_3dmm(params)[0]
@@ -1485,12 +1484,12 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     # pdb.set_trace()
 
 
-    # '''those are for 2024'''
-    dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
-                              clip_length=conf.clip_length,
-                              load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=True,
-                              load_3dmm_l=True, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+    # # '''those are for 2024'''
+    # dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+    #                           clip_length=conf.clip_length,
+    #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
+    #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     
     # #this is for 2024 training
     # dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
@@ -1520,8 +1519,8 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     '''those are for 2025'''
     dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data',split=split,clip_length=conf.clip_length,crop_size=conf.crop_size,
                 target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
-                              load_3dmm_l=load_3dmm_l,normalize_3dmm='standard')
+                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=True,
+                              load_3dmm_l=True,normalize_3dmm='standard')
     
     # dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
     #                           clip_length=conf.clip_length,
