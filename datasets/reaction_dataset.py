@@ -1241,7 +1241,7 @@ class ReactionDataset_2025(data.Dataset):
 
         self._transform = Transform(target_size, crop_size)
         self._len = len(self.speaker_path_list)
-
+        print('reaction dataset, length is', self._len )
     def __getitem__(self, index):
         speaker_path = self.speaker_path_list[index]  # e.g., speaker/session*/Camera-2024-06-21-103121-103102
         listener_path = self.listener_path_list[index]  # e.g., listener/session*/Camera-2024-06-21-103121-103102
