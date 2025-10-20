@@ -1764,6 +1764,16 @@ def main(args):
     # TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     # pdb.set_trace()
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
+
+
+    #if 2025
+    results = compute_metrics(
+            speaker_emotions_input_all,
+            listener_emotion_preds_lists_all,
+            listener_emotion_GTs_all,
+        )
+
+    #elif 2024
     if len(all_listener_emotion_pred)<len(dataset):
         repeat_times=len(dataset)//len(all_listener_emotion_pred)
         fake_all_listener_emotion_pred=all_listener_emotion_pred.repeat(repeat_times,1,1,1)
@@ -1792,7 +1802,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/001-Latte-S-4-F32S3-reaction-Amp/checkpoints/0070000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/015-Latte-S-4-F32S3-reaction-Amp/checkpoints/0100000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     # /data/scratch/acw569/checkpoint/reaction/previous/0240000.pt
