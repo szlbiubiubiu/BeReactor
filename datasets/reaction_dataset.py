@@ -1522,7 +1522,7 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=True,
     #                           load_3dmm_l=True,normalize_3dmm='standard')
-    dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data/val',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
                 target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=True,
                               load_3dmm_l=True,normalize_3dmm='standard')
