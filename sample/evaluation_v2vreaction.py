@@ -802,6 +802,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     input_latent_list = []
     croped_image=[]
     # pdb.set_trace()
+    print('len(coord_list)',len(coord_list))
+    print('len(frame_list)',len(frame_list))
     for bbox, frame in zip(coord_list, frame_list):
         frame=np.squeeze(frame)
         if bbox == coord_placeholder:
