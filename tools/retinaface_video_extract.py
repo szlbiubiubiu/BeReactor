@@ -98,8 +98,8 @@ def process_video(input_path: Path, output_dir: Path, args):
     for i, frames in face_frames.items():
         face_video_path = output_dir / f"{input_path.stem}_face_{i+1}.mp4"
         # imageio.mimwrite expects frames as list of numpy arrays (H,W,3) RGB
-        imageio.mimwrite(str(face_video_path), frames, fps=fps, macro_block_size=None)
-
+        # imageio.mimwrite(str(face_video_path), frames, fps=fps, macro_block_size=None)
+        imageio.mimwrite(str(face_video_path), frames, fps=8, quality=9)
     print(f'\n完成提取：{input_path} -> {output_dir}')
 
 def is_video_file(path: Path):
