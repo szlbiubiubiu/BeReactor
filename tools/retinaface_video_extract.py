@@ -23,7 +23,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import imageio
-
+from tqdm import tqdm
 try:
     from retinaface import RetinaFace
 except Exception as e:
@@ -123,7 +123,7 @@ def main():
     video_files = [p for p in input_dir.rglob('*') if is_video_file(p)]
     print(f'找到 {len(video_files)} 个视频文件。')
 
-    for v in video_files:
+    for v in tqdm(video_files):
         rel = v.relative_to(input_dir)
         out_path = output_dir / rel.parent
         process_video(v, out_path, args)
