@@ -15,6 +15,6 @@
 # module load anaconda3/2020.02
 source ~/.bashrc
 # conda activate
-conda activate py37
+conda activate deepface
 
 python retinaface_video_extract.py --input /data/scratch/acw569/face_react/2025data/train/video-face-crop --outdir /data/scratch/acw569/face_react/2025data/train/ZL_crop --show-progress
