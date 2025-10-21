@@ -1,10 +1,10 @@
 #!/bin/bash
 #$ -cwd
 #$ -j y
-#$ -l h_rt=1:0:0     # XX hours 
+#$ -l h_rt=24:0:0     # XX hours 
 #$ -l h_vmem=7.5G      # 11G RAM per core
-#$ -pe smp 16          # 8 cores per GPU
-#$ -l gpu=2           # request 1 GPU
+#$ -pe smp 10          # 8 cores per GPU
+#$ -l gpu=1           # request 1 GPU
 ##$ -l gpu_type=hopper  
 ##$ -l gpu_type=volta 
 #$ -l gpu_type=ampere   
