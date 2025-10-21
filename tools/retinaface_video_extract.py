@@ -9,11 +9,11 @@ retinaface_video_extract.py
 - 使用 Sefik Serengil 的 RetinaFace（https://github.com/serengil/retinaface）。
 - 遍历输入文件夹中的所有视频（支持子目录递归）。
 - 对每一帧使用 RetinaFace 检测人脸。
-- 将检测到的人脸按人脸编号分别保存为独立视频文件。
+- 将检测到的人脸按人脸编号分别保存为独立视频文件（使用 imageio.mimwrite）。
 - 输出文件夹结构与输入保持一致。
 
 依赖：
-    pip install retinaface opencv-python-headless numpy
+    pip install retinaface opencv-python-headless numpy imageio
 """
 
 import os
@@ -22,6 +22,7 @@ import argparse
 from pathlib import Path
 import cv2
 import numpy as np
+import imageio
 
 try:
     from retinaface import RetinaFace
@@ -58,7 +59,7 @@ def process_video(input_path: Path, output_dir: Path, args):
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     frame_idx = 0
-    face_writers = {}
+    face_frames = {}
 
     ensure_dir(output_dir)
 
@@ -84,24 +85,20 @@ def process_video(input_path: Path, output_dir: Path, args):
 
             face = frame[y1c:y2c, x1c:x2c]
 
-            # 初始化该人脸对应的视频写入器
-            face_dir = output_dir / f"{input_path.stem}_face_{i+1}.mp4"
-            if i not in face_writers:
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                h_f, w_f, _ = face.shape
-                writer = cv2.VideoWriter(str(face_dir), fourcc, fps, (w_f, h_f))
-                face_writers[i] = writer
-
-            # 写入帧
-            face_writers[i].write(face)
+            if i not in face_frames:
+                face_frames[i] = []
+            face_frames[i].append(face)
 
         if args.show_progress:
             print(f'视频 {input_path.name} - 帧 {frame_idx}, 检测到人脸: {len(boxes)}', end='\r')
 
     cap.release()
 
-    for writer in face_writers.values():
-        writer.release()
+    # 保存每个人脸为独立视频
+    for i, frames in face_frames.items():
+        face_video_path = output_dir / f"{input_path.stem}_face_{i+1}.mp4"
+        # imageio.mimwrite expects frames as list of numpy arrays (H,W,3) RGB
+        imageio.mimwrite(str(face_video_path), frames, fps=fps, macro_block_size=None)
 
     print(f'\n完成提取：{input_path} -> {output_dir}')
 
