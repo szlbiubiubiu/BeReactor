@@ -70,8 +70,8 @@ def process_video(input_path: Path, output_dir: Path, args):
         if args.skip > 0 and (frame_idx - 1) % args.skip != 0:
             continue
 
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        faces = detect_faces_on_frame(frame_rgb)
+        # frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        faces = detect_faces_on_frame(frame)
 
         for i, face in enumerate(faces):
             if i not in face_frames:
