@@ -58,8 +58,10 @@ def process_video(input_path: Path, output_dir: Path, args):
     face_frames = {}
 
     ensure_dir(output_dir)
-
+    count=0
     while True:
+        print('count:',count)
+        count+=1
         ret, frame = cap.read()
         if not ret:
             break
