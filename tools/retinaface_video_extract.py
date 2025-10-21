@@ -85,7 +85,8 @@ def process_video(input_path: Path, output_dir: Path, args):
     cap.release()
 
     for i, frames in face_frames.items():
-        face_video_path = output_dir / f"{input_path.stem}_face_{i+1}.mp4"
+        face_video_path = output_dir / f"{input_path.stem}.mp4"
+        # face_video_path = output_dir / f"{input_path.stem}_face_{i+1}.mp4" 
         imageio.mimwrite(str(face_video_path), frames, fps=fps, macro_block_size=None)
 
     print(f'\n完成提取：{input_path} -> {output_dir}')
