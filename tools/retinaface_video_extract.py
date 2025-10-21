@@ -11,9 +11,10 @@ retinaface_video_extract.py
 - 对每一帧使用 RetinaFace 检测人脸。
 - 将检测到的人脸按人脸编号分别保存为独立视频文件（使用 imageio.mimwrite）。
 - 输出文件夹结构与输入保持一致。
+- 使用 GPU（如果可用）。
 
 依赖：
-    pip install retinaface opencv-python-headless numpy imageio
+    pip install retinaface opencv-python-headless numpy imageio torch torchvision
 """
 
 import os
@@ -23,12 +24,17 @@ from pathlib import Path
 import cv2
 import numpy as np
 import imageio
-from tqdm import tqdm
+import torch
+
 try:
     from retinaface import RetinaFace
 except Exception as e:
     print("错误：未能导入 retinaface 模块。请先安装：\n    pip install retinaface")
     sys.exit(1)
+
+# 设置 GPU 可用
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'使用设备: {device}')
 
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
@@ -36,7 +42,7 @@ def ensure_dir(p: Path):
 def detect_faces_on_frame(frame_rgb):
     boxes = []
     try:
-        results = RetinaFace.detect_faces(frame_rgb)
+        results = RetinaFace.detect_faces(frame_rgb, device=device)
     except Exception as e:
         print("检测错误:", e)
         return boxes
@@ -94,12 +100,10 @@ def process_video(input_path: Path, output_dir: Path, args):
 
     cap.release()
 
-    # 保存每个人脸为独立视频
     for i, frames in face_frames.items():
         face_video_path = output_dir / f"{input_path.stem}_face_{i+1}.mp4"
-        # imageio.mimwrite expects frames as list of numpy arrays (H,W,3) RGB
-        # imageio.mimwrite(str(face_video_path), frames, fps=fps, macro_block_size=None)
-        imageio.mimwrite(str(face_video_path), frames, fps=8, quality=9)
+        imageio.mimwrite(str(face_video_path), frames, fps=fps, macro_block_size=None)
+
     print(f'\n完成提取：{input_path} -> {output_dir}')
 
 def is_video_file(path: Path):
@@ -123,7 +127,7 @@ def main():
     video_files = [p for p in input_dir.rglob('*') if is_video_file(p)]
     print(f'找到 {len(video_files)} 个视频文件。')
 
-    for v in tqdm(video_files):
+    for v in video_files:
         rel = v.relative_to(input_dir)
         out_path = output_dir / rel.parent
         process_video(v, out_path, args)
