@@ -6,10 +6,11 @@ retinaface_video_extract.py
     python retinaface_video_extract.py --input path/to/input_dir --outdir path/to/output_dir
 
 说明：
+- 使用 Sefik Serengil 的 RetinaFace（https://github.com/serengil/retinaface）。
 - 遍历输入文件夹中的所有视频（支持子目录递归）。
-- 使用 RetinaFace 对每一帧进行人脸检测。
-- 将检测到的人脸按固定大小裁剪并放在同一帧的网格中，保存为一个新视频，
-  输出目录结构与输入目录结构一致。
+- 对每一帧使用 RetinaFace 检测人脸。
+- 将检测到的人脸裁剪并放入同一帧的网格，输出为新视频。
+- 输出文件夹结构与输入保持一致。
 
 依赖：
     pip install retinaface opencv-python-headless numpy
@@ -31,26 +32,19 @@ except Exception as e:
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
 
-def detect_faces_on_frame(detector, frame_rgb):
-    try:
-        res = detector.detect_faces(frame_rgb)
-    except AttributeError:
-        res = RetinaFace.detect_faces(frame_rgb)
-
+def detect_faces_on_frame(frame_rgb):
+    """使用 Sefik Serengil 的 RetinaFace 检测人脸，返回 [(x1, y1, x2, y2), ...]"""
     boxes = []
-    if isinstance(res, dict):
-        for k, v in res.items():
-            if isinstance(v, dict) and 'facial_area' in v:
-                x1, y1, x2, y2 = map(int, v['facial_area'])
-            elif all(k2 in v for k2 in ('x1','y1','x2','y2')):
-                x1, y1, x2, y2 = int(v['x1']), int(v['y1']), int(v['x2']), int(v['y2'])
-            else:
-                continue
-            boxes.append((x1, y1, x2, y2))
-    elif isinstance(res, list):
-        for r in res:
-            if isinstance(r, (list, tuple)) and len(r) >= 4:
-                x1, y1, x2, y2 = map(int, r[:4])
+    try:
+        results = RetinaFace.detect_faces(frame_rgb)
+    except Exception as e:
+        print("检测错误:", e)
+        return boxes
+
+    if isinstance(results, dict):
+        for face_id, face_data in results.items():
+            if 'facial_area' in face_data:
+                x1, y1, x2, y2 = map(int, face_data['facial_area'])
                 boxes.append((x1, y1, x2, y2))
     return boxes
 
@@ -89,8 +83,6 @@ def process_video(input_path: Path, output_path: Path, args):
     ensure_dir(output_path.parent)
     writer = cv2.VideoWriter(str(output_path), fourcc, fps, (grid_w, grid_h))
 
-    detector = RetinaFace
-
     frame_idx = 0
     written = 0
 
@@ -104,10 +96,7 @@ def process_video(input_path: Path, output_path: Path, args):
             continue
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        try:
-            boxes = detect_faces_on_frame(detector, frame_rgb)
-        except Exception as e:
-            boxes = []
+        boxes = detect_faces_on_frame(frame_rgb)
 
         faces_imgs = []
         for (x1, y1, x2, y2) in boxes:
@@ -136,7 +125,7 @@ def is_video_file(path: Path):
     return path.suffix.lower() in {'.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv'}
 
 def main():
-    parser = argparse.ArgumentParser(description="递归遍历文件夹，对所有视频使用 RetinaFace 提取人脸并输出新视频。")
+    parser = argparse.ArgumentParser(description="递归遍历文件夹，对所有视频使用 RetinaFace (Sefik Serengil) 提取人脸并输出新视频。")
     parser.add_argument('--input', '-i', required=True, help='输入文件夹路径')
     parser.add_argument('--outdir', '-o', required=True, help='输出文件夹路径')
     parser.add_argument('--face-size', type=int, default=256)
