@@ -25,11 +25,11 @@ import cv2
 import numpy as np
 import imageio
 from deepface import DeepFace
-import torch
+# import torch
 
-# 设置 GPU 可用
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(f'使用设备: {device}')
+# # 设置 GPU 可用
+# device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# print(f'使用设备: {device}')
 
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
