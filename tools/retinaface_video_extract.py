@@ -38,7 +38,7 @@ def detect_faces_on_frame(frame_rgb):
     faces = []
     try:
         # DeepFace.extract_faces 返回 list of dict with 'face' key
-        results = DeepFace.extract_faces(frame_rgb, detector_backend='mtcnn', enforce_detection=False, align=False)
+        results = DeepFace.extract_faces(frame_rgb, detector_backend='centerface', enforce_detection=False, align=False)
         for res in results:
             if 'face' in res and res['face'] is not None:
                 faces.append(res['face'])
