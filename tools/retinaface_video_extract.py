@@ -25,7 +25,7 @@ import cv2
 import numpy as np
 import imageio
 import torch
-import tqdm
+from tqdm import tqdm
 try:
     from retinaface import RetinaFace
 except Exception as e:
