@@ -7,7 +7,7 @@
 #$ -l gpu=1           # request 1 GPU
 ##$ -l gpu_type=hopper  
 ##$ -l gpu_type=volta 
-#$ -l gpu_type=ampere   
+##$ -l gpu_type=ampere   
 ##$ -l cluster=andrena
 ##$ -m se
 #$-l rocky
