@@ -29,7 +29,7 @@ from einops import rearrange
 from models import get_models
 from torchvision.utils import save_image
 from diffusers.models import AutoencoderKL
-from models.clip import TextEmbedder
+# from models.clip import TextEmbedder
 import imageio
 from omegaconf import OmegaConf
 
