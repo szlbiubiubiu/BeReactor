@@ -26,7 +26,7 @@ import numpy as np
 import imageio
 from deepface import DeepFace
 # import torch
-
+from tqdm import tqdm
 # # 设置 GPU 可用
 # device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # print(f'使用设备: {device}')
@@ -76,7 +76,7 @@ def process_video(input_path: Path, output_dir: Path, args):
         for i, face in enumerate(faces):
             if i not in face_frames:
                 face_frames[i] = []
-            print('faces max and min',face.max(), face.min())
+            # print('faces max and min',face.max(), face.min())
             face=cv2.resize(face,(256,256))
             face_frames[i].append(face)
 
@@ -113,7 +113,7 @@ def main():
     video_files = [p for p in input_dir.rglob('*') if is_video_file(p)]
     print(f'找到 {len(video_files)} 个视频文件。')
 
-    for v in video_files:
+    for v in tqdm(video_files):
         rel = v.relative_to(input_dir)
         out_path = output_dir / rel.parent
         process_video(v, out_path, args)
