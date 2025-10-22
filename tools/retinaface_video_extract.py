@@ -76,6 +76,7 @@ def process_video(input_path: Path, output_dir: Path, args):
         for i, face in enumerate(faces):
             if i not in face_frames:
                 face_frames[i] = []
+            print('faces max and min',face.max(), face.min())
             # face=cv2.resize(face,(256,256))
             face_frames[i].append(face)
 
