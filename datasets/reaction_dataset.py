@@ -1283,7 +1283,7 @@ class ReactionDataset_2025(data.Dataset):
             speaker_video_clip = torch.stack(clip, dim=0)
             if total_length < self._clip_length*self.interval:
                 speaker_video_clip = torch.cat((speaker_video_clip,
-                                                torch.zeros(size=(self._clip_length - np.int64(total_length/self.interval),
+                                                torch.zeros(size=(self._clip_length - np.ceil(total_length/self.interval),
                                                                   *speaker_video_clip.shape[1:]))), dim=0)
 
         # speaker's facial attribute (emotion) clip
@@ -1323,15 +1323,15 @@ class ReactionDataset_2025(data.Dataset):
 
         if total_length < self._clip_length*self.interval:
             speaker_audio_clip = torch.cat((speaker_audio_clip,
-                                            torch.zeros(size=(self._clip_length - np.int64(total_length/self.interval),
+                                            torch.zeros(size=(self._clip_length - np.ceil(total_length/self.interval),
                                                               speaker_audio_clip.shape[-1]))), dim=0) \
                 if self.load_audio else speaker_audio_clip
             speaker_emotion_clip = torch.cat((speaker_emotion_clip,
-                                            torch.zeros(size=(self._clip_length - np.int64(total_length/self.interval),
+                                            torch.zeros(size=(self._clip_length - np.ceil(total_length/self.interval),
                                                               speaker_emotion_clip.shape[-1]))), dim=0) \
                 if self.load_emotion_s else speaker_emotion_clip
             speaker_params_clip = torch.cat((speaker_params_clip,
-                                            torch.zeros(size=(self._clip_length - np.int64(total_length/self.interval),
+                                            torch.zeros(size=(self._clip_length - np.ceil(total_length/self.interval),
                                                               speaker_params_clip.shape[-1]))), dim=0) \
                 if self.load_3dmm_s else speaker_params_clip
 
