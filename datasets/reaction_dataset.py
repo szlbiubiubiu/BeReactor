@@ -1418,9 +1418,10 @@ class ReactionDataset_2025(data.Dataset):
                     listener_video_clip = torch.cat(
                         (listener_video_clip,
                          torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0)
+                if len(listener_video_clip)<self._clip_length:
                     listener_video_clip_last = torch.cat(
                         (listener_video_clip_last,
-                         torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0)
+                         torch.zeros(size=(self._clip_length - len(listener_video_clip), *listener_video_clip.shape[1:]))), dim=0)
                         
                 
                 
