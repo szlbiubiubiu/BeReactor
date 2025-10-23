@@ -1422,11 +1422,11 @@ class ReactionDataset_2025(data.Dataset):
                         (listener_video_clip,
                          torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0)
                 if len(listener_video_clip_last)<self._clip_length:
-                    print('listener_video_clip_last previous shape',listener_video_clip_last.shape)
+                    # print('listener_video_clip_last previous shape',listener_video_clip_last.shape)
                     listener_video_clip_last = torch.cat(
                         (listener_video_clip_last,
                          torch.zeros(size=(self._clip_length - len(listener_video_clip_last), *listener_video_clip_last.shape[1:]))), dim=0)
-                    print('listener_video_clip_last after shape',listener_video_clip_last.shape)
+                    # print('listener_video_clip_last after shape',listener_video_clip_last.shape)
                     # pdb.set_trace()
                     
                         
@@ -1477,11 +1477,11 @@ class ReactionDataset_2025(data.Dataset):
 
             speaker_clip_length = torch.tensor(total_length)
             listener_clip_length = torch.tensor(total_length)
-        print('listener_video_clip.shape: ',listener_video_clip.shape)
-        print('speaker_video_clip.shape',speaker_video_clip.shape)
-        print('listener_video_clip_last.shape',listener_video_clip_last.shape)
-        print('listener_emotion_clip.shape: ',listener_emotion_clip.shape)
-        print('speaker_emotion_clip.shape: ',speaker_emotion_clip.shape)
+        # print('listener_video_clip.shape: ',listener_video_clip.shape)
+        # print('speaker_video_clip.shape',speaker_video_clip.shape)
+        # print('listener_video_clip_last.shape',listener_video_clip_last.shape)
+        # print('listener_emotion_clip.shape: ',listener_emotion_clip.shape)
+        # print('speaker_emotion_clip.shape: ',speaker_emotion_clip.shape)
         
         # speaker_emotion_clip
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion_clip,
