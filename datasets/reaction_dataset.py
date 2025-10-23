@@ -1272,7 +1272,7 @@ class ReactionDataset_2025(data.Dataset):
         speaker_video_clip = torch.zeros(size=(0,))
         if self.load_video_s:
             clip = []
-            for i in range(cp, cp + self._clip_length):
+            for i in range(cp,cp + self._clip_length*self.interval,self.interval):
                 if i >= len(vr):
                     break
                 frame = vr[i]
@@ -1281,7 +1281,7 @@ class ReactionDataset_2025(data.Dataset):
                 clip.append(img)
             del vr
             speaker_video_clip = torch.stack(clip, dim=0)
-            if total_length < self._clip_length:
+            if total_length < self._clip_length*self.interval:
                 speaker_video_clip = torch.cat((speaker_video_clip,
                                                 torch.zeros(size=(self._clip_length - total_length,
                                                                   *speaker_video_clip.shape[1:]))), dim=0)
@@ -1292,14 +1292,14 @@ class ReactionDataset_2025(data.Dataset):
             emotion_path = os.fspath(Path(self._emotion_dir) / speaker_path.with_suffix('.npy'))
             emotion = np.load(emotion_path)
             speaker_emotion_clip = torch.from_numpy(emotion)
-            speaker_emotion_clip = speaker_emotion_clip[cp: cp + self._clip_length]  # (25-d)
+            speaker_emotion_clip = speaker_emotion_clip[cp: cp + self._clip_length*self.interval:self.interval]  # (25-d)
 
         # speaker's 3DMM coefficient (facial motion) clip
         speaker_params_clip = torch.zeros(size=(0,))
         if self.load_3dmm_s:
             params_path = os.fspath(Path(self._3dmm_dir) / speaker_path.with_suffix('.npy'))
             params = torch.FloatTensor(np.load(params_path)).squeeze()
-            params = params[cp: cp + self._clip_length]
+            params = params[cp: cp + self._clip_length*self.interval:self.interval]
             speaker_params_clip = self._transform_3dmm(params)[0]  # (58-d)
 
         # speaker's audio feature clip
@@ -1317,11 +1317,11 @@ class ReactionDataset_2025(data.Dataset):
                 listener_audio_path=os.fspath(Path(self._audio_dir) / listener_path.with_suffix('.wav'))
             else:
                 raise ValueError(f"Unknown audio feature type: {self.audio_feature_type}")
-            speaker_audio_clip = torch.from_numpy(speaker_audio_clip)[cp:cp + self._clip_length]
+            speaker_audio_clip = torch.from_numpy(speaker_audio_clip)[cp: cp + self._clip_length*self.interval:self.interval]
             speaker_audio_path=audio_path
             listener_audio_path=listener_audio_path
 
-        if total_length < self._clip_length:
+        if total_length < self._clip_length*self.interval:
             speaker_audio_clip = torch.cat((speaker_audio_clip,
                                             torch.zeros(size=(self._clip_length - total_length,
                                                               speaker_audio_clip.shape[-1]))), dim=0) \
@@ -1389,7 +1389,7 @@ class ReactionDataset_2025(data.Dataset):
                 vr = VideoReader(video_path, ctx=cpu(0))
 
                 clip = []
-                for i in range(cp, cp + self._clip_length):
+                for i in range(cp, cp + self._clip_length*self.interval,self.interval):
                     if i >= len(vr):
                         break
                     frame = vr[i]
@@ -1401,7 +1401,7 @@ class ReactionDataset_2025(data.Dataset):
 
                 #load listener past clip
                 vr = VideoReader(video_path, ctx=cpu(0))
-                for i in range(last_cp, last_cp + self._clip_length):
+                for i in range(last_cp, last_cp + self._clip_length*self.interval,self.interval):
                     if i >= len(vr):
                         break
                     frame = vr[i]
@@ -1428,7 +1428,7 @@ class ReactionDataset_2025(data.Dataset):
                 emotion_path = os.fspath(Path(self._emotion_dir) / listener_path.with_suffix('.npy'))
                 emotion = np.load(emotion_path)
                 assert self.load_emotion_s, "Loading speaker's emotion is required for listener's emotion at the moment"
-                listener_emotion_clip = torch.from_numpy(emotion)[cp: cp + self._clip_length]
+                listener_emotion_clip = torch.from_numpy(emotion)[cp: cp + self._clip_length*self.interval:self.interval]
                 _clip_length = len(listener_emotion_clip)
                 listener_emotion_clip = torch.cat(
                     (listener_emotion_clip, speaker_emotion_clip[(_clip_length - self._clip_length):]), dim=0) \
@@ -1440,7 +1440,7 @@ class ReactionDataset_2025(data.Dataset):
                 params_path = os.fspath(Path(self._3dmm_dir) / listener_path.with_suffix('.npy'))
                 params = torch.FloatTensor(np.load(params_path)).squeeze()
                 assert self.load_3dmm_s, "Loading speaker's 3dmm is required for listener's 3dmm at the moment"
-                params = params[cp: cp + self._clip_length]
+                params = params[cp: cp + self._clip_length*self.interval:self.interval]
                 listener_params_clip = self._transform_3dmm(params)[0]
                 _clip_length = len(listener_params_clip)
                 listener_params_clip = torch.cat(
