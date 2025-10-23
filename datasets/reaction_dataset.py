@@ -1418,11 +1418,19 @@ class ReactionDataset_2025(data.Dataset):
                     listener_video_clip = torch.cat(#np.int64(total_length/self.interval)
                         (listener_video_clip, speaker_video_clip[(_clip_length - self._clip_length):]), dim=0) \
                         if _clip_length < self._clip_length else listener_video_clip[:self._clip_length]
+                    
+                    listener_video_clip_last = torch.cat(#np.int64(total_length/self.interval)
+                        (listener_video_clip_last, speaker_video_clip[(_clip_length - self._clip_length):]), dim=0) \
+                        if _clip_length < self._clip_length else listener_video_clip[:self._clip_length]
                 else:
                     listener_video_clip = torch.cat(
                         (listener_video_clip,
                          torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0) \
                         if _clip_length < self._clip_length else listener_video_clip[:self._clip_length]
+                    listener_video_clip_last = torch.cat(
+                    (listener_video_clip_last,
+                        torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0) \
+                    if _clip_length < self._clip_length else listener_video_clip[:self._clip_length]
 
             # listener's (ground-truth) facial attribute (emotion) clip
             listener_emotion_clip = torch.zeros(size=(0,))
