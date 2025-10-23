@@ -1281,7 +1281,9 @@ class ReactionDataset_2025(data.Dataset):
                 clip.append(img)
             del vr
             speaker_video_clip = torch.stack(clip, dim=0)
-            if total_length < self._clip_length*self.interval or len(speaker_video_clip)<self._clip_length:
+            # if total_length < self._clip_length*self.interval or len(speaker_video_clip)<self._clip_length:
+            if len(speaker_video_clip)<self._clip_length:
+
                 speaker_video_clip = torch.cat((speaker_video_clip,
                                                 torch.zeros(size=(self._clip_length - len(speaker_video_clip),
                                                                   *speaker_video_clip.shape[1:]))), dim=0)
