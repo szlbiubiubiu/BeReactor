@@ -1281,10 +1281,10 @@ class ReactionDataset_2025(data.Dataset):
                 clip.append(img)
             del vr
             speaker_video_clip = torch.stack(clip, dim=0)
-            if total_length < self._clip_length*self.interval:
+            if total_length < self._clip_length*self.interval or len(speaker_video_clip)<self._clip_length:
                 speaker_video_clip = torch.cat((speaker_video_clip,
-                                                torch.zeros(size=(self._clip_length - np.int64(np.ceil(total_length/self.interval)),
-                                                                  *speaker_video_clip.shape[1:]))), dim=0)
+                                                torch.zeros(size=(self._clip_length - len(speaker_video_clip)),
+                                                                  *speaker_video_clip.shape[1:])), dim=0)
 
         # speaker's facial attribute (emotion) clip
         speaker_emotion_clip = torch.zeros(size=(0,))
@@ -1321,17 +1321,17 @@ class ReactionDataset_2025(data.Dataset):
             speaker_audio_path=audio_path
             listener_audio_path=listener_audio_path
 
-        if total_length < self._clip_length*self.interval:
+        if total_length < self._clip_length*self.interval or len(speaker_audio_clip)<self._clip_length:
             speaker_audio_clip = torch.cat((speaker_audio_clip,
-                                            torch.zeros(size=(self._clip_length - np.int64(np.ceil(total_length/self.interval)),
+                                            torch.zeros(size=(self._clip_length - len(speaker_audio_clip),
                                                               speaker_audio_clip.shape[-1]))), dim=0) \
                 if self.load_audio else speaker_audio_clip
             speaker_emotion_clip = torch.cat((speaker_emotion_clip,
-                                            torch.zeros(size=(self._clip_length - np.int64(np.ceil(total_length/self.interval)),
+                                            torch.zeros(size=(self._clip_length - len(speaker_audio_clip),
                                                               speaker_emotion_clip.shape[-1]))), dim=0) \
                 if self.load_emotion_s else speaker_emotion_clip
             speaker_params_clip = torch.cat((speaker_params_clip,
-                                            torch.zeros(size=(self._clip_length - np.int64(np.ceil(total_length/self.interval)),
+                                            torch.zeros(size=(self._clip_length - len(speaker_audio_clip),
                                                               speaker_params_clip.shape[-1]))), dim=0) \
                 if self.load_3dmm_s else speaker_params_clip
 
