@@ -1449,7 +1449,10 @@ class ReactionDataset_2025(data.Dataset):
 
             speaker_clip_length = torch.tensor(total_length)
             listener_clip_length = torch.tensor(total_length)
-        
+        print('listener_video_clip.shape: ',listener_video_clip.shape)
+        print('listener_emotion_clip.shape: ',listener_emotion_clip.shape)
+        print('speaker_emotion_clip.shape: ',speaker_emotion_clip.shape)
+        # speaker_emotion_clip
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion_clip,
                                 'speaker_3dmm': speaker_params_clip,'speaker_audio_path':speaker_audio_path,
                                 'listener_video_clip': listener_video_clip, 'listener_align_video_clip':listener_video_clip,
