@@ -1425,9 +1425,9 @@ class ReactionDataset_2025(data.Dataset):
                     print('listener_video_clip_last previous shape',listener_video_clip_last.shape)
                     listener_video_clip_last = torch.cat(
                         (listener_video_clip_last,
-                         torch.zeros(size=(self._clip_length - len(listener_video_clip), *listener_video_clip.shape[1:]))), dim=0)
+                         torch.zeros(size=(self._clip_length - len(listener_video_clip_last), *listener_video_clip_last.shape[1:]))), dim=0)
                     print('listener_video_clip_last after shape',listener_video_clip_last.shape)
-                    pdb.set_trace()
+                    # pdb.set_trace()
                     
                         
                 
