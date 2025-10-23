@@ -1404,6 +1404,7 @@ class ReactionDataset_2025(data.Dataset):
                 listener_video_clip = torch.stack(clip, dim=0)
 
                 #load listener past clip
+                clip=[]
                 vr = VideoReader(video_path, ctx=cpu(0))
                 for i in range(last_cp, last_cp + self._clip_length*self.interval,self.interval):
                     if i >= len(vr):
@@ -1420,7 +1421,7 @@ class ReactionDataset_2025(data.Dataset):
                     listener_video_clip = torch.cat(
                         (listener_video_clip,
                          torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0)
-                if len(listener_video_clip)<self._clip_length:
+                if len(listener_video_clip_last)<self._clip_length:
                     listener_video_clip_last = torch.cat(
                         (listener_video_clip_last,
                          torch.zeros(size=(self._clip_length - len(listener_video_clip), *listener_video_clip.shape[1:]))), dim=0)
