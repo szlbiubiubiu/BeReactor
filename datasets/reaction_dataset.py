@@ -1139,7 +1139,7 @@ class ReactionDataset_2025(data.Dataset):
                  load_3dmm_s: bool = True,
                  load_3dmm_l: bool = True,
                  normalize_3dmm: str = 'standard',  # standard | zero_center
-                 interval=10,
+                 interval=5,
                  **kwargs,
                  ):
 
