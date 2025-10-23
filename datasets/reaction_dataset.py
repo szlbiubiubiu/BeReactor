@@ -1401,7 +1401,10 @@ class ReactionDataset_2025(data.Dataset):
                     img = self._transform(img)
                     clip.append(img)
                 del vr
-                listener_video_clip = torch.stack(clip, dim=0)
+                if len(clip)==0:
+                    listener_video_clip=torch.zeros_like(speaker_video_clip)
+                else:
+                    listener_video_clip = torch.stack(clip, dim=0)
 
                 #load listener past clip
                 clip=[]
