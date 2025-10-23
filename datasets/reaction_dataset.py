@@ -1294,7 +1294,7 @@ class ReactionDataset_2025(data.Dataset):
             speaker_emotion_clip = torch.from_numpy(emotion)
             speaker_emotion_clip = speaker_emotion_clip[cp: cp + self._clip_length*self.interval:self.interval]  # (25-d)
             if len(speaker_emotion_clip)<self._clip_length:
-                speaker_emotion_clip=torch.cat(speaker_emotion_clip,torch.zeros(self._clip_length-len(speaker_emotion_clip),speaker_emotion_clip.shape[-1]),dim=0)
+                speaker_emotion_clip=torch.cat((speaker_emotion_clip,torch.zeros(self._clip_length-len(speaker_emotion_clip)),speaker_emotion_clip.shape[-1]),dim=0)
         # speaker's 3DMM coefficient (facial motion) clip
         speaker_params_clip = torch.zeros(size=(0,))
         if self.load_3dmm_s:
