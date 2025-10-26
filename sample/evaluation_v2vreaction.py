@@ -814,7 +814,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             # continue
             x1, y1, x2, y2 = [0,0,256,256]
         else:
-            x1, y1, x2, y2 = bbox
+            x1, y1, x2, y2 = np.max(bbox,0)
         # if not args.without_landmark:
         crop_frame = frame[y1:y2, x1:x2]
         # else:
