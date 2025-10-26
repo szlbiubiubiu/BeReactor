@@ -821,9 +821,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         crop_frame = frame[y1:y2, x1:x2]
         # else:
         #     crop_frame = frame
-        print('frame.shape:' ,frame.shape)
-        print('crop_frame.shape:' ,crop_frame.shape)
-        print('x1, y1, x2, y2:' ,x1, y1, x2, y2)
+        # print('frame.shape:' ,frame.shape)
+        # print('crop_frame.shape:' ,crop_frame.shape)
+        # print('x1, y1, x2, y2:' ,x1, y1, x2, y2)
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
         croped_image.append(torch.unsqueeze(torch.tensor(crop_frame),dim=0))
