@@ -48,7 +48,7 @@ use_fp16: False
 # sample config:
 # seed:
 sample_method: 'ddpm'  #ddim 20;  ddpm 250
-num_sampling_steps: 1000
+num_sampling_steps: 250
 cfg_scale: 1.0 #7.0 #from 1.0 to 7.5
 negative_name:
 

@@ -1565,15 +1565,15 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
     #                           load_3dmm_l=False,normalize_3dmm='standard')
-    # # dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
-    # #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-    # #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=True,
-    # #                           load_3dmm_l=True,normalize_3dmm='standard')
-    dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
-                              clip_length=conf.clip_length,
-                              load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
-                              load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+    dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
+                target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
+                              load_3dmm_l=False,normalize_3dmm='standard')
+    # dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+    #                           clip_length=conf.clip_length,
+    #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
+    #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     
     '''this is for training'''
     # dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
