@@ -1778,6 +1778,7 @@ def main(args):
     # pdb.set_trace()
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
 
+    #for react 2025
     torch.save(speaker_emotions_input_all,'./speaker_emo_gt.gt')
     torch.save(listener_emotion_preds_lists_all,'./emo_pred.gt')
     torch.save(listener_emotion_GTs_all,'./listener_emo_gt.gt')
