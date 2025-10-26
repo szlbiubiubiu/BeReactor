@@ -812,7 +812,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         #     continue
         # x1, y1, x2, y2 = bbox
 
-        if bbox == coord_placeholder:
+        if （bbox == coord_placeholder）.all():
             # continue
             x1, y1, x2, y2 = [0,0,256,256]
         else:
