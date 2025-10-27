@@ -1758,19 +1758,19 @@ def main(args):
 
 
     #save and load parameter
-    torch.save(all_listener_emotion_pred, "./emo_pred.pt")
-    torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
-    torch.save(listener_emotion_gt, "./listener_emo_gt.pt")
-    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred.pt")
+    torch.save(all_listener_emotion_pred, "./emo_pred_19.pt")
+    torch.save(speaker_emotion_gt, "./speaker_emo_gt_19.pt")
+    torch.save(listener_emotion_gt, "./listener_emo_gt_19.pt")
+    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred_19.pt")
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
     # TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     # pdb.set_trace()
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
 
     #for react 2025
-    torch.save(speaker_emotions_input_all,'./speaker_emo_gt.gt')
-    torch.save(listener_emotion_preds_lists_all,'./emo_pred.gt')
-    torch.save(listener_emotion_GTs_all,'./listener_emo_gt.gt')
+    torch.save(speaker_emotions_input_all,'./speaker_emo_gt_19.gt')
+    torch.save(listener_emotion_preds_lists_all,'./emo_pred_19.gt')
+    torch.save(listener_emotion_GTs_all,'./listener_emo_gt_19.gt')
     print("-----------------Evaluating Metric-----------------")
 
     
@@ -1820,7 +1820,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/043-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/043-Latte-S-4-F32S3-reaction-Amp/checkpoints/0190000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     # /data/scratch/acw569/checkpoint/reaction/previous/0240000.pt
