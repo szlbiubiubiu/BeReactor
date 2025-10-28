@@ -7,7 +7,7 @@ import torch
 def _func(target, pred):
     target = target.numpy()
     pred = pred.numpy()
-
+    pdb.set_trace()
     # num_preds = pred.shape[0]
     min_dwt_sum = 0
     for i in range(pred.shape[0]):
