@@ -20,7 +20,7 @@ print("-----------------Evaluating Metric-----------------")
 # speaker: N 750 25
 pdb.set_trace()
 emo_pred_reshape=emo_pred.reshape(len(llm_emo_pred),1,clip_size,10)
-listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
+listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),1,clip_size,10)
 # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
 # TLCC = compute_TLCC_nomp(emo_pred_reshape, speaker_emo_gt[:,:,-10:])
