@@ -4,7 +4,7 @@ from tslearn.metrics import dtw
 from functools import partial
 import multiprocessing as mp
 import pdb
-
+import torch
 def corrcoef(x, y=None, rowvar=True, bias=np._NoValue, ddof=np._NoValue, *,
              dtype=None):
     if bias is not np._NoValue or ddof is not np._NoValue:
@@ -61,7 +61,7 @@ def concordance_correlation_coefficient(y_true, y_pred,
     >>> concordance_correlation_coefficient(y_true, y_pred)
     0.97678916827853024
     """
-
+    pdb.set_trace()
     # y_true.shape: (seq_len, dim); y_pred.shape: (seq_len, dim)
     if len(y_true.shape) > 1:
         ccc_list = []
@@ -129,6 +129,10 @@ def compute_FRC_nomp(preds, targets, p=1):
     FRC_list = []
     pdb.set_trace()
     for tar, pred in zip(targets, preds):
+        if len(tar.shape)==0:
+            tar=torch.unsqueeze(tar,dim=0)
+        if len(pred.shape)==0:
+            pred=torch.unsqueeze(pred,dim=0)
         FRC_list+=_func(tar,pred)
     return np.mean(FRC_list)
 # def compute_FRC_mp(args, pred, em, val_test='test', p=1):
