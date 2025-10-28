@@ -61,17 +61,17 @@ def shift(x, y, lag):
 #         return torch.abs(offset).item()
 
 
-# def compute_TLCC(pred, speaker):
-#     # pred: N 10 750 25
-#     # speaker: N 750 25
-#     offset_list = []
-#     for k in range(speaker.shape[0]):
-#         pred_item = pred[k]
-#         sp_item = speaker[k]
-#         for i in range(pred_item.shape[0]):
-#             peak, center, offset = calculate_tlcc(pred_item[i].float().numpy(), sp_item.float().numpy())
-#             offset_list.append(torch.abs(offset).item())
-#     return torch.mean(torch.Tensor(offset_list)).item()
+def compute_TLCC_nomp(pred, speaker):
+    # pred: N 10 750 25
+    # speaker: N 750 25
+    offset_list = []
+    for k in range(speaker.shape[0]):
+        pred_item = pred[k]
+        sp_item = speaker[k]
+        for i in range(pred_item.shape[0]):
+            peak, center, offset = calculate_tlcc(pred_item[i].float().numpy(), sp_item.float().numpy())
+            offset_list.append(torch.abs(offset).item())
+    return torch.mean(torch.Tensor(offset_list)).item()
 
 
 # def compute_TLCC_mp(pred, speaker, p=8):
