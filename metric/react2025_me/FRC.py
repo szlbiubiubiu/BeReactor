@@ -134,7 +134,10 @@ def compute_FRC_nomp(preds, targets, p=1):
         #     tar=torch.unsqueeze(tar,dim=0)
         # if len(pred.shape)==2:
         #     pred=torch.unsqueeze(pred,dim=0)
-        FRC_list+=_func(tar,pred)
+        func_result=_func(tar,pred)
+        if not isinstance(func_result, list):
+            func_result=[func_result]
+        FRC_list+=func_result
     return np.mean(FRC_list)
 # def compute_FRC_mp(args, pred, em, val_test='test', p=1):
 #     # pred: N 10 750 dim
