@@ -19,7 +19,7 @@ def _func(target, pred):
                 for st, ed, weight in [(0, 15, 1 / 15), (15, 17, 1), (17, 25, 1 / 8)]:
                     res += weight * dtw(pred[i].astype(np.float32)[:, st: ed], emotion.astype(np.float32)[:, st: ed])
             elif pred.shape[-1]==10:
-                for st, ed, weight in [ (15, 17, 1), (17, 25, 1 / 8)]:
+                for st, ed, weight in [ (0, 2, 1), (2, 10, 1 / 8)]:
                     res += weight * dtw(pred[i].astype(np.float32)[:, st: ed], emotion.astype(np.float32)[:, st: ed])
             dwt_list.append(res)
         min_dwt_sum += min(dwt_list)
