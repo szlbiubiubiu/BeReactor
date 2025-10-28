@@ -125,7 +125,11 @@ def compute_FRC(preds, targets, p=1):
         FRC_list += pool.starmap(_func, zip(targets, preds))
     return np.mean(FRC_list)
 
-
+def compute_FRC_nomp(preds, targets, p=1):
+    FRC_list = []
+    for tar, pred in zip(targets, preds):
+        FRC_list+=_func(tar,pred)
+    return np.mean(FRC_list)
 # def compute_FRC_mp(args, pred, em, val_test='test', p=1):
 #     # pred: N 10 750 dim
 #     # em: N 750 dim
