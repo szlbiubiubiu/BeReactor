@@ -1,16 +1,16 @@
 import torch
 # from metric.react2025_me.metric import *
-from metric.react2025_me.FRC import   compute_FRC
-from metric.react2025_me.FRD import   compute_FRD
+from metric.react2025_me.FRC import   compute_FRC_nomp
+from metric.react2025_me.FRD import   compute_FRD_nomp
 from metric.react2025_me.FRDvs import   compute_FRDvs
 from metric.react2025_me.FRVar import   compute_FRVar
-from metric.react2025_me.TLCC import   compute_TLCC
+from metric.react2025_me.TLCC import   compute_TLCC_nomp
 import pdb
 clip_size=32
-emo_pred=torch.load("./emo_pred.pt")
-speaker_emo_gt=torch.load("./speaker_emo_gt.pt")
-listener_emo_gt=torch.load("./listener_emo_gt.pt")
-llm_emo_pred=torch.load('./llm_emo_pred.pt')
+emo_pred=torch.load("./emo_pred.pt").cpu()
+speaker_emo_gt=torch.load("./speaker_emo_gt.pt").cpu()
+listener_emo_gt=torch.load("./listener_emo_gt.pt").cpu()
+llm_emo_pred=torch.load('./llm_emo_pred.pt').cpu()
 
 print("-----------------Evaluating Metric-----------------")
 # clip_size
@@ -23,13 +23,13 @@ emo_pred_reshape=emo_pred.reshape(len(llm_emo_pred),1,clip_size,10)
 # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-TLCC = compute_TLCC(emo_pred, speaker_emo_gt[:,:,-10:])
+TLCC = compute_TLCC_nomp(emo_pred, speaker_emo_gt[:,:,-10:])
 
 # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-FRC = compute_FRC(emo_pred, listener_emo_gt)
+FRC = compute_FRC_nomp(emo_pred, listener_emo_gt)
 
 # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-FRD = compute_FRD(emo_pred, listener_emo_gt)
+FRD = compute_FRD_nomp(emo_pred, listener_emo_gt)
 
 # FRDvs = compute_FRDvs(all_listener_emotion_pred)
 FRVar  = compute_FRVar(emo_pred)
