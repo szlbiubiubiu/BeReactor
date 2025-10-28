@@ -64,6 +64,7 @@ def shift(x, y, lag):
 def compute_TLCC_nomp(pred, speaker):
     # pred: N 10 750 25
     # speaker: N 750 25
+    pdb.set_trace()
     offset_list = []
     for k in range(speaker.shape[0]):
         pred_item = pred[k]
