@@ -14,10 +14,10 @@ import multiprocessing
 torch.multiprocessing.set_start_method('spawn')
 # multiprocessing.set_start_method('spawn')
 clip_size=32
-emo_pred=torch.load("./emo_pred.pt")
-speaker_emo_gt=torch.load("./speaker_emo_gt.pt")
-listener_emo_gt=torch.load("./listener_emo_gt.pt")
-llm_emo_pred=torch.load('./llm_emo_pred.pt')
+emo_pred=torch.load("./emo_pred.pt").cpu()
+speaker_emo_gt=torch.load("./speaker_emo_gt.pt").cpu()
+listener_emo_gt=torch.load("./listener_emo_gt.pt").cpu()
+llm_emo_pred=torch.load('./llm_emo_pred.pt').cpu()
 
 print("-----------------Evaluating Metric-----------------")
 # clip_size
