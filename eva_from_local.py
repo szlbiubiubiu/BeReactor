@@ -21,13 +21,13 @@ print("-----------------Evaluating Metric-----------------")
 # p = args.threads
 
 # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-TLCC = compute_TLCC(emo_pred, speaker_emo_gt)
+TLCC = compute_TLCC_nomp(emo_pred, speaker_emo_gt)
 
 # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-FRC = compute_FRC(emo_pred, listener_emo_gt, val_test='val')
+FRC = compute_FRC_nomp(emo_pred, listener_emo_gt, val_test='val')
 
 # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-FRD = compute_FRD(emo_pred, listener_emo_gt, val_test='val')
+FRD = compute_FRD_nomp(emo_pred, listener_emo_gt, val_test='val')
 
 # FRDvs = compute_FRDvs(all_listener_emotion_pred)
 FRVar  = compute_FRVar(emo_pred)
