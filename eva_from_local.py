@@ -7,8 +7,8 @@ from metric.react2025_me.FRVar import   compute_FRVar
 from metric.react2025_me.TLCC import   compute_TLCC
 import multiprocessing
 
-
-multiprocessing.set_start_method('spawn')
+torch.multiprocessing.set_start_method('spawn')
+# multiprocessing.set_start_method('spawn')
 clip_size=32
 emo_pred=torch.load("./emo_pred.pt")
 speaker_emo_gt=torch.load("./speaker_emo_gt.pt")
