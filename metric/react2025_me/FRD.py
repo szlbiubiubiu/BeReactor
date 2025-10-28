@@ -29,15 +29,18 @@ def compute_FRD(preds, targets, p=1):
     return np.mean(FRD_list)
 
 def compute_FRD_nomp(preds, targets, p=1):
-    FRC_list = []
+    FRD_list = []
     for tar, pred in zip(targets, preds):
         
         if len(tar.shape)==2:
             tar=torch.unsqueeze(tar,dim=0)
         if len(pred.shape)==2:
             pred=torch.unsqueeze(pred,dim=0)
-        FRC_list+=_func(tar,pred)
-    return np.mean(FRC_list)
+        func_result=_func(tar,pred)
+        if not isinstance(func_result, list):
+            func_result=[func_result]
+        FRD_list+=func_result
+    return np.mean(FRD_list)
 # def _func(k_neighbour_matrix, k_pred, em=None):
 #     neighbour_index = np.argwhere(k_neighbour_matrix == 1).reshape(-1)
 #     neighbour_index_len = len(neighbour_index)
