@@ -23,13 +23,13 @@ emo_pred_reshape=emo_pred.reshape(len(llm_emo_pred),1,clip_size,10)
 # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-TLCC = compute_TLCC_nomp(emo_pred, speaker_emo_gt[:,:,-10:])
+TLCC = compute_TLCC_nomp(emo_pred_reshape, speaker_emo_gt[:,:,-10:])
 
 # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-FRC = compute_FRC_nomp(emo_pred, listener_emo_gt)
+FRC = compute_FRC_nomp(emo_pred_reshape, listener_emo_gt)
 
 # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-FRD = compute_FRD_nomp(emo_pred, listener_emo_gt)
+FRD = compute_FRD_nomp(emo_pred_reshape, listener_emo_gt)
 
 # FRDvs = compute_FRDvs(all_listener_emotion_pred)
 FRVar  = compute_FRVar(emo_pred)
