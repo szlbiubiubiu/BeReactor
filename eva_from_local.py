@@ -1,5 +1,5 @@
 import torch
-from metric.react2025_me.metric import *
+# from metric.react2025_me.metric import *
 from metric.react2025_me.FRC import   compute_FRC
 from metric.react2025_me.FRD import   compute_FRD
 from metric.react2025_me.FRDvs import   compute_FRDvs
