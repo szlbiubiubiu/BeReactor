@@ -1762,6 +1762,13 @@ def main(args):
     torch.save(speaker_emotion_gt, "./speaker_emo_gt_19.pt")
     torch.save(listener_emotion_gt, "./listener_emo_gt_19.pt")
     torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred_19.pt")
+    torch.save(all_score,"./llm_all_score.pt"
+
+    # emo_pred=torch.load("./emo_pred.pt")
+    # speaker_emo_gt=torch.load("./speaker_emo_gt.pt")
+    # listener_emo_gt=torch.load("./listener_emo_gt.pt")
+    # llm_emo_pred=torch.load('./llm_emo_pred.pt')
+    # emo_pred=torch.load("./emo_pred.pt")
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
     # TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emotion_gt.cpu())
     # pdb.set_trace()
@@ -1772,9 +1779,9 @@ def main(args):
     torch.save(listener_emotion_preds_lists_all,'./emo_pred_19.gt')
     torch.save(listener_emotion_GTs_all,'./listener_emo_gt_19.gt')
     print("-----------------Evaluating Metric-----------------")
-
-    
-    language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emotion_gt[:,:,:10],1))#check listener_emotion_gt.shape
+# clip_size
+    listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
+    language_mse=torch.nn.functional.mse_loss(all_score['all_sentiment_emb'][:len(listener_emotion_gt)],torch.mean(listener_emo_gt_reshape[:,:,:,:10],1))#check listener_emotion_gt.shape
     print('language_mse',language_mse)
     # pdb.set_trace()
     realism_score=all_score['all_realism_score']/len(listener_emotion_gt)
