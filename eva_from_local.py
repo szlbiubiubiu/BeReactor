@@ -20,20 +20,20 @@ print("-----------------Evaluating Metric-----------------")
 # speaker: N 750 25
 pdb.set_trace()
 emo_pred_reshape=emo_pred.reshape(len(llm_emo_pred),1,clip_size,10)
-# emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
+listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
 # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
-TLCC = compute_TLCC_nomp(emo_pred_reshape, speaker_emo_gt[:,:,-10:])
+# TLCC = compute_TLCC_nomp(emo_pred_reshape, speaker_emo_gt[:,:,-10:])
 
 # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
-FRC = compute_FRC_nomp(emo_pred_reshape, listener_emo_gt)
+FRC = compute_FRC_nomp(emo_pred_reshape, listener_emo_gt_reshape)
 
 # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
-FRD = compute_FRD_nomp(emo_pred_reshape, listener_emo_gt)
+FRD = compute_FRD_nomp(emo_pred_reshape, listener_emo_gt_reshape)
 
 # FRDvs = compute_FRDvs(all_listener_emotion_pred)
-FRVar  = compute_FRVar(emo_pred)
-smse  = compute_s_mse(emo_pred)
+FRVar  = compute_FRVar(emo_pred_reshape)
+smse  = compute_s_mse(emo_pred_reshape)
 
 print("Metric: | FRC: {:.5f} | FRD: {:.5f} | S-MSE: {:.5f} | FRVar: {:.5f} | FRDvs: {:.5f} | TLCC: {:.5f}".format(FRC, FRD, smse, FRVar, FRDvs, TLCC))
 print("Latex-friendly --> model_name & {:.2f} & {:.2f} & {:.4f} & {:.4f} & {:.4f} & - & {:.2f} \\\\".format( FRC, FRD, smse, FRVar, FRDvs, TLCC))
