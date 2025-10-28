@@ -2,7 +2,7 @@ import numpy as np
 from tslearn.metrics import dtw
 from functools import partial
 import multiprocessing as mp
-
+import torch
 
 def _func(target, pred):
     target = target.numpy()
@@ -32,9 +32,9 @@ def compute_FRD_nomp(preds, targets, p=1):
     FRC_list = []
     for tar, pred in zip(targets, preds):
         
-        if len(tar.shape)==0:
+        if len(tar.shape)==2:
             tar=torch.unsqueeze(tar,dim=0)
-        if len(pred.shape)==0:
+        if len(pred.shape)==2:
             pred=torch.unsqueeze(pred,dim=0)
         FRC_list+=_func(tar,pred)
     return np.mean(FRC_list)
