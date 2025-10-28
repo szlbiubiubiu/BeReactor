@@ -61,7 +61,7 @@ def concordance_correlation_coefficient(y_true, y_pred,
     >>> concordance_correlation_coefficient(y_true, y_pred)
     0.97678916827853024
     """
-    pdb.set_trace()
+    # pdb.set_trace()
     # y_true.shape: (seq_len, dim); y_pred.shape: (seq_len, dim)
     if len(y_true.shape) > 1:
         ccc_list = []
@@ -127,7 +127,7 @@ def compute_FRC(preds, targets, p=1):
 
 def compute_FRC_nomp(preds, targets, p=1):
     FRC_list = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for tar, pred in zip(targets, preds):
         if len(tar.shape)==0:
             tar=torch.unsqueeze(tar,dim=0)
