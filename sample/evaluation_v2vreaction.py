@@ -1827,9 +1827,12 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/043-Latte-S-4-F32S3-reaction-Amp/checkpoints/0190000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/015-Latte-S-4-F32S3-reaction-Amp/checkpoints/0260000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
+    
+    #2025 v4 /data/scratch/acw569/checkpoint/latte_check_new/043-Latte-S-4-F32S3-reaction-Amp/checkpoints/0190000.pt
+    #2024 v4 /data/scratch/acw569/checkpoint/latte_check_new/015-Latte-S-4-F32S3-reaction-Amp/checkpoints/0260000.pt
     # /data/scratch/acw569/checkpoint/reaction/previous/0240000.pt
     # /data/scratch/acw569/checkpoint/latte_check/018-Latte-S-4-F32S3-reaction-Amp/checkpoints/0180000.pt
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
