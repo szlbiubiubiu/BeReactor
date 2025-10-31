@@ -7,10 +7,10 @@ from metric.react2025_me.FRVar import   compute_FRVar
 from metric.react2025_me.TLCC import   compute_TLCC_nomp
 import pdb
 clip_size=32
-emo_pred=torch.load("./emo_pred.pt").cpu()
-speaker_emo_gt=torch.load("./speaker_emo_gt.pt").cpu()
-listener_emo_gt=torch.load("./listener_emo_gt.pt").cpu()
-llm_emo_pred=torch.load('./llm_emo_pred.pt').cpu()
+emo_pred=torch.load("./emo_pred_19.pt").cpu()
+speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt.pt").cpu()
+listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
+llm_emo_pred=torch.load('./llm_emo_pred_19.pt').cpu()
 
 print("-----------------Evaluating Metric-----------------")
 # clip_size
