@@ -27,14 +27,14 @@ listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),1,clip_size,10
 
 # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
 FRC = compute_FRC_nomp(emo_pred_reshape, listener_emo_gt_reshape)
-
+print("FRC:",FRC)
 # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
 FRD = compute_FRD_nomp(emo_pred_reshape, listener_emo_gt_reshape)
-
+print("FRD:",FRD)
 # FRDvs = compute_FRDvs(all_listener_emotion_pred)
 FRVar  = compute_FRVar(emo_pred_reshape)
-smse  = compute_s_mse(emo_pred_reshape)
-
+# smse  = compute_s_mse(emo_pred_reshape)
+print("FRVar:",FRVar)
 print("Metric: | FRC: {:.5f} | FRD: {:.5f} | S-MSE: {:.5f} | FRVar: {:.5f} | FRDvs: {:.5f} | TLCC: {:.5f}".format(FRC, FRD, smse, FRVar, FRDvs, TLCC))
 print("Latex-friendly --> model_name & {:.2f} & {:.2f} & {:.4f} & {:.4f} & {:.4f} & - & {:.2f} \\\\".format( FRC, FRD, smse, FRVar, FRDvs, TLCC))
 
