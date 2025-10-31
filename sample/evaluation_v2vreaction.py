@@ -1758,11 +1758,11 @@ def main(args):
 
 
     #save and load parameter
-    torch.save(all_listener_emotion_pred, "./emo_pred_19.pt")
-    torch.save(speaker_emotion_gt, "./speaker_emo_gt_19.pt")
-    torch.save(listener_emotion_gt, "./listener_emo_gt_19.pt")
-    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred_19.pt")
-    torch.save(all_score,"./llm_all_score.pt"
+    torch.save(all_listener_emotion_pred, "./emo_pred_24v4.pt")
+    torch.save(speaker_emotion_gt, "./speaker_emo_gt_24v4.pt")
+    torch.save(listener_emotion_gt, "./listener_emo_gt_24v4.pt")
+    torch.save(all_score['all_sentiment_emb'][:len(listener_emotion_gt)], "./llm_emo_pred_24v4.pt")
+    torch.save(all_score,"./llm_all_score_24v4.pt")
 
     # emo_pred=torch.load("./emo_pred.pt")
     # speaker_emo_gt=torch.load("./speaker_emo_gt.pt")
@@ -1775,9 +1775,9 @@ def main(args):
     # If you have problems running function compute_FRC_mp, please replace this function with function compute_FRC
 
     #for react 2025
-    torch.save(speaker_emotions_input_all,'./speaker_emo_gt_19.gt')
-    torch.save(listener_emotion_preds_lists_all,'./emo_pred_19.gt')
-    torch.save(listener_emotion_GTs_all,'./listener_emo_gt_19.gt')
+    # torch.save(speaker_emotions_input_all,'./speaker_emo_gt_19.gt')
+    # torch.save(listener_emotion_preds_lists_all,'./emo_pred_19.gt')
+    # torch.save(listener_emotion_GTs_all,'./listener_emo_gt_19.gt')
     print("-----------------Evaluating Metric-----------------")
 # clip_size
     listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
@@ -1791,12 +1791,12 @@ def main(args):
     print('bleu_scores',bleu_scores)
     print('bert_scores',bert_scores)
     
-    #if 2025
-    results = compute_metrics(
-            speaker_emotions_input_all,
-            listener_emotion_preds_lists_all,
-            listener_emotion_GTs_all,
-        )
+    # #if 2025
+    # results = compute_metrics(
+    #         speaker_emotions_input_all,
+    #         listener_emotion_preds_lists_all,
+    #         listener_emotion_GTs_all,
+    #     )
 
     #elif 2024
     if len(all_listener_emotion_pred)<len(dataset):
