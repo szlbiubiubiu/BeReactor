@@ -951,8 +951,28 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
         t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
         # bbox=[0,0,t_shape[0],t_shape[1]]
+        
         bbox=t_shape
-        x1, y1, x2, y2 = bbox
+
+        bbox=np.array(bbox)
+        bbox[bbox<0]=0
+        frame=np.squeeze(frame)
+        # if bbox == coord_placeholder:
+        #     continue
+        # x1, y1, x2, y2 = bbox
+
+        if (bbox == coord_placeholder).all():
+            # continue
+            x1, y1, x2, y2 = [0,0,256,256]
+        else:
+            x1, y1, x2, y2 = bbox#arr[arr < 0] = 0
+        # if not args.without_landmark:
+        # crop_frame = frame[y1:y2, x1:x2]
+
+
+
+
+        # x1, y1, x2, y2 = bbox
         
         # try:
         res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
