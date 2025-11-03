@@ -34,7 +34,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 fa = FaceAlignment(LandmarksType._2D, flip_input=False,device=device)
 
 # maker if the bbox is not sufficient 
-coord_placeholder = (0.0,0.0,0.0,0.0)
+coord_placeholder = [0.0,0.0,0.0,0.0]
 
 def resize_landmark(landmark, w, h, new_w, new_h):
     w_ratio = new_w / w
