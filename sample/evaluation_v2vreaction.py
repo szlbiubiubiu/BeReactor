@@ -956,16 +956,17 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
         bbox=np.array(bbox)
         bbox[bbox<0]=0
-        frame=np.squeeze(frame)
+        # frame=np.squeeze(frame)
         # if bbox == coord_placeholder:
         #     continue
         # x1, y1, x2, y2 = bbox
 
         if (bbox == coord_placeholder).all():
             # continue
-            x1, y1, x2, y2 = [0,0,256,256]
-        else:
-            x1, y1, x2, y2 = bbox#arr[arr < 0] = 0
+            bbox=[0,0,256,256]
+        # x1, y1, x2, y2 = [0,0,256,256]
+    # else:
+        x1, y1, x2, y2 = bbox#arr[arr < 0] = 0
         # if not args.without_landmark:
         # crop_frame = frame[y1:y2, x1:x2]
 
