@@ -38,7 +38,7 @@ def get_image(image,face,face_box,upper_boundary_ratio = 0.5,expand=1.2):
 
     face_large = body.crop(crop_box)
     ori_shape = face_large.size
-    print('face_large.shape:',face_large.shape)
+    print('face_large.shape:',np.array(face_large).shape)
     print('crop_box:',crop_box)
     mask_image = face_seg(face_large)
     mask_small = mask_image.crop((x-x_s, y-y_s, x1-x_s, y1-y_s))
