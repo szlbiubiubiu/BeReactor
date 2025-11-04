@@ -90,4 +90,4 @@ else:
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
     # print('TLCC',TLCC)
-    print(" FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % ( FRC, FRD, FRDvs, FRVar, smse))
+    print(" FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;" % ( FRC, FRD, FRDvs, FRVar))
