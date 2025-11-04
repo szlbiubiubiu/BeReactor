@@ -3,10 +3,7 @@ import torch
 
 import pdb
 clip_size=32
-emo_pred=torch.load("./emo_pred_19.pt").cpu()
-speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt").cpu()
-listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
-llm_emo_pred=torch.load('./llm_emo_pred_19.pt').cpu()
+
 
 class jiexi:
     def __init__(self):
@@ -18,7 +15,7 @@ class jiexi:
 print("-----------------Evaluating Metric-----------------")
 # clip_size
 
-is_2025=False
+is_2025=True
 if is_2025:
     from metric.react2025_me.FRC import   compute_FRC_nomp
     from metric.react2025_me.FRD import   compute_FRD_nomp
@@ -28,9 +25,16 @@ if is_2025:
     # p = args.threads
     # pred: N 10 750 25
     # speaker: N 750 25
+    emo_pred=torch.load("./emo_pred_19.pt").cpu()
+    speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt").cpu()
+    listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
+    llm_emo_pred=torch.load('./llm_emo_pred_19.pt').cpu()
     pdb.set_trace()
+    print('emo_pred.shape',emo_pred.shape)
+    print('speaker_emo_gt.shape',speaker_emo_gt.shape)
+    print('listener_emo_gt.shape',listener_emo_gt.shape)
     emo_pred_reshape=emo_pred.reshape(len(llm_emo_pred),1,clip_size,10)
-    listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),1,clip_size,10)
+    listener_emo_gt_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,10)
     # emo_pred_reshape=listener_emo_gt.reshape(len(llm_emo_pred),clip_size,1,10)
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
     # TLCC = compute_TLCC_nomp(emo_pred_reshape, speaker_emo_gt[:,:,-10:])
