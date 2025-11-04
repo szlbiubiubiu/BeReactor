@@ -15,7 +15,7 @@ class jiexi:
 print("-----------------Evaluating Metric-----------------")
 # clip_size
 
-is_2025=True
+is_2025=False
 if is_2025:
     from metric.react2025_me.FRC import   compute_FRC_nomp
     from metric.react2025_me.FRD import   compute_FRD_nomp
@@ -90,4 +90,4 @@ else:
     FRVar  = compute_FRVar(all_listener_emotion_pred.cpu())
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
     # print('TLCC',TLCC)
-    print("TLCC: %.4f; FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
+    print(" FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % ( FRC, FRD, FRDvs, FRVar, smse))
