@@ -61,11 +61,13 @@ else:
 
     all_listener_emotion_pred=torch.load("./emo_pred_24v4.pt").cpu()
     pred_shape=all_listener_emotion_pred.shape
-    all_listener_emotion_pred=all_listener_emotion_pred.reshape(-1,clip_size,pred_shape[1],pred_shape[2],pred_shape[3])
+    all_listener_emotion_pred=all_listener_emotion_pred.reshape(clip_size,-1,pred_shape[1],pred_shape[2],pred_shape[3])
+    all_listener_emotion_pred=all_listener_emotion_pred.transpose(0,1)
     speaker_emo_gt=torch.load("./speaker_emo_gt_24v4.pt").cpu()
     listener_emotion_gt=torch.load("./listener_emo_gt_24v4.pt").cpu()
     listener_emotion_gt_shape=listener_emotion_gt.shape
-    listener_emotion_gt=listener_emotion_gt.reshape(-1,clip_size,listener_emotion_gt_shape[1],listener_emotion_gt_shape[2])
+    listener_emotion_gt=listener_emotion_gt.reshape(clip_size,-1,listener_emotion_gt_shape[1],listener_emotion_gt_shape[2])
+    listener_emotion_gt=listener_emotion_gt.transpose(0,1)
     llm_emo_pred=torch.load('./llm_emo_pred_24v4.pt').cpu()
     print('all_listener_emotion_pred.shape',all_listener_emotion_pred.shape)
     print('listener_emotion_gt.shape,',listener_emotion_gt.shape)
