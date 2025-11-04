@@ -59,10 +59,10 @@ else:
     args=jiexi()
     args.dataset_path='./data'
 
-    all_listener_emotion_pred=torch.load("./emo_pred__24v4.pt").cpu()
-    speaker_emo_gt=torch.load("./speaker_emo_gt__24v4.pt").cpu()
-    listener_emotion_gt=torch.load("./listener_emo_gt__24v4.pt").cpu()
-    llm_emo_pred=torch.load('./llm_emo_pred__24v4.pt').cpu()
+    all_listener_emotion_pred=torch.load("./emo_pred_24v4.pt").cpu()
+    speaker_emo_gt=torch.load("./speaker_emo_gt_24v4.pt").cpu()
+    listener_emotion_gt=torch.load("./listener_emo_gt_24v4.pt").cpu()
+    llm_emo_pred=torch.load('./llm_emo_pred_24v4.pt').cpu()
     FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
