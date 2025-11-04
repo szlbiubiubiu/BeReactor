@@ -70,7 +70,7 @@ else:
     print('all_listener_emotion_pred.shape',all_listener_emotion_pred.shape)
     print('listener_emotion_gt.shape,',listener_emotion_gt.shape)
     FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
-
+    print('FRC:',FRC)
     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
     FRD = compute_FRD(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
 
