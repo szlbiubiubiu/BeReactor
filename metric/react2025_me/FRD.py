@@ -5,6 +5,8 @@ import multiprocessing as mp
 import torch
 import pdb
 def _func(target, pred):
+    # target: (10, l, dim)
+    # pred: (10, l, dim)
     target = target.numpy()
     pred = pred.numpy()
     # pdb.set_trace()
