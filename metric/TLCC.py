@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import multiprocessing as mp
-
+import torch.nn.functional as F
 import pdb
 def crosscorr(datax, datay, lag=0, dim=25):
     pcc_list = []
