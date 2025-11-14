@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import multiprocessing as mp
 
+import pdb
 def crosscorr(datax, datay, lag=0, dim=25):
     pcc_list = []
     for i in range(dim):
@@ -22,6 +23,7 @@ def calculate_tlcc(pred, sp, seconds=2, fps=25):
 def compute_TLCC(pred, speaker):
     # pred: N 10 750 25
     # speaker: N 750 25
+    pdb.set_trace()
     offset_list = []
     for k in range(speaker.shape[0]):
         pred_item = pred[k]
