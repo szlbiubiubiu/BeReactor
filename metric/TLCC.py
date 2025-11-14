@@ -14,7 +14,7 @@ def crosscorr(datax, datay, lag=0, dim=25):
     return torch.mean(torch.Tensor(pcc_list))
 
 
-def calculate_tlcc(pred, sp, seconds=1, fps=25):
+def calculate_tlcc(pred, sp, seconds=1, fps=2):
     # pdb.set_trace()W
     rs = [crosscorr(pred, sp, lag, sp.shape[-1]) for lag in range(-int(seconds * fps - 1), int(seconds * fps))]
     peak = max(rs)
