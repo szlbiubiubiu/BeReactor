@@ -81,6 +81,8 @@ else:
     llm_emo_pred=torch.load('./llm_emo_pred_24v4.pt').cpu()
     print('all_listener_emotion_pred.shape',all_listener_emotion_pred.shape)
     print('listener_emotion_gt.shape,',listener_emotion_gt.shape)
+    TLCC = compute_TLCC(all_listener_emotion_pred.cpu(), speaker_emo_gt.cpu())
+    print("TLCC:", TLCC)
     FRC = compute_FRC(args, all_listener_emotion_pred.cpu(), listener_emotion_gt.cpu(), val_test='test')
     print('FRC:',FRC)
     # If you have problems running function compute_FRD_mp, please replace this function with function compute_FRD
