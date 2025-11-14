@@ -27,7 +27,20 @@ def compute_TLCC(pred, speaker):
     # speaker: N 750 25
     pdb.set_trace()
     pred = F.interpolate(pred, size=(750, 10), mode='nearest')
-    speaker = F.interpolate(speaker, size=(750, 10), mode='nearest')
+    speaker = speaker.permute(0, 2, 1) # [N, 10, 32]
+
+    # 3. Interpolate the last dimension (Length) to 750
+    # 'linear' is the standard interpolation mode for 1D data
+    speaker = F.interpolate(
+        speaker, 
+        size=750, 
+        mode='linear', 
+        align_corners=False
+    ) # [N, 10, 750]
+
+    # 4. Permute/Transpose back to [N, Length=750, Features=10]
+    speaker = speaker.permute(0, 2, 1)
+    pdb.set_trace()
     offset_list = []
     for k in range(speaker.shape[0]):
         pred_item = pred[k]
