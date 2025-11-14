@@ -5,7 +5,7 @@ import multiprocessing as mp
 import pdb
 def crosscorr(datax, datay, lag=0, dim=25):
     pcc_list = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for i in range(dim):
         cn_1, cn_2 = shift(datax[:, i], datay[:, i], lag)
         pcc_i = np.corrcoef(cn_1, cn_2)[0, 1]
@@ -14,7 +14,7 @@ def crosscorr(datax, datay, lag=0, dim=25):
     return torch.mean(torch.Tensor(pcc_list))
 
 
-def calculate_tlcc(pred, sp, seconds=1, fps=25):
+def calculate_tlcc(pred, sp, seconds=1, fps=8):
     # pdb.set_trace()W
     rs = [crosscorr(pred, sp, lag, sp.shape[-1]) for lag in range(-int(seconds * fps - 1), int(seconds * fps))]
     peak = max(rs)
