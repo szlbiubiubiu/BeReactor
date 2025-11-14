@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import pdb
 def crosscorr(datax, datay, lag=0, dim=25):
     pcc_list = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for i in range(dim):
         cn_1, cn_2 = shift(datax[:, i], datay[:, i], lag)
         pcc_i = np.corrcoef(cn_1, cn_2)[0, 1]
