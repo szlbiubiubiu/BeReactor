@@ -44,6 +44,10 @@ def _func(pred_item, sp_item):
 def compute_TLCC_mp(pred, speaker, p=8):
     # pred: N 10 750 25
     # speaker: N 750 25
+    pdb.set_trace()
+    pred = F.interpolate(pred, size=(750, 10), mode='nearest')
+    speaker = F.interpolate(speaker, size=(750, 10), mode='nearest')
+    pdb.set_trace()
     offset_list = []
     # process each speaker in parallel
     np.seterr(divide='ignore', invalid='ignore')
