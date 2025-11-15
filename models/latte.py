@@ -1995,7 +1995,7 @@ class DiffusionVideoAutoencoder_v4(nn.Module):
 class DiffusionVideoAutoencoder_v5(nn.Module):
     def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,
     au_file_path_bp4d=None,emotion_file_path=None, detect_face=True,i_drop_rate=0.05,t_drop_rate=0.05,ti_drop_rate=0.05):
-        super(DiffusionVideoAutoencoder_v4, self).__init__()
+        super(DiffusionVideoAutoencoder_v5, self).__init__()
         self.idnet = IDnet(id_file_path).requires_grad_(False)#don't have to modify resolution
         # self.idnet.eval()
         # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
