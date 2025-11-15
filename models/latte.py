@@ -383,7 +383,7 @@ class Latte(nn.Module):
             #         ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
             # self.facial_condition = DiffusionVideoAutoencoder_v4("./pretrained_models/model_ir_se50.pth", "./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "./pretrained_models/79999_iter.pth"
             #         ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
-            self.facial_condition = DiffusionVideoAutoencoder_v4("./pretrained_models/model_ir_se50.pth", "./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "./pretrained_models/79999_iter.pth"
+            self.facial_condition = DiffusionVideoAutoencoder_v5("./pretrained_models/model_ir_se50.pth", "./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", "./pretrained_models/79999_iter.pth"
                     ,emotion_file_path='./pretrained_models/emonet_8.pth', au_file_path_disfa='./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',au_file_path_bp4d='./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth')
             
             
@@ -1992,7 +1992,7 @@ class DiffusionVideoAutoencoder_v4(nn.Module):
         fg_mask = self.bgnet(bg, for_video=for_video) # [B, 1, 256, 256]
         return fg_mask
 
-class DiffusionVideoAutoencoder_v4(nn.Module):
+class DiffusionVideoAutoencoder_v5(nn.Module):
     def __init__(self, id_file_path, lnd_file_path, bg_file_path,au_file_path_disfa=None,
     au_file_path_bp4d=None,emotion_file_path=None, detect_face=True,i_drop_rate=0.05,t_drop_rate=0.05,ti_drop_rate=0.05):
         super(DiffusionVideoAutoencoder_v4, self).__init__()
