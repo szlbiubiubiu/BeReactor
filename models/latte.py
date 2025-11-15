@@ -2160,7 +2160,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         # lnd_feats = self.lndnet(lnd) # [B, 102]
         # pdb.set_trace()
         # lis_drop
-        print('listener_video_clip_last.shape:',listener_video_clip_last.shape)
+        # print('listener_video_clip_last.shape:',listener_video_clip_last.shape)
         
         if listener_video_clip_last is not None:
             '''obtain listener feature'''
