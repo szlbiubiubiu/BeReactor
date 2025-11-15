@@ -2024,9 +2024,9 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
                                     # nn.Dropout(p=0.5)
                                     nn.LayerNorm(128, eps=1e-6)
                                     )
-        self.audio_proj_sec=self.enc_proj=nn.Sequential(nn.Linear(128,128),
+        self.audio_proj_sec=self.enc_proj=nn.Sequential(nn.Linear(128,64),
                                     # nn.Dropout(p=0.5)
-                                    nn.LayerNorm(128, eps=1e-6)
+                                    nn.LayerNorm(64, eps=1e-6)
                                     )
         '''end second projection'''
         self.shared_att=Multi_CrossAttention(128,128,head_num=4)#input is  sp_facial, sp_audio, li_facial_past
