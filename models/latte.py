@@ -2186,6 +2186,8 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             encode_fea=self.gating(encode_fea)
             audio_feat=self.gating(audio_feat)
             
+            #shared feature projection
+            
             # linear projection
 
             encode_fea=self.enc_proj_sec(encode_fea)
@@ -2193,14 +2195,14 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             audio_feat=self.audio_proj_sec(audio_feat)
 
             '''fusion end'''
-            # print(encode_fea.shape)
-            # print(lisenter_encode_fea.shape)
-            print('shared_feat',shared_feat.shape)
-            print('encode_fea',encode_fea.shape)
-            print('lisenter_encode_fea',lisenter_encode_fea.shape)
-            print('lisenter_ref_id',lisenter_ref_id.shape)
-            pdb.set_trace()
-            feats = self.linear(torch.cat([shared_feat,
+            # # print(encode_fea.shape)
+            # # print(lisenter_encode_fea.shape)
+            # print('shared_feat',shared_feat.shape)
+            # print('encode_fea',encode_fea.shape)
+            # print('lisenter_encode_fea',lisenter_encode_fea.shape)
+            # print('lisenter_ref_id',lisenter_ref_id.shape)
+            # pdb.set_trace()
+            feats = self.linear(torch.cat([audio_feat,
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
         else:
             feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
