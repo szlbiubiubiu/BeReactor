@@ -2174,6 +2174,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             # print(audio_feat.shape)
             shared_feat,attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=audio_feat.unsqueeze(1),value=audio_feat.unsqueeze(1))
             # shared_feat=self.att_linear(shared_feat.squeeze())
+            shared_feat=shared_feat.squeeze()
             # attn_output, attn_weights = cross_attention(query=query, key=key, value=value)
 
             #substract and gating:
