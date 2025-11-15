@@ -2034,7 +2034,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         self.shared_att = nn.MultiheadAttention(embed_dim=128, num_heads=4, batch_first=True)
         self.att_linear=nn.Linear(128,64)
         
-
+        self.gating=nn.LeakyReLU()
         
         self.emo_cond_linear=nn.Linear(512*2,512)
         self.encode_video=ConvBlock()  #output is 128
@@ -2172,9 +2172,21 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             
             audio_feat=self.audio_proj(speaker_Audio).mean(dim=1)
             # print(audio_feat.shape)
-            shared_feat,attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=lisenter_encode_fea.unsqueeze(1),value=audio_feat.unsqueeze(1))
+            shared_feat,attention_weight=self.shared_att(query=encode_fea.unsqueeze(1),key=audio_feat.unsqueeze(1),value=audio_feat.unsqueeze(1))
             shared_feat=self.att_linear(shared_feat.squeeze())
             # attn_output, attn_weights = cross_attention(query=query, key=key, value=value)
+
+            #substract and gating:
+            
+            encode_fea=encode_fea-shared_feat
+            # lisenter_encode_fea=encode_fea-shared_feat  #listener no share
+            audio_feat=audio_feat-shared_feat
+            
+            encode_fea=self.gating(encode_fea)
+            audio_feat=self.gating(audio_feat)
+            
+            # linear projection
+
             encode_fea=self.enc_proj_sec(encode_fea)
             lisenter_encode_fea=self.enc_proj_listener_sec(lisenter_encode_fea)
             audio_feat=self.audio_proj_sec(audio_feat)
