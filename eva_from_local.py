@@ -41,10 +41,10 @@ if is_2025:
     print('emo_pred.shape',emo_pred.shape)
     print('speaker_emo_gt.shape',speaker_emo_gt.shape)
     print('listener_emo_gt.shape',listener_emo_gt.shape)
-    emo_pred_reshape=emo_pred.reshape(clip_size,1,len(emo_pred),10)
+    emo_pred_reshape=emo_pred.reshape(clip_size,1,len(emo_pred),25)#10 or 25
     emo_pred_reshape=emo_pred_reshape.permute(2,1,0,3)
 
-    listener_emo_gt_reshape=listener_emo_gt.reshape(clip_size,1,len(emo_pred),10)
+    listener_emo_gt_reshape=listener_emo_gt.reshape(clip_size,1,len(emo_pred),25)
     listener_emo_gt_reshape=listener_emo_gt_reshape.permute(2,1,0,3)
     print('emo_pred_reshape.shape',emo_pred_reshape.shape)
     print('speaker_emo_gt.shape',speaker_emo_gt.shape)
