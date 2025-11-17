@@ -15,7 +15,7 @@ class jiexi:
 print("-----------------Evaluating Metric-----------------")
 # clip_size
 
-is_2025=False
+is_2025=True
 if is_2025:
     from metric.react2025_me.FRC import   compute_FRC_nomp
     from metric.react2025_me.FRD import   compute_FRD_nomp
@@ -25,10 +25,16 @@ if is_2025:
     # p = args.threads
     # pred: N 10 750 25
     # speaker: N 750 25
-    emo_pred=torch.load("./emo_pred_19.pt").cpu()
-    speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt").cpu()
-    listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
-    llm_emo_pred=torch.load('./llm_emo_pred_19.pt').cpu()
+    # emo_pred=torch.load("./emo_pred_19.pt").cpu()
+    # speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt").cpu()
+    # listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
+    # llm_emo_pred=torch.load('./llm_emo_pred_19.pt').cpu()
+    emo_pred=torch.load("./emo_pred_25_base.pt").cpu()
+    speaker_emo_gt=torch.load("./speaker_emo_gt_25_base.pt").cpu()
+    listener_emo_gt=torch.load("./listener_emo_gt_25_base.pt").cpu()
+    llm_emo_pred=torch.load('./llm_emo_pred_25_base.pt').cpu()
+
+    # /data/scratch/acw569/code/react2025_copy/react2025_copy
     pdb.set_trace()
     print('emo_pred.shape',emo_pred.shape)
     print('speaker_emo_gt.shape',speaker_emo_gt.shape)
