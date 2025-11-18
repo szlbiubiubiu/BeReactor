@@ -1616,7 +1616,7 @@ def main(args):
             # pdb.set_trace()
             samples = reaction_vae.decode(samples / 0.18215).sample
             samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)#*0.5+0.5
-            pdb.set_trace()
+            # pdb.set_trace()
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
@@ -1628,7 +1628,7 @@ def main(args):
         # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         # print('save path {}'.format(args.save_video_path))
 
-        
+        pdb.set_trace()
         all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
