@@ -25,11 +25,16 @@ if is_2025:
     # p = args.threads
     # pred: N 10 750 25
     # speaker: N 750 25
-    emo_pred=torch.load("./emo_pred_19.pt").cpu()
-    speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt").cpu()
-    listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
+    # emo_pred=torch.load("./emo_pred_19.pt").cpu()
+    # speaker_emo_gt=torch.load("./speaker_emo_gt_19.pt").cpu()
+    # listener_emo_gt=torch.load("./listener_emo_gt_19.pt").cpu()
     # llm_emo_pred=torch.load('./llm_emo_pred_19.pt').cpu()
     #2025
+    # /data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/
+    emo_pred=torch.load("/data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/251118074922_bqe4clwi/emo_pred_25_base.pt").cpu()[:,:,:,:10]
+    speaker_emo_gt=torch.load("/data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/251118074922_bqe4clwi/speaker_emo_gt_25_base.pt").cpu()[:,:,:10]
+    listener_emo_gt=torch.load("/data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/251118074922_bqe4clwi/listener_emo_gt_25_base.pt").cpu()[:,:,:10]
+    
     # emo_pred=torch.load("/data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/251117130041_bsfgcab0/emo_pred_25_base.pt").cpu()[:,:,:,:10]
     # speaker_emo_gt=torch.load("/data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/251117130041_bsfgcab0/speaker_emo_gt_25_base.pt").cpu()[:,:,:10]
     # listener_emo_gt=torch.load("/data/scratch/acw569/code/react2025_copy/react2025_copy/outputs/motion_transvae/react_2025/offline/251117130041_bsfgcab0/listener_emo_gt_25_base.pt").cpu()[:,:,:10]
