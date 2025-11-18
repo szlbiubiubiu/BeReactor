@@ -649,7 +649,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #add final text
     chat.append(
             {"role": "Assistant", "content": current_text})
-    realism_score,sentiment_emb=evaluate_LLM(dialogue)
+    # realism_score,sentiment_emb=evaluate_LLM(dialogue)###???
+    realism_score,sentiment_emb=evaluate_LLM(chat)
+    pdb.set_trace()
     # all_text
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
