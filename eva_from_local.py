@@ -2,7 +2,7 @@ import torch
 # from metric.react2025_me.metric import *
 
 import pdb
-clip_size=32
+clip_size=64
 
 
 class jiexi:
