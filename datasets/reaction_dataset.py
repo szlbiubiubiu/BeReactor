@@ -540,7 +540,11 @@ class ReactionDataset_readvideo(data.Dataset):
         # img_paths = sorted(img_paths, key=cmp_to_key(lambda a, b: int(a[:-4]) - int(b[:-4])))
         # pdb.set_trace()
         cp = random.randint(0, total_length - 1 - self._clip_length*self.interval) if (self._clip_length*self.interval) < total_length else 0
+        
         last_cp= cp if (cp<=self._clip_length*self.interval) else cp-self._clip_length*self.interval
+        if self._split=='test' or self._split=='val':
+            cp=0
+            last_cp=0
         # cp=0
         # img_paths = img_paths[cp: cp + self._clip_length]
 
