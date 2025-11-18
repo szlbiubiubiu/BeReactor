@@ -1616,6 +1616,7 @@ def main(args):
             # pdb.set_trace()
             samples = reaction_vae.decode(samples / 0.18215).sample
             samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)#*0.5+0.5
+            pdb.set_trace()
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
