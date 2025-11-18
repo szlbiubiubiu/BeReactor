@@ -501,7 +501,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
     # pdb.set_trace()
     expression=emo_fea['expression'].to(torch.device('cuda:0'))
     expression_soft_sing=F.softmax(expression,dim=1)
@@ -1017,7 +1017,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     # pdb.set_trace()
     #get emotion from images
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1'))).to(torch.device('cuda:0'))
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0'))).to(torch.device('cuda:0'))
     expression=emo_fea['expression']
     expression_soft=F.softmax(expression,dim=1)
     valence=emo_fea['valence']
