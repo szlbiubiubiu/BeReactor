@@ -581,7 +581,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             #     ]
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 20 words in each reply"},
                 {"role": "user", "content": sentences[0]}
                 ]
             else:
@@ -1010,8 +1010,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # if return_image4emotion:
     #return emotion image
     pdb.set_trace()
-    interval_listener=len(res_frame_list)//num_frame_sp
-    out_images=res_frame_list[::interval_listener]
+    # interval_listener=len(res_frame_list)//num_frame_sp
+    # out_images=res_frame_list[::interval_listener]
+    # return out_images[:num_frame_sp],evaluation_score 
+    
     return out_images[:num_frame_sp],evaluation_score 
 
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
