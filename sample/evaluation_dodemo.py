@@ -347,7 +347,7 @@ else:
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
                     ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', 
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
-                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:1'))#.cuda()
+                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:0'))#.cuda()
 
 
 
@@ -501,7 +501,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
     # pdb.set_trace()
     expression=emo_fea['expression'].to(torch.device('cuda:0'))
     expression_soft_sing=F.softmax(expression,dim=1)
@@ -1009,7 +1009,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # if return_image4emotion:
     #return emotion image
-    # pdb.set_trace()
+    pdb.set_trace()
     interval_listener=len(res_frame_list)//num_frame_sp
     out_images=res_frame_list[::interval_listener]
     # return out_images[:num_frame_sp],evaluation_score 
@@ -1022,7 +1022,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     # pdb.set_trace()
     #get emotion from images
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1'))).to(torch.device('cuda:0'))
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0'))).to(torch.device('cuda:0'))
     expression=emo_fea['expression']
     expression_soft=F.softmax(expression,dim=1)
     valence=emo_fea['valence']
@@ -1323,7 +1323,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
 
     print("pad talking image to original video")
-    # pdb.set_trace()
+    pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
@@ -1716,7 +1716,7 @@ def main(args):
         all_face_images=out_samples.reshape(b*v,c,w,h)
         b,c,w,h=all_face_images.shape
         # all_face_images=out_samples
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)
