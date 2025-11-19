@@ -616,7 +616,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'},#+". please reply within 10 words"}
+                        +'. Remove the emotion number in your reply. Return a binary descirbtion of the response level, 0 means negative and 1 means postive)'},#+". please reply within 10 words"}
             # <| Assistant |><think>\n\n</think>\n\n
             # chat.append(
             # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
@@ -629,7 +629,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         #below is llama3
-        # pdb.set_trace()
+        pdb.set_trace()
         current_text=response[0]['generated_text'][-1]['content']
         # pdb.set_trace()
 
@@ -742,11 +742,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
     tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
-    prompt = "Hey, how are you doing today?"
+    prompt = all_text#"Hey, how are you doing today?"
     description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up."
 
-    input_ids = tokenizer(description, return_tensors="pt").input_ids.to(device)
-    prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
+    input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
+    prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
 
     generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
     audio_arr = generation.cpu().numpy().squeeze()
