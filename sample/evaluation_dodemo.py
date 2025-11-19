@@ -630,7 +630,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         #below is llama3
         pdb.set_trace()
-        current_text=response[0]['generated_text'][-1]['content']
+        text_4_split=response[0]['generated_text'][-1]['content'].split('(')
+        current_text=text_4_split[0]#response[0]['generated_text'][-1]['content'].split('(')
+        if len(text_4_split)==2:
+
+            tone_pos=text_4_split[1]
+        else:
+            tone_pos=1
         # pdb.set_trace()
 
         # #deepseek with thinking tag
