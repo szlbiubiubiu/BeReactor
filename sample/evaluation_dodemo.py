@@ -1637,7 +1637,7 @@ def main(args):
                     original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
                     sp_audio_clip=sp_audio_clip
                 )
-            pdb.set_trace()
+            # pdb.set_trace()
             # print(samples.shape)
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
