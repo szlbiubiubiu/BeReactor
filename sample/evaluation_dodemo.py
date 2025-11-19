@@ -752,9 +752,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     prompt = all_text#"Hey, how are you doing today?"
     if tone_pos:
-        description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive."
+        description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
+            The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive. Keep slience for 10 seconds."
     else:
-        description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
+        description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
+        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative. Keep slience for 10 seconds"
 
     input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
     prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
@@ -1635,7 +1637,7 @@ def main(args):
                     original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
                     sp_audio_clip=sp_audio_clip
                 )
-            # pdb.set_trace()
+            pdb.set_trace()
             # print(samples.shape)
             if args.use_fp16:
                 samples = samples.to(dtype=torch.float16)
