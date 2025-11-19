@@ -82,7 +82,9 @@ import re
 
 import platform
 #it is single forward function
-
+from parler_tts import ParlerTTSForConditionalGeneration
+from transformers import AutoTokenizer
+import soundfile as sf
 
 
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
@@ -730,9 +732,26 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #     os.remove(OUTPUT_audio_FILE)
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
-    communicate = edge_tts.Communicate(all_text, VOICE)
-    # pdb.set_trace()
-    communicate.save_sync(OUTPUT_audio_FILE)
+    '''edge tts'''
+    # communicate = edge_tts.Communicate(all_text, VOICE)
+    # # pdb.set_trace()
+    # communicate.save_sync(OUTPUT_audio_FILE)
+    pdb.set_trace()
+    audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
+    tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+
+    prompt = "Hey, how are you doing today?"
+    description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up."
+
+    input_ids = tokenizer(description, return_tensors="pt").input_ids.to(device)
+    prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
+
+    generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
+    audio_arr = generation.cpu().numpy().squeeze()
+    sf.write(OUTPUT_audio_FILE, audio_arr, audio_model.config.sampling_rate)
+    print('audio_generated, path is: ',OUTPUT_audio_FILE)
     # # message in self.stream()
     wavs=[]
     # with open(OUTPUT_audio_FILE, "wb") as file:
