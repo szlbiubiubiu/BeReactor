@@ -743,7 +743,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
     prompt = all_text#"Hey, how are you doing today?"
-    description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up."
+    if tone_pos:
+        description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive."
+    else:
+        description = "A female speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
 
     input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
     prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
