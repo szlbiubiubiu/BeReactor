@@ -537,7 +537,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
 
     rand_num=torch.randint(0,100,(1,))
-    all_text=''
+    all_text=',,,,,,,,,,'
     conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words(at least 6 words)\n"
     # for i in range(1):
     #     if i==0:
@@ -753,10 +753,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     prompt = all_text#"Hey, how are you doing today?"
     if tone_pos:
         description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-            The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive. Keep slience for 10 seconds."
+            The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive."
     else:
         description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative. Keep slience for 10 seconds"
+        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
 
     input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
     prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
