@@ -566,7 +566,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     )
     dialogue=[]
     random_number=np.random.randint(low=0, high=100)
-    
+    # else:
+    tone_pos=1
     for i in range(len(sentences)):
         if i>=5:
             break
@@ -635,8 +636,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         if len(text_4_split)==2:
 
             tone_pos=text_4_split[1]
-        else:
-            tone_pos=1
+        
         # pdb.set_trace()
 
         # #deepseek with thinking tag
