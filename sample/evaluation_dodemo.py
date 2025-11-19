@@ -583,7 +583,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             #     ]
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 20 words in each reply"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 15 words in each reply. Return a binary descirbtion of the response level at each response, 0 means negative and 1 means postive"},
                 {"role": "user", "content": sentences[0]}
                 ]
             else:
@@ -616,7 +616,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply. Return a binary descirbtion of the response level, 0 means negative and 1 means postive)'},#+". please reply within 10 words"}
+                        +'. Remove the emotion number in your reply. )'},#+". please reply within 10 words"}
             # <| Assistant |><think>\n\n</think>\n\n
             # chat.append(
             # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
