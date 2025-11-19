@@ -1540,10 +1540,10 @@ def main(args):
         
         out_samples=None
         # pdb.set_trace()
-        if args.use_fp16:
-            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+        if args.use_fp16:#args.num_frames
+            z = torch.randn(batch_size, 64, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
         else:
-            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+            z = torch.randn(batch_size, 64, 4, latent_size, latent_size, device=device)#args.num_frames
         # if args.use_fp16:
         #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
         # else:
