@@ -497,7 +497,7 @@ def evaluate_LLM(dialogue: str):
 
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=True,num_frame_sp=32):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
@@ -1539,7 +1539,7 @@ def main(args):
             sample_fn = model.forward
             model_kwargs = dict(y=None, use_fp16=args.use_fp16)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         for index_clip in range((video_data['img'].shape)[1]//clip_size):
             # if len(listener_ref)<=32:
             #     pdb.set_trace()
