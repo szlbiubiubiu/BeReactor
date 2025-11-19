@@ -1675,101 +1675,102 @@ def main(args):
             # print(video_.shape)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
             
+        pdb.set_trace()
+        a=1
+        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        # # #generate talking head
+        # # result = whisper_model.transcribe(audio_file)
+        # # print(result["text"])
 
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
-        # #generate talking head
-        # result = whisper_model.transcribe(audio_file)
-        # print(result["text"])
-
-        # sentences=result["text"].split('.')
-
-        #visualize 
-        
-
-        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
-        # pdb.set_trace()
-
+        # # sentences=result["text"].split('.')
 
         # #visualize 
-        # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
-
-        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
-        # pdb.set_trace()
-
-        # pdb.set_trace()
-        #get emo feature
-        b,v,c,w,h=out_samples.shape
-        # b,v,c_l,w_l,h_l=lnd.shape
-
-        all_face_images=out_samples.reshape(b*v,c,w,h)
-        b,c,w,h=all_face_images.shape
-        # all_face_images=out_samples
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
-        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
-        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
-        # id=id.reshape(b*v,c,w,h)
-        # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
         
+
+        # # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # # print(video_save_path)
+        # # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # # print('save path {}'.format(args.save_video_path))
         # # pdb.set_trace()
-        # self.idnet.eval()
-        # id_feats = self.idnet(id)  # [B, 512]
 
-        #emo_feature
-        # pdb.set_trace()
-        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
-        au=torch.reshape(au,[b,-1,15])
 
-        #
-        expression=emo_fea['expression']
-        expression_soft=Func.softmax(expression,dim=1)
-        valence=emo_fea['valence']
-        arousal=emo_fea['arousal']
-        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
-        emo=torch.reshape(emo,[b,-1,10])
-        current_emo=emo#torch.cat([emo,au],dim=-1)
-        # current_emo=torch.cat([emo,au],dim=-1)
+        # # #visualize 
+        # # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
+        # # print(video_save_path)
+        # # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # # print('save path {}'.format(args.save_video_path))
 
-        # pdb.set_trace()
-        # #get emo label from listener image
-        # if all_face_images.shape[0]!=listener_ref.shape[0]:
-        #     listener_emotion_pred_list.append(current_emo.cpu())
-        #     listener_emotion_gt_list.append(emo_label.cpu())
-        #     speaker_emotion_gt_list.append(speaker_emo)
-        #     continue
-        listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        # # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # # print(video_save_path)
+        # # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # # print('save path {}'.format(args.save_video_path))
+        # # pdb.set_trace()
+
+        # # pdb.set_trace()
+        # #get emo feature
+        # b,v,c,w,h=out_samples.shape
+        # # b,v,c_l,w_l,h_l=lnd.shape
+
+        # all_face_images=out_samples.reshape(b*v,c,w,h)
+        # b,c,w,h=all_face_images.shape
+        # # all_face_images=out_samples
+        # id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
+        # # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
+        # # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
+        # # id=id.reshape(b*v,c,w,h)
+        # # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
         
-        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
-        au=torch.reshape(au,[b,-1,15])
+        # # # pdb.set_trace()
+        # # self.idnet.eval()
+        # # id_feats = self.idnet(id)  # [B, 512]
 
-        #
-        expression=emo_fea['expression']
-        expression_soft=Func.softmax(expression,dim=1)
-        valence=emo_fea['valence']
-        arousal=emo_fea['arousal']
-        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
-        emo=torch.reshape(emo,[b,-1,10])
-        listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
-        # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+        # #emo_feature
+        # # pdb.set_trace()
+        # au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        # au=torch.reshape(au,[b,-1,15])
 
-        #
-        # pdb.set_trace()
-        listener_emotion_pred_list.append(current_emo.cpu())
-        listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
-        # listener_emotion_gt_list.append(emo_label.cpu())
-        speaker_emotion_gt_list.append(speaker_emo)
+        # #
+        # expression=emo_fea['expression']
+        # expression_soft=Func.softmax(expression,dim=1)
+        # valence=emo_fea['valence']
+        # arousal=emo_fea['arousal']
+        # emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        # emo=torch.reshape(emo,[b,-1,10])
+        # current_emo=emo#torch.cat([emo,au],dim=-1)
+        # # current_emo=torch.cat([emo,au],dim=-1)
+
+        # # pdb.set_trace()
+        # # #get emo label from listener image
+        # # if all_face_images.shape[0]!=listener_ref.shape[0]:
+        # #     listener_emotion_pred_list.append(current_emo.cpu())
+        # #     listener_emotion_gt_list.append(emo_label.cpu())
+        # #     speaker_emotion_gt_list.append(speaker_emo)
+        # #     continue
+        # listener_ref_4emo=listener_ref.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
+        # id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
+        
+        # au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        # au=torch.reshape(au,[b,-1,15])
+
+        # #
+        # expression=emo_fea['expression']
+        # expression_soft=Func.softmax(expression,dim=1)
+        # valence=emo_fea['valence']
+        # arousal=emo_fea['arousal']
+        # emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        # emo=torch.reshape(emo,[b,-1,10])
+        # listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
+        # # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+
+        # #
+        # # pdb.set_trace()
+        # listener_emotion_pred_list.append(current_emo.cpu())
+        # listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
+        # # listener_emotion_gt_list.append(emo_label.cpu())
+        # speaker_emotion_gt_list.append(speaker_emo)
         
 
     # pdb.set_trace()
