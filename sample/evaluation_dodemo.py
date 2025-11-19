@@ -634,8 +634,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         text_4_split=response[0]['generated_text'][-1]['content'].split('(')
         current_text=text_4_split[0]#response[0]['generated_text'][-1]['content'].split('(')
         if len(text_4_split)==2:
-
-            tone_pos=text_4_split[1]
+            number_string = text_4_split[1].strip(')')
+            # Convert the resulting string '1' to an integer
+            tone_pos = int(number_string)
+            # =
         
         # pdb.set_trace()
 
