@@ -919,7 +919,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #----
     #use image----
     pdb.set_trace()
-    input_latent_list_cycle = torch.tensor(frame_list)#input_latent_list #+ input_latent_list[::-1]
+    input_latent_list_cycle = torch.tensor(frame_list/127.5-1)#input_latent_list #+ input_latent_list[::-1]
     
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
