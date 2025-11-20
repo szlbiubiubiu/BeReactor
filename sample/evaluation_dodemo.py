@@ -634,9 +634,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         text_4_split=response[0]['generated_text'][-1]['content'].split('(')
         current_text=text_4_split[0]#response[0]['generated_text'][-1]['content'].split('(')
         if len(text_4_split)==2:
-            number_string = text_4_split[1].strip(')')
-            # Convert the resulting string '1' to an integer
-            tone_pos = int(number_string)
+            # number_string = text_4_split[1].strip(')')
+            # # Convert the resulting string '1' to an integer
+            # tone_pos = int(number_string)
+            tone_pos = re.findall(r"\d+\.?\d*",text_4_split[1])[-1]
+            # print(re.findall(r"\d+\.?\d*",string))  
             # =
         
         # pdb.set_trace()
@@ -751,12 +753,12 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
     prompt = all_text#"Hey, how are you doing today?"
-    if tone_pos:
-        description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-            The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive."
-    else:
-        description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
+    # if tone_pos:
+    description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
+        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive level of "+str(tone_pos)
+    # else:
+    #     description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
+    #     The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
 
     input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
     prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
@@ -996,7 +998,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
     print('len(res_frame_list)=',len(res_frame_list))
-    pdb.set_trace()
+    # pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
