@@ -836,7 +836,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     reverse_input_img_list=input_img_list_single[::-1]#.reverse()
     #reverse end
     #repeat start
-    repeat_times=2
+    repeat_times=1
     input_img_list=repeat_times*(input_img_list_single+reverse_input_img_list)  #
     #repeat and concat
     # input_img_list[sample]
