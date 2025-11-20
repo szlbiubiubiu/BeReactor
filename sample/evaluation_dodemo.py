@@ -389,7 +389,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
     # pdb.set_trace()
     if len(result["text"].split('.'))==1:
-        pdb.set_trace()
+        # pdb.set_trace()
         a=1
     #sentences=result["text"].split('.')
     listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
@@ -1183,7 +1183,7 @@ def main(args):
             # # pdb.set_trace()
             # Sample images:
             # listener_ref=torch.zeros_like(listener_ref)
-            x=torch.zeros_like(x)
+            # x=torch.zeros_like(x)
             listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
             sp_audio_clip=torch.zeros_like(sp_audio_clip)
             if args.sample_method == 'ddim':
@@ -1448,7 +1448,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/054-Latte-S-4-F32S3-reaction-Amp/checkpoints/0170000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/043-Latte-S-4-F32S3-reaction-Amp/checkpoints/0190000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     #2025 v5 /data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt 
