@@ -918,10 +918,16 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     #----
     #use image----
-    pdb.set_trace()
-    input_latent_list_cycle = torch.tensor(frame_list/127.5-1)#input_latent_list #+ input_latent_list[::-1]
+    input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
     
-    original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
+    # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
+    pdb.set_trace()
+    new_frame_list=[]
+    for single_ori_img in frame_list:
+        new_frame_list.append( torch.permute(torch.tensor(single_ori_img/127.5-1),(0,3,1,2))   )
+    original_image_cycle=new_frame_list
+    # original_image_cycle= np.split(frame_list,frame_list.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
+
     
     laten_repeat=max(len(whisper_chunks)//len(input_latent_list_cycle),1)
     # pdb.set_trace()
