@@ -529,7 +529,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print(result["text"])
     
     sentences=[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-    if len(result["text"].split('.'))>1:
+    if len(result["text"].split('.'))==1:
         pdb.set_trace()
         a=1
     #sentences=result["text"].split('.')
@@ -925,7 +925,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
     
     # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-    pdb.set_trace()
+    # pdb.set_trace()
     new_frame_list=[]
     for single_ori_img in frame_list:
         new_frame_list.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2))   )
@@ -1053,7 +1053,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # combine_frame = get_image(ori_frame,res_frame,bbox)
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
         combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
-
+        #clip to -1:1,, or 0-255
         cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
