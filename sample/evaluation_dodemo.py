@@ -537,7 +537,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
 
     rand_num=torch.randint(0,100,(1,))
-    all_text=',,,,,,,,,,'
+    all_text=''
     conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words(at least 6 words)\n"
     # for i in range(1):
     #     if i==0:
@@ -763,6 +763,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
     audio_arr = generation.cpu().numpy().squeeze()
+
+    asdf_aduio=np.zeros(audio_model.config.sampling_rate*6,dtype=np.float32)
+    new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
     sf.write(OUTPUT_audio_FILE, audio_arr, audio_model.config.sampling_rate)
     print('audio_generated, path is: ',OUTPUT_audio_FILE)
     # # message in self.stream()
