@@ -1184,7 +1184,7 @@ def main(args):
             # Sample images:
             # listener_ref=torch.zeros_like(listener_ref)
             x=torch.zeros_like(x)
-            listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
+            # listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
             sp_audio_clip=torch.zeros_like(sp_audio_clip)
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
