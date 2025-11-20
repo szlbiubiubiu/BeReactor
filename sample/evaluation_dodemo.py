@@ -630,7 +630,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         
         response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
         #below is llama3
-        pdb.set_trace()
+        # pdb.set_trace()
         text_4_split=response[0]['generated_text'][-1]['content'].split('(')
         current_text=text_4_split[0]#response[0]['generated_text'][-1]['content'].split('(')
         if len(text_4_split)==2:
@@ -832,11 +832,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     pdb.set_trace()
     input_img_list_single = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
 
-    #repeat here
-    reverse_input_img_list=input_img_list_single.reverse()
-    #repeat end
-
-    input_img_list=2*reverse_input_img_list
+    #reverse here
+    reverse_input_img_list=input_img_list_single[::-1]#.reverse()
+    #reverse end
+    #repeat start
+    repeat_times=2
+    input_img_list=repeat_times*(input_img_list_single+reverse_input_img_list)  #
+    #repeat and concat
     # input_img_list[sample]
     bbox_shift=0
     coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
