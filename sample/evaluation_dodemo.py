@@ -1728,8 +1728,8 @@ def main(args):
             # print(video_.shape)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
             
-        pdb.set_trace()
-        a=1
+        # pdb.set_trace()
+        # a=1
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # # #generate talking head
         # # result = whisper_model.transcribe(audio_file)
@@ -1826,7 +1826,7 @@ def main(args):
         # speaker_emotion_gt_list.append(speaker_emo)
         
 
-    # pdb.set_trace()
+    pdb.set_trace()
     listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
     listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
