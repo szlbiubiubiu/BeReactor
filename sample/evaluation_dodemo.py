@@ -528,7 +528,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     result = whisper_model.transcribe(speaker_audio_path)
     print(result["text"])
     
-    sentences=result["text"]#.split('.')  for demo, find a speaker that only speak 1 sentence
+    sentences=[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
     if len(result["text"].split('.'))>1:
         pdb.set_trace()
         a=1
