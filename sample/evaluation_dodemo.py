@@ -924,7 +924,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     pdb.set_trace()
     new_frame_list=[]
     for single_ori_img in frame_list:
-        new_frame_list.append( torch.permute(torch.tensor(single_ori_img/127.5-1),(0,3,1,2))   )
+        new_frame_list.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2))   )
     original_image_cycle=new_frame_list
     # original_image_cycle= np.split(frame_list,frame_list.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
 
