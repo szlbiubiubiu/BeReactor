@@ -1260,8 +1260,8 @@ def main(args):
             all_score['all_bert_scores']+=scores['bert_scores']
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             
-            pdb.set_trace()
-            video_ = np.asarray(batched_faces)[:,:,:,::-1]
+            # pdb.set_trace()
+            video_ = np.asarray(np.clip(batched_faces,0,255))[:,:,:,::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
             print(video_save_path)
             # print(video_.shape)
@@ -1447,7 +1447,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/054-Latte-S-4-F32S3-reaction-Amp/checkpoints/0170000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     #2025 v5 /data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt 
