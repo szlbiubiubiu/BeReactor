@@ -528,8 +528,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     result = whisper_model.transcribe(speaker_audio_path)
     print(result["text"])
     
-    sentences=result["text"].split('.')
-
+    sentences=result["text"]#.split('.')  for demo, find a speaker that only speak 1 sentence
+    if len(result["text"].split('.'))>1:
+        pdb.set_trace()
+        a=1
+    #sentences=result["text"].split('.')
     listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
     # print(result["text"])
         
@@ -574,6 +577,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     random_number=np.random.randint(low=0, high=100)
     # else:
     tone_pos=1
+    pdb.set_trace()
     for i in range(len(sentences)):
         if i>=5:
             break
