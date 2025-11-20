@@ -362,6 +362,12 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 import bert_score
 
+
+audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
+tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+
 # Function to calculate BLEU for multiple chats
 def calculate_bleu_batch(references, candidates):
     smoothie = SmoothingFunction().method4
@@ -747,10 +753,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # # pdb.set_trace()
     # communicate.save_sync(OUTPUT_audio_FILE)
     # pdb.set_trace()
-    audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-    audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
-    tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+    # audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    # audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
+    # tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
     prompt = all_text#"Hey, how are you doing today?"
     # if tone_pos:
@@ -911,9 +918,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     #----
     #use image----
-    input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
-    # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    # pdb.set_trace()
+    input_latent_list_cycle = frame_list#input_latent_list #+ input_latent_list[::-1]
+    
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
     laten_repeat=max(len(whisper_chunks)//len(input_latent_list_cycle),1)
