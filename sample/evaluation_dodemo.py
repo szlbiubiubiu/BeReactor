@@ -766,7 +766,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     asdf_aduio=np.zeros(audio_model.config.sampling_rate*6,dtype=np.float32)
     new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
-    sf.write(OUTPUT_audio_FILE, audio_arr, audio_model.config.sampling_rate)
+    sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
     print('audio_generated, path is: ',OUTPUT_audio_FILE)
     # # message in self.stream()
     wavs=[]
