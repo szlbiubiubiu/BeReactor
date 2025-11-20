@@ -848,8 +848,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     repeat_times=2
     coord_list_reverse=coord_list_single[::-1]
     frame_list_reverse=frame_list_single[::-1]
-    coord_list_list=repeat_times*(coord_list_single+coord_list_reverse)
-    frame_list_list=repeat_times*(frame_list_single+frame_list_reverse)
+    coord_list=repeat_times*(coord_list_single+coord_list_reverse)
+    frame_list=repeat_times*(frame_list_single+frame_list_reverse)
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
