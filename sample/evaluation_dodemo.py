@@ -577,7 +577,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     random_number=np.random.randint(low=0, high=100)
     # else:
     tone_pos=1
-    pdb.set_trace()
+    # pdb.set_trace()
     for i in range(len(sentences)):
         if i>=5:
             break
@@ -600,7 +600,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             else:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 15 words(more than 5 words)"},
+                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 10 words)"},
                 {"role": "user", "content": sentences[0]}
                 ]
             # {"role": "system", "content": 
