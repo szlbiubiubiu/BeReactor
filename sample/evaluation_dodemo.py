@@ -830,18 +830,26 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     pdb.set_trace()
-    input_img_list_single = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
+    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
 
-    #reverse here
-    reverse_input_img_list=input_img_list_single[::-1]#.reverse()
-    #reverse end
-    #repeat start
-    repeat_times=1
-    input_img_list=repeat_times*(input_img_list_single+reverse_input_img_list)  #
-    #repeat and concat
-    # input_img_list[sample]
+    # #reverse here
+    # reverse_input_img_list=input_img_list_single[::-1]#.reverse()
+    # #reverse end
+    # #repeat start
+    # repeat_times=2
+    # input_img_list=repeat_times*(input_img_list_single+reverse_input_img_list)  #
+    # #repeat and concat
+    # # input_img_list[sample]
     bbox_shift=0
-    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
+    coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
+
+
+    #reverse and repeat here
+    repeat_times=2
+    coord_list_reverse=coord_list_single[::-1]
+    frame_list_reverse=frame_list_single[::-1]
+    coord_list_list=repeat_times*(coord_list_single+coord_list_reverse)
+    frame_list_list=repeat_times*(frame_list_single+frame_list_reverse)
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
