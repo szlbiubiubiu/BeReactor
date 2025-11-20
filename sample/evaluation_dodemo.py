@@ -636,7 +636,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
     audio_arr = generation.cpu().numpy().squeeze()
 
-    asdf_aduio=np.zeros(audio_model.config.sampling_rate*4,dtype=np.float32)
+    asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
     new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
     print('audio_generated, path is: ',OUTPUT_audio_FILE)
