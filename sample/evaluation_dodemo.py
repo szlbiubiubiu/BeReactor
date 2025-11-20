@@ -1015,7 +1015,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
     print('len(res_frame_list)=',len(res_frame_list))
-    pdb.set_trace()
+    # pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
@@ -1475,7 +1475,8 @@ def main(args):
         assert args.num_classes == 1000
 
     #load audio->talking head branch--------------------------------
-    whisper_model = whisper.load_model("base.en")
+    # whisper_model = whisper.load_model("base.en")
+    whisper_model = whisper.load_model("medium.en")
 
     # result = whisper_model.transcribe(audio_file)
     # print(result["text"])
