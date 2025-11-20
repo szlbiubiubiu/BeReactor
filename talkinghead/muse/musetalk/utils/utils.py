@@ -87,7 +87,7 @@ def datagen_reaction(whisper_chunks,
         laten_repeat=1
     # pdb.set_trace()
     vae_encode_latents_new=[]
-    vae_encode_latents_copy=vae_encode_latents.copy()
+    # vae_encode_latents_copy=vae_encode_latents.copy()
     for single_latent in vae_encode_latents:
         repeated_latent=laten_repeat * [single_latent]
         vae_encode_latents_new+=repeated_latent
