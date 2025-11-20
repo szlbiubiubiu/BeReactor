@@ -1260,7 +1260,7 @@ def main(args):
             all_score['all_bert_scores']+=scores['bert_scores']
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             
-            
+            pdb.set_trace()
             video_ = np.asarray(batched_faces)[:,:,:,::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
             print(video_save_path)
