@@ -829,7 +829,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # print(video_.shape)
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
-    pdb.set_trace()
+    # pdb.set_trace()
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
@@ -1060,7 +1060,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # if return_image4emotion:
     #return emotion image
-    pdb.set_trace()
+    # pdb.set_trace()
     interval_listener=len(res_frame_list)//num_frame_sp
     out_images=res_frame_list[::interval_listener]
     # return out_images[:num_frame_sp],evaluation_score 
@@ -1684,7 +1684,7 @@ def main(args):
         # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         # print('save path {}'.format(args.save_video_path))
 
-        pdb.set_trace()
+        # pdb.set_trace()
         all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
