@@ -387,7 +387,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print(result["text"])
     
     sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-    pdb.set_trace()
+    # pdb.set_trace()
     if len(result["text"].split('.'))==1:
         pdb.set_trace()
         a=1
