@@ -744,7 +744,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # communicate = edge_tts.Communicate(all_text, VOICE)
     # # pdb.set_trace()
     # communicate.save_sync(OUTPUT_audio_FILE)
-    pdb.set_trace()
+    # pdb.set_trace()
     audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
