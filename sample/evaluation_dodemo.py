@@ -453,13 +453,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             #             +'. Remove the emotion number in your reply.)'}
             #     ]
                 chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(A computer science PhD student), subject to the random seed:"+str(random_number)\
+                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
                 +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words in each reply. Return a binary number describing of the response level, 0 means negative and 1 means postive"},
                 {"role": "user", "content": sentences[0]}
                 ]
             else:
                 chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(A computer science PhD student), subject to the random seed:"+str(random_number)\
+                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
                 +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 100 words(more than 10 words)"},
                 {"role": "user", "content": sentences[0]}
                 ]
