@@ -406,7 +406,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
-    conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words(at least 6 words)\n"
+    conversation_history = f"system: You are a person with a specific personality(a phd student), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
     # for i in range(1):
     #     if i==0:
     #         chat = [
@@ -1182,10 +1182,10 @@ def main(args):
             #     model_kwargs = dict(y=None, use_fp16=args.use_fp16)
             # # pdb.set_trace()
             # Sample images:
-            listener_ref=torch.zeros_like(listener_ref)
-            # x=torch.zeros_like(x)
-            listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
-            sp_audio_clip=torch.zeros_like(sp_audio_clip)
+            # listener_ref=torch.zeros_like(listener_ref)
+            # # x=torch.zeros_like(x)
+            # listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
+            # sp_audio_clip=torch.zeros_like(sp_audio_clip)
             if args.sample_method == 'ddim':
                 samples = diffusion.ddim_sample_loop(
                     sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
