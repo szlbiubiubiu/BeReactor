@@ -407,7 +407,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
-    conversation_history = f"system: You are a person with a specific personality(a phd student), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
+    conversation_history = f"system: You are a person with a specific personality(scientist), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
     # for i in range(1):
     #     if i==0:
     #         chat = [
@@ -453,13 +453,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             #             +'. Remove the emotion number in your reply.)'}
             #     ]
                 chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
+                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(A computer science PhD student), subject to the random seed:"+str(random_number)\
                 +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words in each reply. Return a binary number describing of the response level, 0 means negative and 1 means postive"},
                 {"role": "user", "content": sentences[0]}
                 ]
             else:
                 chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
+                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(A computer science PhD student), subject to the random seed:"+str(random_number)\
                 +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 100 words(more than 10 words)"},
                 {"role": "user", "content": sentences[0]}
                 ]
