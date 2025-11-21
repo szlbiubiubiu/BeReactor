@@ -386,8 +386,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     result = whisper_model.transcribe(speaker_audio_path)
     print(result["text"])
     
-    # sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-    sentences=['Have you traveled to Vancouver? What impresses you most?']
+    sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
+    # sentences=['Have you traveled to Vancouver? What impresses you most?']
     # pdb.set_trace()
     if len(result["text"].split('.'))==1:
         # pdb.set_trace()
@@ -407,7 +407,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
-    conversation_history = f"system: You are a person with a specific personality(scientist), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
+    conversation_history = f"system: You are a person with a specific personality(a sales), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
     # for i in range(1):
     #     if i==0:
     #         chat = [
