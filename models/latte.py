@@ -396,7 +396,7 @@ class Latte(nn.Module):
         if self.extras == 78: # timestep + text_embedding
             self.text_embedding_projection = nn.Sequential(
             nn.SiLU(),
-            nn.Linear(77 * 384, hidden_size, bias=True)  #768--S; 384--B
+            nn.Linear(77 * 768, hidden_size, bias=True)
         )
 
         num_patches = self.x_embedder.num_patches
@@ -2016,17 +2016,35 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
 
 
         '''second projection'''
-        self.enc_proj_sec=nn.Sequential(nn.Linear(128,128),
+        # self.enc_proj_sec=nn.Sequential(nn.Linear(128,128),
+        #                             # nn.Dropout(p=0.5)
+        #                             nn.LayerNorm(128, eps=1e-6)
+        #                             )
+        # self.enc_proj_listener_sec=nn.Sequential(nn.Linear(128,128),
+        #                             # nn.Dropout(p=0.5)
+        #                             nn.LayerNorm(128, eps=1e-6)
+        #                             )
+        # self.audio_proj_sec=self.enc_proj=nn.Sequential(nn.Linear(128,64),
+        #                             # nn.Dropout(p=0.5)
+        #                             nn.LayerNorm(64, eps=1e-6)
+        #                             )
+        self.id_proj=nn.Sequential(nn.Linear(512,1024),#64-128
+                                    torch.nn.GELU(),
+                                    torch.nn.Linear(1024, 128),
+                                    nn.LayerNorm(128, eps=1e-6)
+                                    # nn.Dropout(p=0.5)
+                                    ) 
+        self.enc_proj_sec=nn.Sequential(nn.Linear(128,256),
+                                    # nn.Dropout(p=0.5)
+                                    nn.LayerNorm(256, eps=1e-6)
+                                    )
+        self.enc_proj_listener_sec=nn.Sequential(nn.Linear(128,256),
+                                    # nn.Dropout(p=0.5)
+                                    nn.LayerNorm(256, eps=1e-6)
+                                    )
+        self.audio_proj_sec=self.enc_proj=nn.Sequential(nn.Linear(128,128),
                                     # nn.Dropout(p=0.5)
                                     nn.LayerNorm(128, eps=1e-6)
-                                    )
-        self.enc_proj_listener_sec=nn.Sequential(nn.Linear(128,128),
-                                    # nn.Dropout(p=0.5)
-                                    nn.LayerNorm(128, eps=1e-6)
-                                    )
-        self.audio_proj_sec=self.enc_proj=nn.Sequential(nn.Linear(128,64),
-                                    # nn.Dropout(p=0.5)
-                                    nn.LayerNorm(64, eps=1e-6)
                                     )
         '''end second projection'''
         self.shared_att=Multi_CrossAttention(128,128,head_num=4)#input is  sp_facial, sp_audio, li_facial_past
