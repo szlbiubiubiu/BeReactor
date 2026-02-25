@@ -130,7 +130,7 @@ class ReactionDataset(data.Dataset):
         self._fps = fps
         self._split = split
         self.interval=interval
-
+        pdb.set_trace()
         self._data_path = os.path.join(self._root_path, self._split)
         self.real_dataset_path=os.path.join(real_dataset_path, self._split)
         self._list_path = pd.read_csv(os.path.join(self._root_path, self._split + '.csv'), header=None, delimiter=',')
