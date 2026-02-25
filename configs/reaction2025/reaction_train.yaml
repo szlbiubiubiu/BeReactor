@@ -7,7 +7,8 @@ pretrained_model_path: "/data/home/acw569/paper_face/face_react/latte/latte_reac
 
 # save and load
 # results_dir: "./results"
-results_dir:  '/data/szl/code/latte_reaction_new/latte_reaction_check' #l40
+results_dir:  '/data/szl/code/latte_reaction_new/latte_reaction/pretrained_models'
+#'/data/szl/code/latte_reaction_new/latte_reaction_check' #l40
 #'/data/scratch/acw569/checkpoint/latte_check_new' #'/data/scratch/acw569/checkpoint/latte_check' #"./results"
 pretrained:
 
