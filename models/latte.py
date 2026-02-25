@@ -396,7 +396,7 @@ class Latte(nn.Module):
         if self.extras == 78: # timestep + text_embedding
             self.text_embedding_projection = nn.Sequential(
             nn.SiLU(),
-            nn.Linear(77 * 768, hidden_size, bias=True)
+            nn.Linear(77 * 384, hidden_size, bias=True)  #768--S; 384--B
         )
 
         num_patches = self.x_embedder.num_patches
