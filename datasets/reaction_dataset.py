@@ -130,7 +130,7 @@ class ReactionDataset(data.Dataset):
         self._fps = fps
         self._split = split
         self.interval=interval
-        pdb.set_trace()
+    
         self._data_path = os.path.join(self._root_path, self._split)
         self.real_dataset_path=os.path.join(real_dataset_path, self._split)
         self._list_path = pd.read_csv(os.path.join(self._root_path, self._split + '.csv'), header=None, delimiter=',')
@@ -759,6 +759,14 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
             self.aligned_video_path=self._video_path
             self._emotion_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
             self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+        elif 'server' in platform.node():
+            self._audio_path = os.path.join('/data/szl/dataset/react2024', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
+            # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
+            
+            self._video_path = '/data/szl/dataset/react2024'+'/cropped_face'
+            self.aligned_video_path=self._video_path
+            self._emotion_path = os.path.join('/data/szl/dataset/react2024', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
+            self._3dmm_path = os.path.join('/data/szl/dataset/react2024, self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
         
         else:
             self.emo_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
