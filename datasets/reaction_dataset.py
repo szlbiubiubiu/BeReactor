@@ -766,7 +766,7 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
             self._video_path = '/data/szl/dataset/react2024'+'/cropped_face'
             self.aligned_video_path=self._video_path
             self._emotion_path = os.path.join('/data/szl/dataset/react2024', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
-            self._3dmm_path = os.path.join('/data/szl/dataset/react2024, self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+            self._3dmm_path = os.path.join('/data/szl/dataset/react2024', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
         
         else:
             self.emo_filepath24='/import/nobackup_mmv_ioannisp/zs003/react_2024'#include emotion and data matrix
