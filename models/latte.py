@@ -2028,6 +2028,9 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         #                             # nn.Dropout(p=0.5)
         #                             nn.LayerNorm(64, eps=1e-6)
         #                             )
+
+        #above is small model
+        #below is B-model
         self.id_proj=nn.Sequential(nn.Linear(512,1024),#64-128
                                     torch.nn.GELU(),
                                     torch.nn.Linear(1024, 128),

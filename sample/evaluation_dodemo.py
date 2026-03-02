@@ -200,10 +200,10 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     # emo_loss= mean_flat((emo-emo_label[:,:,15:])**2)
         return id_feats,emo_fea,au_disfa,au_bp4d
 
-if 'sbg'  in platform.node() or 'dg' in platform.node():
-    pretrain_root=''
-else:
-    pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
+# if 'sbg'  in platform.node() or 'dg' in platform.node():
+pretrain_root=''
+# else:
+#     pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
                     ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', 
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
@@ -965,8 +965,8 @@ def main(args):
     device = torch.device("cuda", 0)
     # device = torch.device("cuda", 0)
     clip_size=32 #64
-    audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
-    listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
+    # audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
+    # listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
     # pdb.set_trace()
     print('check test/val matrix..')
