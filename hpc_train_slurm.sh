@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -A pilot_andrena
-#SBATCH -p andrena  #Andrena 40g
+#SBATCH -p andrena  ##Andrena 40g
 
 ##SBATCH -A pilot_sae_gpu
 ##SBATCH -p sae  ##Andrena 80g
