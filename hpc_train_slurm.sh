@@ -1,22 +1,20 @@
 #!/bin/bash
+##SBATCH -A pilot_andrena
+##SBATCH -p andrena  #Andrena 40g
 
-
-##SBATCH -A pilot_sae_gpu
-##SBATCH -p sae  ##Andrena 80g
+#SBATCH -A pilot_sae_gpu
+#SBATCH -p sae  ##Andrena 80g
 
 ###SBATCH -A pilot_gpu
 ###SBATCH -p gpu  #Apocrita
 ###SBATCH -p gpushort
 
-#####Andrena 40g
-#SBATCH -A pilot_andrena
-#SBATCH -p andrena  
 #SBATCH -t 10:0:0 # 10 hour runtime
 #SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
-#SBATCH -n 8 # 8 cores (8 cores per GPU)
-#SBATCH --gres=gpu:nvidia_a100-pcie-40gb:1. #gpu:1 # request 2 GPUs
-#SBATCH -J environment_name
+#SBATCH -n 12 # 8 cores (8 cores per GPU)
+#SBATCH --gres=gpu:1 # request 2 GPUs
 
+##SBATCH -J environment_name
 ##SBATCH --constraint="ampere"
 ##SBATCH --mail-type=ALL
 
