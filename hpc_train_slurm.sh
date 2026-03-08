@@ -19,7 +19,7 @@
 ##SBATCH --mail-type=ALL
 
 # module load miniforge
-set -e
+#set -e
 
 source ~/.bashrc
 
