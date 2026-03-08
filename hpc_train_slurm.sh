@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH -A pilot_gpu
+#SBATCH -p gpu  
+#SBATCH -t 72:0:0 # 10 hour runtime
+#SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
+#SBATCH -n 8 # 8 cores (8 cores per GPU)
+#SBATCH --gres=gpu:2 # request 2 GPUs
+#SBATCH -J environment_name
+#SBATCH --mail-type=ALL
+
+# module load miniforge
+set -e
+
+source ~/.bashrc
+
+# Replace the following line with a program or command
+conda activate latte_new
+
+CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --nproc_per_node=2 --master-port=25641 train.py
+
+# For assistance, please email its-research-support@qmul.ac.uk
