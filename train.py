@@ -65,7 +65,9 @@ def main(args):
     assert torch.cuda.is_available(), "Training currently requires at least one GPU."
     vqgan_en_dec=False
     # Setup DDP:
+    print("Setting up distributed training...")
     setup_distributed()
+    print("Distributed training setup complete.")
     # dist.init_process_group("nccl")
     # assert args.global_batch_size % dist.get_world_size() == 0, f"Batch size must be divisible by world size."
     # rank = dist.get_rank()
