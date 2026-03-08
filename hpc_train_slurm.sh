@@ -11,7 +11,7 @@
 #SBATCH -n 8 # 8 cores (8 cores per GPU)
 #SBATCH --gres=gpu:1 # request 2 GPUs
 #SBATCH -J environment_name
-#SBATCH --constraint="ampere"
+##SBATCH --constraint="ampere"
 ##SBATCH --mail-type=ALL
 
 # module load miniforge
