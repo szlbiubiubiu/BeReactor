@@ -373,11 +373,11 @@ class ReactionDataset_readvideo(data.Dataset):
             # self._video_path = '/data/scratch/acw569/face_react/new_crop'
             # self._emotion_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
             # self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
-            self._audio_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
+            self._audio_path = os.path.join('/gpfs/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
-            self._video_path = '/data/scratch/acw569/face_react/new_reaction_2024data/cropped_face'
-            self._emotion_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
-            self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+            self._video_path = '/gpfs/scratch/acw569/face_react/new_reaction_2024data/cropped_face'
+            self._emotion_path = os.path.join('/gpfs/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
+            self._3dmm_path = os.path.join('/gpfs/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
         elif 'server' in platform.node():
             self._audio_path = os.path.join('/data/szl/dataset/data', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
@@ -752,13 +752,13 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
             # self.aligned_video_path=os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')
             # self._emotion_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
             # self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
-            self._audio_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
+            self._audio_path = os.path.join('/gpfs/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
             
-            self._video_path = '/data/scratch/acw569/face_react/new_reaction_2024data/cropped_face'
+            self._video_path = '/gpfs/scratch/acw569/face_react/new_reaction_2024data/cropped_face'
             self.aligned_video_path=self._video_path
-            self._emotion_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
-            self._3dmm_path = os.path.join('/data/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
+            self._emotion_path = os.path.join('/gpfs/scratch/acw569/face_react/new_reaction_2024data', self._split+'/Emotion')#'/data/scratch/acw569/face_react/New_Emotion'
+            self._3dmm_path = os.path.join('/gpfs/scratch/acw569/face_react/new_reaction_2024data', self._split+'/3D_FV_files')#'/data/scratch/acw569/face_react/3dmm_param_all/3DMM_param'
         elif 'server' in platform.node():
             self._audio_path = os.path.join('/data/szl/dataset/react2024', self._split+'/Audio_files')#'/data/scratch/acw569/face_react/audios'#os.path.join(self.real_dataset_path, 'Audio_files')
             # self._video_path = os.path.join('/data/scratch/acw569/face_react/from_hengde/', self._split+'/Video_files')#os.path.join(self.real_dataset_path, 'aligned_faces')
@@ -1573,11 +1573,11 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #              load_3dmm_l: bool = True,
     #              normalize_3dmm: str = 'standard',
     # '''those are for 2025'''
-    dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data_v2',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
                 target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
                               load_3dmm_l=False,normalize_3dmm='standard')
-    # dataset=ReactionDataset_2025(root_dir='/data/scratch/acw569/face_react/2025data/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    # dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/face_react/2025data/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
     #                           load_3dmm_l=False,normalize_3dmm='standard')
