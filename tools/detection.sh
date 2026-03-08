@@ -26,4 +26,4 @@ source ~/.bashrc
 # conda activate
 conda activate deepface_v3
 
-python retinaface_video_extract.py --input /gpfs/scratch/acw569/dataset/2025data_v2/val/video-face-crop --outdir /gpfs/scratch/acw569/dataset/2025data_v2/val/ZL_crop_test --show-progress
+python retinaface_video_extract.py --input /gpfs/scratch/acw569/dataset/2025data_v2/video-face-crop --outdir /gpfs/scratch/acw569/dataset/2025data_v2/ZL_crop_test --show-progress
