@@ -1199,7 +1199,7 @@ class ReactionDataset_2025(data.Dataset):
         speaker_path_list = []
         listener_path_list = []
         gt_path_list = []
-
+        pdb.set_trace()
         for root, _, files in os.walk(self._video_dir):
             for path in files:
                 path = Path(path)
