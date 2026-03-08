@@ -12,9 +12,9 @@
 #SBATCH -A pilot_andrena
 #SBATCH -p andrena  
 #SBATCH -t 10:0:0 # 10 hour runtime
-#SBATCH --mem=88G ##--mem-per-cpu=11G # 11 * 8 = 88G total RAM
+#SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
 #SBATCH -n 8 # 8 cores (8 cores per GPU)
-#SBATCH --gres=gpu:1 # request 2 GPUs
+#SBATCH --gres=gpu:nvidia_a100-pcie-40gb:1. #gpu:1 # request 2 GPUs
 #SBATCH -J environment_name
 
 ##SBATCH --constraint="ampere"
