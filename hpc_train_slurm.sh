@@ -9,8 +9,8 @@
 ###SBATCH -p gpu  #Apocrita
 ###SBATCH -p gpushort
 
-#SBATCH -t 10:0:0 # 10 hour runtime
-#SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
+#SBATCH -t 1:0:0 # 10 hour runtime
+#SBATCH --mem-per-cpu=10G # 11 * 8 = 88G total RAM
 #SBATCH -n 12 # 8 cores (8 cores per GPU)
 #SBATCH --gres=gpu:1 # request 2 GPUs
 #SBATCH -J environment_name
