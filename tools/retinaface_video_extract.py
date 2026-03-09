@@ -14,7 +14,9 @@ deepface_video_extract.py
 - 使用 GPU（如果可用）。
 
 依赖：
-    pip install deepface opencv-python-headless numpy imageio torch torchvision
+    pip install deepface opencv-python-headless numpy imageio torch torchvision imageio-ffmpeg
+    imageio==2.33
+    tf-keras
 """
 
 import os
