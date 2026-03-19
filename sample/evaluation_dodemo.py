@@ -964,7 +964,7 @@ def main(args):
     # device = torch.device("cuda", local_rank)
     device = torch.device("cuda", 0)
     # device = torch.device("cuda", 0)
-    clip_size=32 #64
+    clip_size=64 #64
     # audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     # listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
@@ -1449,7 +1449,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/data/scratch/acw569/checkpoint/latte_check_new/054-Latte-S-4-F32S3-reaction-Amp/checkpoints/0170000.pt")
+        parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/008-Latte-B-4-F64S3-reaction-Amp/checkpoints/0120000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
     #2025 v5 /data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt 
