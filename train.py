@@ -216,21 +216,36 @@ def main(args):
     num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
 
     # Potentially load in the weights and states from a previous save
+    # if args.resume_from_checkpoint:
+    #     # TODO, need to checkout
+    #     # Get the most recent checkpoint
+    #     dirs = os.listdir(os.path.join(experiment_dir, 'checkpoints'))
+    #     dirs = [d for d in dirs if d.endswith("pt")]
+    #     dirs = sorted(dirs, key=lambda x: int(x.split(".")[0]))
+    #     path = dirs[-1]
+    #     logger.info(f"Resuming from checkpoint {path}")
+    #     model.load_state(os.path.join(dirs, path))
+    #     train_steps = int(path.split(".")[0])
+
+    #     first_epoch = train_steps // num_update_steps_per_epoch
+    #     resume_step = train_steps % num_update_steps_per_epoch
+    #     pdb.set_trace()
     if args.resume_from_checkpoint:
-        # TODO, need to checkout
-        # Get the most recent checkpoint
-        dirs = os.listdir(os.path.join(experiment_dir, 'checkpoints'))
-        dirs = [d for d in dirs if d.endswith("pt")]
-        dirs = sorted(dirs, key=lambda x: int(x.split(".")[0]))
-        path = dirs[-1]
-        logger.info(f"Resuming from checkpoint {path}")
-        model.load_state(os.path.join(dirs, path))
-        train_steps = int(path.split(".")[0])
+        
+        # # TODO, need to checkout
+        # # Get the most recent checkpoint
+        # dirs = os.listdir(os.path.join(experiment_dir, 'checkpoints'))
+        # dirs = [d for d in dirs if d.endswith("pt")]
+        # dirs = sorted(dirs, key=lambda x: int(x.split(".")[0]))
+        # path = dirs[-1]
+        # logger.info(f"Resuming from checkpoint {path}")
+        model.load_state(args.resume_ckpt_path)
+        # train_steps = int(path.split(".")[0])
 
-        first_epoch = train_steps // num_update_steps_per_epoch
-        resume_step = train_steps % num_update_steps_per_epoch
+        # first_epoch = train_steps // num_update_steps_per_epoch
+        # resume_step = train_steps % num_update_steps_per_epoch
+        resume_step=1
         pdb.set_trace()
-
     if args.pretrained:
         train_steps = int(args.pretrained.split("/")[-1].split('.')[0])
 
