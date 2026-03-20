@@ -1,6 +1,5 @@
 #!/bin/bash
-#SBATCH -A pilot_andrena
-#SBATCH -p andrena  #Andrena 40g
+
 
 ##SBATCH -A pilot_sae_gpu
 ##SBATCH -p sae  ##Andrena 80g
@@ -9,8 +8,10 @@
 ###SBATCH -p gpu  #Apocrita
 ###SBATCH -p gpushort
 
+#SBATCH -A pilot_andrena
+#SBATCH -p andrena  #Andrena 40g
 #SBATCH -t 120:0:0 # 10 hour runtime
-#SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
+#SBATCH --mem-per-cpu=7G # 11 * 8 = 88G total RAM
 ##SBATCH -n 12 # 8 cores (8 cores per GPU)
 #SBATCH -n 1          # 1 Task (Because you are running 1 torchrun command)
 #SBATCH -c 12
