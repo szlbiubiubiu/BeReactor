@@ -239,7 +239,9 @@ def main(args):
         # dirs = sorted(dirs, key=lambda x: int(x.split(".")[0]))
         # path = dirs[-1]
         # logger.info(f"Resuming from checkpoint {path}")
-        model.module.load_state_dict(torch.load(args.resume_ckpt_path, weights_only=True))
+        model_weight=torch.load(args.resume_ckpt_path)
+        pdb.set_trace()
+        model.module.load_state_dict(model_weight)
         # train_steps = int(path.split(".")[0])
 
         # first_epoch = train_steps // num_update_steps_per_epoch
