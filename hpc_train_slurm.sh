@@ -22,6 +22,9 @@
 
 # module load miniforge
 #set -e
+export MASTER_ADDR=localhost
+export NCCL_DEBUG=INFO
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
 
 source ~/.bashrc
 
