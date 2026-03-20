@@ -38,7 +38,8 @@ global_seed: 3407
 num_workers: 12
 log_every: 100
 lr_warmup_steps: 0
-resume_from_checkpoint: '/gpfs/scratch/acw569/checkpoint/latte_check_new/008-Latte-B-4-F64S3-reaction-Amp/checkpoints/0120000.pt'
+resume_from_checkpoint: True
+resume_ckpt_path: '/gpfs/scratch/acw569/checkpoint/latte_check_new/008-Latte-B-4-F64S3-reaction-Amp/checkpoints/0120000.pt' #"/data/szl/code/latte_reaction_new/latte_reaction_check/latte_B_4_64_256_3_True_True_True/ckpt-1000000.pt"
 gradient_accumulation_steps: 1 # TODO
 num_classes:
 
