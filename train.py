@@ -229,6 +229,7 @@ def main(args):
 
         first_epoch = train_steps // num_update_steps_per_epoch
         resume_step = train_steps % num_update_steps_per_epoch
+        pdb.set_trace()
 
     if args.pretrained:
         train_steps = int(args.pretrained.split("/")[-1].split('.')[0])
