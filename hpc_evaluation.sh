@@ -24,6 +24,8 @@ conda activate latte_new
 CUDA_VISIBLE_DEVICES=0,1 python sample/evaluation_dodemo.py --save_video_path /data/scratch/acw569/face_react/reaction2024_v5 #./test
 # CUDA_VISIBLE_DEVICES=0,1 python sample/evaluation_v2v_singlecase.py --save_video_path /data/scratch/acw569/face_react/generated_videos_listenertrain #./test
 
+#l40 python sample/evaluation_dodemo.py --save_video_path /data/szl/code/latte_reaction_new/results
+
 # OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --nproc_per_node=2  --rdzv_backend c10d --master_port 0 \
 # sample/evaluation_v2vreaction.py --save_video_path ./test
 
