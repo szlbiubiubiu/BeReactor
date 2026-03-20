@@ -240,8 +240,8 @@ def main(args):
         # path = dirs[-1]
         # logger.info(f"Resuming from checkpoint {path}")
         model_weight = torch.load(args.resume_ckpt_path, map_location=device)
-        pdb.set_trace()
-        model.module.load_state_dict(model_weight)
+        # pdb.set_trace()
+        model.module.load_state_dict(model_weight['ema'])
         # train_steps = int(path.split(".")[0])
 
         # first_epoch = train_steps // num_update_steps_per_epoch
