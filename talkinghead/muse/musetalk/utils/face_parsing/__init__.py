@@ -25,8 +25,11 @@ class FaceParsing():
             model_pth='/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
         
         else:
-            resnet_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth'
-            model_pth='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
+            resnet_path='./talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth'
+            model_pth='./talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
+        
+            # resnet_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth'
+            # model_pth='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
         
         net = BiSeNet(resnet_path)
         if torch.cuda.is_available():
