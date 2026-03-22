@@ -18,7 +18,7 @@ import platform
 
 # initialize the mmpose model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-if 'sbg'  in platform.node() or 'dg' in platform.node():
+if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
     config_file = './talkinghead/muse/musetalk/utils/dwpose/rtmpose-l_8xb32-270e_coco-ubody-wholebody-384x288.py'
     checkpoint_file = './talkinghead/muse/models/dwpose/dw-ll_ucoco_384.pth'
 elif 'server' in platform.node():
