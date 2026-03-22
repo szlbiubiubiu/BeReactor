@@ -20,7 +20,7 @@ class FaceParsing():
                 #    resnet_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth', 
                 #    model_pth='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
                    ):
-        if 'sbg'  in platform.node() or 'dg' in platform.node():
+        if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
             resnet_path='/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/face-parse-bisent/resnet18-5c106cde.pth'
             model_pth='/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/face-parse-bisent/79999_iter.pth'
         

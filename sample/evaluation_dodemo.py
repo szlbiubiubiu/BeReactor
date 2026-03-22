@@ -971,7 +971,7 @@ def main(args):
     # pdb.set_trace()
     print('check test/val matrix..')
     # if val_test == 'val':
-    if 'sbg'  in platform.node() or 'dg' in platform.node():
+    if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
         args.dataset_path='/data/home/acw569/paper_face/face_react/latte/latte_reaction/val_test_matrix'
     else:
         args.dataset_path='./val_test_matrix'
@@ -1456,7 +1456,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
-    if 'sbg'  in platform.node() or 'dg' in platform.node():
+    if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
         parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
