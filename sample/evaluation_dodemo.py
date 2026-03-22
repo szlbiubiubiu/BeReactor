@@ -207,7 +207,7 @@ pretrain_root=''
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
                     ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', 
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
-                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:0'))#.cuda()
+                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:1'))#.cuda()
 
 
 
@@ -367,12 +367,12 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
     # pdb.set_trace()
-    expression=emo_fea['expression'].to(torch.device('cuda:0'))
+    expression=emo_fea['expression'].to(torch.device('cuda:1'))
     expression_soft_sing=F.softmax(expression,dim=1)
-    valence_sing=emo_fea['valence'].to(torch.device('cuda:0'))
-    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:0'))
+    valence_sing=emo_fea['valence'].to(torch.device('cuda:1'))
+    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:1'))
     # if step==0:
     expression_soft=expression_soft_sing
     valence=valence_sing
