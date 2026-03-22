@@ -1706,7 +1706,10 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
                 img = self._transform(img)
                 clip.append(img)
             del vr_crop
-            speaker_video_clip_crop = torch.stack(clip, dim=0)
+            if len(clip) == 0:
+                speaker_video_clip_crop = torch.zeros_like(speaker_video_clip)
+            else:
+                speaker_video_clip_crop = torch.stack(clip, dim=0)
             # if total_length < self._clip_length*self.interval or len(speaker_video_clip)<self._clip_length:
             if len(speaker_video_clip_crop)<self._clip_length:
 
