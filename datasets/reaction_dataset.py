@@ -1730,7 +1730,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
             params = torch.FloatTensor(np.load(params_path)).squeeze()
             params = params[cp: cp + self._clip_length*self.interval:self.interval]
             speaker_params_clip = self._transform_3dmm(params)[0]  # (58-d)
-        pdb.set_trace()
+
         # speaker's audio feature clip
         speaker_audio_clip = torch.zeros(size=(0,))
         if self.load_audio:
@@ -1931,7 +1931,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
         # print('listener_video_clip_last.shape',listener_video_clip_last.shape)
         # print('listener_emotion_clip.shape: ',listener_emotion_clip.shape)
         # print('speaker_emotion_clip.shape: ',speaker_emotion_clip.shape)
-        pdb.set_trace()
+        
         # speaker_emotion_clip
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,
                 'speaker_video_clip_crop':speaker_video_clip_crop, 'speaker_emotion': speaker_emotion_clip,
