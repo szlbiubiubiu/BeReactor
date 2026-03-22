@@ -341,6 +341,7 @@ class ReactionDataset_readvideo(data.Dataset):
         self._split = split
 
         self._data_path = os.path.join(self._root_path, self._split)
+        pdb.set_trace()
         if 'sbg'  in platform.node() or 'rdg' in platform.node():
             self.real_dataset_path=real_dataset_path
         else:
