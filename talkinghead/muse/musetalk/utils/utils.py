@@ -23,7 +23,7 @@ def load_all_model():
     # unet = UNet(unet_config="./models/musetalk/musetalk.json",
     #             model_path ="./models/musetalk/pytorch_model.bin")
     # pdb.set_trace()
-    if 'sbg'  in platform.node() or 'dg' in platform.node():
+    if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
         audio_processor = Audio2Feature(model_path="/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/whisper/tiny.pt")
         vae = VAE(model_path = "/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/sd-vae-ft-mse/")
         unet = UNet(unet_config="/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/musetalk/musetalk.json",
