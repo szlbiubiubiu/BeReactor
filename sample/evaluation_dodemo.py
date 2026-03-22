@@ -220,7 +220,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 import bert_score
 
-
+os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
