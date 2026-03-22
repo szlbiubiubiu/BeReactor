@@ -1209,20 +1209,25 @@ def main(args):
             if using_cfg:
                 samples=samples[:len(x)//2]
             b, f, c, h, w = samples.shape
-            # pdb.set_trace()
-            samples = rearrange(samples, 'b f c h w -> (b f) c h w')
-            # if index_clip==0:
-            #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
-            # else:
-            #     out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
             pdb.set_trace()
-            samples = reaction_vae.decode(samples / 0.18215).sample
-            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)#*0.5+0.5
+            
+            # 按 batch 中每个 instance 单独处理，用 vae.decode 解码，然后组合为 batch 输出
+            decoded_batch = []
+            for batch_idx in range(b):
+                # 取出当前 batch instance 的所有 frames: (f, c, h, w)
+                sample_instance = samples[batch_idx]
+                # vae.decode 处理 (f, c, h, w) 批次，返回 (f, 3, H, W)
+                decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                decoded_batch.append(decoded_instance)
+            
+            # 组合为 batch: list of (f, 3, H, W) -> (b, f, 3, H, W)
+            samples = torch.stack(decoded_batch, dim=0)
+            
             # pdb.set_trace()
             if index_clip==0:
-                out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
+                out_samples = samples
             else:
-                out_samples=torch.cat((out_samples,samples),dim=1)
+                out_samples = torch.cat((out_samples, samples), dim=1)
         # #save original video
         # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
         # video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
