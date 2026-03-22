@@ -276,18 +276,19 @@ def main(args):
             # video_name = video_data['video_name']
             speaker_crop=video_data['speaker_video_clip_crop'].to(device, non_blocking=True)
             listener_crop=video_data['listener_video_clip_crop'].to(device, non_blocking=True)
-
+            pdb.set_trace()
             with torch.no_grad():
                 # Map input images to latent space + normalize latents:
-                b, _, _, _, _ = x.shape
-                x = rearrange(x, 'b f c h w -> (b f) c h w').contiguous()
-                pdb.set_trace()
-                if not vqgan_en_dec:
-                    x = vae.encode(x).latent_dist.sample().mul_(0.18215)  #[bc,4,32,32]
-                    x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()
-                else:
-                    x = latent_encoder(x)   
-                    x = rearrange(x, '(b f) c h w -> b f c h w', b=b).contiguous()        #[bc,3,64,64]
+                b, f, c, h, w = x.shape
+                x_encoded = []
+                for i in range(b):
+                    x_single = x[i]  # [f, c, h, w]
+                    if not vqgan_en_dec:
+                        x_latent = vae.encode(x_single).latent_dist.sample().mul_(0.18215)  # [f, 4, 32, 32]
+                    else:
+                        x_latent = latent_encoder(x_single)  # [f, latent_c, latent_h, latent_w]
+                    x_encoded.append(x_latent)
+                x = torch.stack(x_encoded, dim=0)  # [b, f, ...]
             if args.extras == 78: # text-to-video
                 raise 'T2V training are Not supported at this moment!'
             # elif args.extras == 2:
