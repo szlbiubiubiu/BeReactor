@@ -8,8 +8,8 @@ pretrained_model_path: "./pretrained_models"
 
 # save and load
 # results_dir: "./results"
-# results_dir: '/data/szl/code/latte_reaction_new/latte_reaction_check' #l40
-results_dir: '/gpfs/scratch/acw569/checkpoint/latte_check_new' #'/data/scratch/acw569/checkpoint/latte_check' #"./results"
+results_dir: '/data/szl/code/latte_reaction_new/latte_reaction_check' #l40
+# results_dir: '/gpfs/scratch/acw569/checkpoint/latte_check_new' #'/data/scratch/acw569/checkpoint/latte_check' #"./results"
 
 pretrained:
 

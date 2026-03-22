@@ -1730,7 +1730,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
             params = torch.FloatTensor(np.load(params_path)).squeeze()
             params = params[cp: cp + self._clip_length*self.interval:self.interval]
             speaker_params_clip = self._transform_3dmm(params)[0]  # (58-d)
-
+        pdb.set_trace()
         # speaker's audio feature clip
         speaker_audio_clip = torch.zeros(size=(0,))
         if self.load_audio:
