@@ -303,7 +303,7 @@ def main(args):
             #     listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip,
             #     vae=vae,emo_label=emo_label,emo_label_forregression=emo_label_forregression) #previous
             loss_dict = diffusion.training_losses(model, x, t, model_kwargs,
-                original_x=video_data['img'].to(device, non_blocking=True),listener_ref=listener_ref,
+                original_x=speaker_crop.to(device, non_blocking=True),listener_ref=listener_crop,
                 listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip,
                 vae=vae,emo_label=emo_label,emo_label_forregression=emo_label_forregression) #now,use crop images
             # loss_dict = diffusion.training_losses(model, x, t, model_kwargs,
