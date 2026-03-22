@@ -30,7 +30,7 @@ def load_all_model():
                     model_path ="/data/home/acw569/paper_face/face_react/latte/latte_reaction/talkinghead/muse/models/musetalk/pytorch_model.bin")
     elif 'server' in platform.node():
         audio_processor = Audio2Feature(model_path="./talkinghead/muse/models/whisper/tiny.pt")
-        vae = VAE(model_path = "./talkinghead/muse/models/sd-vae-ft-mse/")
+        vae = VAE(model_path = "./talkinghead/muse/models/sd-vae/")
         unet = UNet(unet_config="./talkinghead/muse/models/musetalk/musetalk.json",
                     model_path ="./talkinghead/muse/models/musetalk/pytorch_model.bin")
     else:
