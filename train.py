@@ -276,7 +276,7 @@ def main(args):
             # video_name = video_data['video_name']
             speaker_crop=video_data['speaker_video_clip_crop'].to(device, non_blocking=True)
             listener_crop=video_data['listener_video_clip_crop'].to(device, non_blocking=True)
-            pdb.set_trace()
+            # pdb.set_trace()
             with torch.no_grad():
                 # Map input images to latent space + normalize latents:
                 b, f, c, h, w = x.shape
