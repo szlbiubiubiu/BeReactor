@@ -1575,12 +1575,12 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #              normalize_3dmm: str = 'standard',
     # '''those are for 2025'''
     if 'server' in platform.node():
-        # dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+        # dataset=ReactionDataset_2025(root_dir='/data/szl/dataset/react2025',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
     #                           load_3dmm_l=False,normalize_3dmm='standard')
     
-        dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
+        dataset=ReactionDataset_2025(root_dir='/data/szl/dataset/react2025',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
                 target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
                               load_3dmm_l=False,normalize_3dmm='standard')
