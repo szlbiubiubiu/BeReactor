@@ -1843,7 +1843,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
                     clip.append(img)
                 del vr_crop
                 if len(clip)==0:
-                    listener_video_clip_crop=torch.zeros_like(speaker_video_clip)
+                    listener_video_clip_crop=torch.zeros_like(speaker_video_clip_crop)
                 else:
                     listener_video_clip_crop = torch.stack(clip, dim=0)
 
@@ -1870,6 +1870,10 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
                     listener_video_clip = torch.cat(
                         (listener_video_clip,
                          torch.zeros(size=(self._clip_length - _clip_length, *listener_video_clip.shape[1:]))), dim=0)
+                if len(listener_video_clip_crop)<self._clip_length:
+                    listener_video_clip_crop = torch.cat(
+                        (listener_video_clip_crop,
+                         torch.zeros(size=(self._clip_length - len(listener_video_clip_crop), *listener_video_clip_crop.shape[1:]))), dim=0)
                 if len(listener_video_clip_last)<self._clip_length:
                     # print('listener_video_clip_last previous shape',listener_video_clip_last.shape)
                     listener_video_clip_last = torch.cat(
