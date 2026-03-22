@@ -1697,7 +1697,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
                                                                   *speaker_video_clip.shape[1:]))), dim=0)
             #above is for uncropped video, below is for cropped video
             ######
-            pdb.set_trace()
+            # pdb.set_trace()
             clip = []
             for i in range(cp,cp + self._clip_length*self.interval,self.interval):
                 if i >= len(vr_crop):
