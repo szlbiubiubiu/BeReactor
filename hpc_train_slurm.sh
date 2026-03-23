@@ -16,7 +16,7 @@
 ##SBATCH -n 12 # 8 cores (8 cores per GPU)
 #SBATCH -n 1          # 1 Task (Because you are running 1 torchrun command)
 #SBATCH -c 12
-#SBATCH --gres=gpu: # request 2 GPUs
+#SBATCH --gres=gpu:1 # request 2 GPUs
 
 ##SBATCH -J environment_name
 ##SBATCH --constraint="ampere"
