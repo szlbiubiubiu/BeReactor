@@ -2001,7 +2001,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
         self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
         # self.linear = nn.Identity()#nn.Linear(512, 384)#model s:384, model B: 768 #With listener 512
-        self.linear = nn.Linear(384, 768) #model s:384, model B: 768 #With listener 512
+        self.linear = nn.Linear(768, 384) #model s:384, model B: 768 #With listener 512
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
         self.emo_proj=nn.Sequential(nn.Linear(25,128),
                                     # nn.Dropout(p=0.5)
@@ -2223,11 +2223,10 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             # print('encode_fea',encode_fea.shape)
             # print('lisenter_encode_fea',lisenter_encode_fea.shape)
             # print('lisenter_ref_id',lisenter_ref_id.shape)
-            pdb.set_trace()
-            a=torch.cat([audio_feat,encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1)
-            feats = self.linear(torch.cat([audio_feat,encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
+            # pdb.set_trace()
+            feats = self.linear(torch.cat([audio_feat,
+                encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
         else:
-            pdb.set_trace()
             feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
                 encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384]
 
