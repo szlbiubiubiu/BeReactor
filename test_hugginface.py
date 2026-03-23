@@ -16,8 +16,8 @@ def upgrade_packages():
     except Exception as e:
         print(f"依赖包升级失败（非必须，可忽略）：{e}")
 
-# 执行升级（首次运行建议执行）
-upgrade_packages()
+# # 执行升级（首次运行建议执行）
+# upgrade_packages()
 
 # 第三步：导入并创建UTMOSv2模型
 import utmosv2
