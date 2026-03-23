@@ -2223,10 +2223,11 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             # print('encode_fea',encode_fea.shape)
             # print('lisenter_encode_fea',lisenter_encode_fea.shape)
             # print('lisenter_ref_id',lisenter_ref_id.shape)
-            # pdb.set_trace()
+            pdb.set_trace()
             feats = self.linear(torch.cat([audio_feat,
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
         else:
+            pdb.set_trace()
             feats = self.linear(torch.cat([self.id_proj(id_feats), self.emo_proj(current_emo).mean(-2),
                 encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384]
 
