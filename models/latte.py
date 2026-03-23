@@ -515,7 +515,7 @@ class Latte(nn.Module):
             text_embedding = self.text_embedding_projection(text_embedding.reshape(batches, -1))
             text_embedding_spatial = repeat(text_embedding, 'n d -> (n c) d', c=self.temp_embed.shape[1])
             text_embedding_temp = repeat(text_embedding, 'n d -> (n c) d', c=self.pos_embed.shape[1])
-        pdb.set_trace()
+        # pdb.set_trace()
         for i in range(0, len(self.blocks), 2):
             spatial_block, temp_block = self.blocks[i:i+2]
             if self.extras == 2:
@@ -2000,7 +2000,8 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         # self.idnet.eval()
         # self.lndnet = LNDnet(lnd_file_path).requires_grad_(False)#modify resolution
         self.bgnet = BGnet(bg_file_path).requires_grad_(False)#don't have to modify resolution
-        self.linear = nn.Identity()#nn.Linear(512, 384)#model s:384, model B: 768 #With listener 512
+        # self.linear = nn.Identity()#nn.Linear(512, 384)#model s:384, model B: 768 #With listener 512
+        self.linear = nn.Linear(384, 768) #model s:384, model B: 768 #With listener 512
         # self.lstm = nn.LSTM(512, 512, 1 , batch_first = True)
         self.emo_proj=nn.Sequential(nn.Linear(25,128),
                                     # nn.Dropout(p=0.5)
