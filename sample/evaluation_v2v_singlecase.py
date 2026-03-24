@@ -658,6 +658,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             {"role": "Assistant", "content": current_text})
     realism_score,sentiment_emb=evaluate_LLM(dialogue)
     # all_text
+    pdb.set_trace()
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
@@ -940,7 +941,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
-    pdb.set_trace()
+    # pdb.set_trace()
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
     print(cmd_img2video)
     os.system(cmd_img2video)
@@ -954,7 +955,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     os.remove("temp.mp4")
     # # shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
-    pdb.set_trace()
+    # pdb.set_trace()
     # if return_image4emotion:
     #return emotion image
     interval_listener=len(res_frame_list)//num_frame_sp
@@ -1563,7 +1564,7 @@ def main(args):
             if using_cfg:
                 samples=samples[:len(x)//2]
             b, f, c, h, w = samples.shape
-            pdb.set_trace()
+            # pdb.set_trace()
             
             # 按 batch 中每个 instance 单独处理，用 vae.decode 解码，然后组合为 batch 输出
             decoded_batch = []
