@@ -305,6 +305,12 @@ class ReactionDataset(data.Dataset):
             listener_reference = self._transform(listener_reference)
 
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
+        # Convert speaker_audio_clip to tensor if it's numpy array
+        if isinstance(speaker_audio_clip, np.ndarray):
+            speaker_audio_clip = torch.from_numpy(speaker_audio_clip).float()
+        elif isinstance(speaker_audio_clip, int) or speaker_audio_clip == 0:
+            speaker_audio_clip = torch.zeros(self._clip_length, 78)  # 78 is the audio feature dimension
+        
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_emotion': listener_emotion,
                                 'listener_3dmm': listener_3dmm,'listener_reference': listener_reference,'speaker_emotion_path':speaker_emotion_path,'cp':[cp,cp + self._clip_length*self.interval]}
@@ -677,6 +683,12 @@ class ReactionDataset_readvideo(data.Dataset):
             listener_reference = self._transform(img)
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
         # pdb.set_trace()
+        # Convert speaker_audio_clip to tensor if it's numpy array
+        if isinstance(speaker_audio_clip, np.ndarray):
+            speaker_audio_clip = torch.from_numpy(speaker_audio_clip).float()
+        elif isinstance(speaker_audio_clip, int) or speaker_audio_clip == 0:
+            speaker_audio_clip = torch.zeros(self._clip_length, 78)  # 78 is the audio feature dimension
+        
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'speaker_audio_path':speaker_audio_path,
                                 'listener_video_clip': listener_video_clip, 'listener_video_clip_last':listener_video_clip_last,
@@ -1126,6 +1138,12 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
             listener_reference = self._transform(img)
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
         # pdb.set_trace()
+        # Convert speaker_audio_clip to tensor if it's numpy array
+        if isinstance(speaker_audio_clip, np.ndarray):
+            speaker_audio_clip = torch.from_numpy(speaker_audio_clip).float()
+        elif isinstance(speaker_audio_clip, int) or speaker_audio_clip == 0:
+            speaker_audio_clip = torch.zeros(self._clip_length, 78)  # 78 is the audio feature dimension
+        
         return {'img': speaker_video_clip,'speaker_align_video_clip':speaker_align_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_align_video_clip':listener_align_video_clip,
                                 'listener_video_clip_last':listener_video_clip_last,'listener_emotion': listener_emotion,
