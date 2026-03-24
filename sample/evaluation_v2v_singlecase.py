@@ -223,6 +223,8 @@ def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae,
         os.system(cmd_combine_audio)
         
         os.remove("temp.mp4")
+        # Remove PNG image files
+        os.system(f"rm {result_img_save_path}/*.png")
         # shutil.rmtree(result_img_save_path)
         print(f"result is save to {output_vid_name}")
 
@@ -953,6 +955,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     os.system(cmd_combine_audio)
     
     os.remove("temp.mp4")
+    # Remove PNG image files
+    os.system(f"rm {result_img_save_path}/*.png")
     # # shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
     # pdb.set_trace()
@@ -1299,6 +1303,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     os.system(cmd_combine_audio)
     
     os.remove("temp.mp4")
+    # Remove PNG image files
+    os.system(f"rm {result_img_save_path}/*.png")
     # # shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")        
 def main(args):
@@ -1593,7 +1599,7 @@ def main(args):
 
         all_face_images=[]
         #can consider do not use the decode of vae
-        pdb.set_trace()
+        # pdb.set_trace()
         dim_out=out_samples.shape
         # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
         #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
