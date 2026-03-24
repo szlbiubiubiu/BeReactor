@@ -852,7 +852,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #----
     #use image----
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    # pdb.set_trace()
+    pdb.set_trace()
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
     laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
@@ -865,6 +865,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     # frame_list_cycle = frame_list + frame_list[::-1]
     coord_list_cycle = coord_list + coord_list[::-1]
+    # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    # # pdb.set_trace()
+    # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
+    
+    # laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
+    # # pdb.set_trace()
+    # vae_encode_latents_new=[]
+    # for single_latent in original_image_cycle:
+    #     repeated_latent=laten_repeat * [single_latent]
+    #     vae_encode_latents_new+=repeated_latent
+    # original_image_cycle=vae_encode_latents_new
+    
+    # # frame_list_cycle = frame_list + frame_list[::-1]
+    # coord_list_cycle = coord_list + coord_list[::-1]
 
     coord_list_cycle_new=[]
     for single_coord in coord_list_cycle:
@@ -1208,18 +1222,11 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     #----
     #use image----
-    input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
+    input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
+    pdb.set_trace()
+    original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
-    # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-    # pdb.set_trace()
-    new_frame_list=[]
-    for single_ori_img in frame_list:
-        new_frame_list.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2))   )
-    original_image_cycle=new_frame_list
-    # original_image_cycle= np.split(frame_list,frame_list.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-
-    
-    laten_repeat=max(len(whisper_chunks)//len(input_latent_list_cycle),1)
+    laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
     # pdb.set_trace()
     vae_encode_latents_new=[]
     for single_latent in original_image_cycle:
@@ -1228,22 +1235,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     original_image_cycle=vae_encode_latents_new
     
     # frame_list_cycle = frame_list + frame_list[::-1]
-    # coord_list_cycle = coord_list + coord_list[::-1]
-    coord_list_cycle = coord_list #+ coord_list[::-1]
-    # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    # pdb.set_trace()
-    # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-    
-    # laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
-    # # pdb.set_trace()
-    # vae_encode_latents_new=[]
-    # for single_latent in original_image_cycle:
-    #     repeated_latent=laten_repeat * [single_latent]
-    #     vae_encode_latents_new+=repeated_latent
-    # original_image_cycle=vae_encode_latents_new
-    
-    # # frame_list_cycle = frame_list + frame_list[::-1]
-    # coord_list_cycle = coord_list + coord_list[::-1]
+    coord_list_cycle = coord_list + coord_list[::-1]
 
     coord_list_cycle_new=[]
     for single_coord in coord_list_cycle:
