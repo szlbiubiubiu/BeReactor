@@ -515,7 +515,7 @@ class Latte(nn.Module):
             text_embedding = self.text_embedding_projection(text_embedding.reshape(batches, -1))
             text_embedding_spatial = repeat(text_embedding, 'n d -> (n c) d', c=self.temp_embed.shape[1])
             text_embedding_temp = repeat(text_embedding, 'n d -> (n c) d', c=self.pos_embed.shape[1])
-        pdb.set_trace()
+        # pdb.set_trace()
         for i in range(0, len(self.blocks), 2):
             spatial_block, temp_block = self.blocks[i:i+2]
             if self.extras == 2:
@@ -2183,7 +2183,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         # pdb.set_trace()
         # lis_drop
         # print('listener_video_clip_last.shape:',listener_video_clip_last.shape)
-        pdb.set_trace()
+        # pdb.set_trace()
         if listener_video_clip_last is not None:
             '''obtain listener feature'''
             video_input_listner_last=listener_video_clip_last.permute(0,2,1,3,4)
@@ -2223,8 +2223,8 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
             # print('encode_fea',encode_fea.shape)
             # print('lisenter_encode_fea',lisenter_encode_fea.shape)
             # print('lisenter_ref_id',lisenter_ref_id.shape)
-            pdb.set_trace()
-            a=torch.cat([audio_feat,encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1)
+            # pdb.set_trace()
+            # a=torch.cat([audio_feat,encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1)
             feats = self.linear(torch.cat([audio_feat,
                 encode_fea,lisenter_encode_fea,self.id_proj(lisenter_ref_id)], dim=1))   # [B, 64+128+128+64=384] #
         else:
