@@ -2184,7 +2184,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         # lis_drop
         # print('listener_video_clip_last.shape:',listener_video_clip_last.shape)
         pdb.set_trace()
-        if listener_video_clip_last is not None and speaker_Audio is not None and not isinstance(listener_video_clip_last, int):
+        if listener_video_clip_last is not None:
             '''obtain listener feature'''
             video_input_listner_last=listener_video_clip_last.permute(0,2,1,3,4)
             lisenter_encode_fea=self.encode_video_listener(video_input_listner_last)

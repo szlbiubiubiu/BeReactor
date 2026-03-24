@@ -284,12 +284,12 @@ class GaussianDiffusion:
         # model_output = model(x, t, **model_kwargs)
         pdb.set_trace()
         # model_output = model(x, t,original_x=original_x,listener_ref=listener_ref, **model_kwargs)
-        try:
-            model_output = model(x, t,original_x=original_x,listener_ref=listener_ref,
-                listener_video_clip_last=listener_video_clip_last, sp_audio_clip=sp_audio_clip,**model_kwargs)
-        except:
-            # print('error occurs')
-            model_output = model(x, t, **model_kwargs)
+        # try:
+        model_output = model(x, t,original_x=original_x,listener_ref=listener_ref,
+            listener_video_clip_last=listener_video_clip_last, sp_audio_clip=sp_audio_clip,**model_kwargs)
+        # except:
+        #     # print('error occurs')
+        #     model_output = model(x, t, **model_kwargs)
         # try:
         #     model_output = model_output.sample # for tav unet
         # except:
