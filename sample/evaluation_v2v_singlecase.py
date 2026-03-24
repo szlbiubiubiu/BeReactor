@@ -60,7 +60,7 @@ import numpy as np
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 #talking head libs
 # sys.path.append('/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/talkinghead/muse')
 from talkinghead.muse.musetalk.utils.utils import get_file_type,get_video_fps,datagen,datagen_reaction
@@ -1608,7 +1608,7 @@ def main(args):
         for batch_index in range(len(out_samples)):
             batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,num_frame_sp=dim_out[1])     #openai,deepseek
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
