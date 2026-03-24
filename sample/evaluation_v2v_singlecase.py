@@ -1635,7 +1635,7 @@ def main(args):
             # print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
         # continue
-        pdb.set_trace()
+        # pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
@@ -1719,7 +1719,7 @@ def main(args):
         # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
         #
-        pdb.set_trace()
+        # pdb.set_trace()
         listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
         # listener_emotion_gt_list.append(emo_label.cpu())
