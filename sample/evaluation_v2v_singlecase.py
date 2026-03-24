@@ -81,7 +81,7 @@ import re
 
 import platform
 #it is single forward function
-
+import shutil
 
 
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
@@ -812,6 +812,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # input_img_list[sample]
     bbox_shift=0
     # landmark detection问题
+    pdb.set_trace()
     coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
@@ -1293,25 +1294,33 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     pdb.set_trace()
-    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 -t {len(res_frame_list)/fps:.2f} temp.mp4"
+    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png  -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp2.mp4"
+
     print(cmd_img2video)
-    print(f"Generated {len(res_frame_list)} frames, expected duration: {len(res_frame_list)/fps:.2f}s")
-    print("[Sync Info] Video timing calculated as: frames={}, fps={}, duration={:.2f}s".format(len(res_frame_list), fps, len(res_frame_list)/fps))
     os.system(cmd_img2video)
     
 
     # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
     output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index)+'.mp4')
-    # Use -shortest to ensure video and audio are synchronized
-    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 -c:v copy -c:a aac -shortest {output_vid_name}"
+    
+    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp2.mp4 {output_vid_name}"
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
     
-    os.remove("temp.mp4")
-    # Remove PNG image files
-    os.system(f"rm {result_img_save_path}/*.png")
-    # # shutil.rmtree(result_img_save_path)
-    print(f"result is save to {output_vid_name}")        
+    # os.remove("./temp.mp4")
+    shutil.rmtree(result_img_save_path)
+    print(f"result is save to {output_vid_name}")      
+
+    # print('the corresponding speaker path is: ', speaker_audio_path)
+    # pdb.set_trace()
+    # if return_image4emotion:
+    #return emotion image
+    # pdb.set_trace()
+    interval_listener=len(res_frame_list)//num_frame_sp
+    out_images=res_frame_list[::interval_listener]
+    # return out_images[:num_frame_sp],evaluation_score 
+    
+    return out_images[:num_frame_sp],evaluation_score 
 def main(args):
     # # Setup PyTorch:
     # # torch.manual_seed(args.seed)
@@ -1639,7 +1648,7 @@ def main(args):
             # print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
         # continue
-        # pdb.set_trace()
+        pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
