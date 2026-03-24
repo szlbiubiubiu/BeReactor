@@ -2183,7 +2183,7 @@ class DiffusionVideoAutoencoder_v5(nn.Module):
         # pdb.set_trace()
         # lis_drop
         # print('listener_video_clip_last.shape:',listener_video_clip_last.shape)
-        pdb.set_trace()
+        # pdb.set_trace()
         if listener_video_clip_last is not None:
             '''obtain listener feature'''
             video_input_listner_last=listener_video_clip_last.permute(0,2,1,3,4)
