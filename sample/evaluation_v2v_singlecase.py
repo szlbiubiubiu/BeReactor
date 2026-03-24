@@ -338,14 +338,24 @@ class DiffusionVideoAutoencoder(nn.Module):
         #     # emo_loss= mean_flat((emo-emo_label[:,:,15:])**2)
         return id_feats,emo_fea,au_disfa,au_bp4d
 
-if 'sbg'  in platform.node() or 'dg' in platform.node():
-    pretrain_root=''
-else:
-    pretrain_root='/homes/zs003/paper_face/face_react/diff/reaction_generation/'
+pretrain_root = ''
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
                     ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', 
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
                     au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:1'))#.cuda()
+
+# Initialize UTMOS model for audio quality evaluation
+try:
+    import utmosv2
+    import librosa
+    utmos_model = utmosv2.create_model(pretrained=False)
+    utmos_model.load_state_dict(torch.load('./fold0_s42_best_model.pth'))
+    utmos_model = utmos_model.to(torch.device('cuda:0'))
+    utmos_model.eval()
+    utmos_available = True
+except Exception as e:
+    print(f"UTMOS model initialization failed: {e}")
+    utmos_available = False
 
 
 
@@ -725,6 +735,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     communicate = edge_tts.Communicate(all_text, VOICE)
     # pdb.set_trace()
     communicate.save_sync(OUTPUT_audio_FILE)
+    pdb.set_trace()
+    # Compute UTMOS MOS score for generated audio
+    if utmos_available:
+        try:
+            audio_data, sr = librosa.load(OUTPUT_audio_FILE, sr=16000)
+            mos_score = utmos_model.predict(data=audio_data, sr=16000)
+            print(f"UTMOS MOS Score: {mos_score}")
+            evaluation_score = {'mos_score': float(mos_score) if hasattr(mos_score, 'item') else float(mos_score)}
+        except Exception as e:
+            print(f"UTMOS evaluation failed: {e}")
+            evaluation_score = {'mos_score': None}
+    else:
+        evaluation_score = {'mos_score': None}
+    
     # # message in self.stream()
     wavs=[]
     # with open(OUTPUT_audio_FILE, "wb") as file:
@@ -1297,7 +1321,7 @@ def main(args):
     # pdb.set_trace()
     print('check test/val matrix..')
     # if val_test == 'val':
-    if 'sbg'  in platform.node() or 'dg' in platform.node():
+    if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
         args.dataset_path='/data/home/acw569/paper_face/face_react/latte/latte_reaction/val_test_matrix'
     else:
         args.dataset_path='/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/val_test_matrix'
@@ -1411,6 +1435,7 @@ def main(args):
     all_score['all_bleu_scores']=0
     all_score['all_rouge_scores']=0
     all_score['all_bert_scores']=0
+    all_score['all_mos_scores']=0
 
     all_score['all_sentiment_emb']=torch.zeros([len(dataset),10])
     # pdb.set_trace()
@@ -1528,15 +1553,21 @@ def main(args):
             if using_cfg:
                 samples=samples[:len(x)//2]
             b, f, c, h, w = samples.shape
+            pdb.set_trace()
+            
+            # 按 batch 中每个 instance 单独处理，用 vae.decode 解码，然后组合为 batch 输出
+            decoded_batch = []
+            for batch_idx in range(b):
+                # 取出当前 batch instance 的所有 frames: (f, c, h, w)
+                sample_instance = samples[batch_idx]
+                # vae.decode 处理 (f, c, h, w) 批次，返回 (f, 3, H, W)
+                decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                decoded_batch.append(decoded_instance)
+            
+            # 组合为 batch: list of (f, 3, H, W) -> (b, f, 3, H, W)
+            samples = torch.stack(decoded_batch, dim=0)
+            
             # pdb.set_trace()
-            samples = rearrange(samples, 'b f c h w -> (b f) c h w')
-            # if index_clip==0:
-            #     out_samples=rearrange(samples, '(b f) c h w -> b f c h w', b=b)
-            # else:
-            #     out_samples=torch.cat((out_samples,rearrange(samples, '(b f) c h w -> b f c h w', b=b)),dim=1)
-            # pdb.set_trace()
-            samples = reaction_vae.decode(samples / 0.18215).sample
-            samples = rearrange(samples, '(b f) c h w -> b f c h w', b=b)#*0.5+0.5
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
@@ -1547,7 +1578,7 @@ def main(args):
         print(video_save_path)
         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         print('save path {}'.format(args.save_video_path))
-        continue
+        # continue
 
         all_face_images=[]
         #can consider do not use the decode of vae
@@ -1571,6 +1602,10 @@ def main(args):
             all_score['all_bleu_scores']+=scores['bleu_scores']
             # all_score['all_rouge_scores']+=scores['rouge_scores']
             all_score['all_bert_scores']+=scores['bert_scores']
+            # Add MOS score if available
+            mos_value = scores.get('mos_score')
+            if mos_value is not None:
+                all_score['all_mos_scores'] += mos_value
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             video_ = np.asarray(batched_faces)[:,:,:,::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples)*step+batch_index)+'.mp4')
@@ -1580,7 +1615,7 @@ def main(args):
             # pdb.set_trace()
             # print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
-        continue
+        # continue
         pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
@@ -1698,6 +1733,11 @@ def main(args):
     print('realism_score',realism_score)
     print('bleu_scores',bleu_scores)
     print('bert_scores',bert_scores)
+    # Compute average MOS score if collected
+    pdb.set_trace()
+    if all_score['all_mos_scores'] > 0:
+        mos_score = all_score['all_mos_scores']/len(listener_emotion_gt)
+        print('mos_score',mos_score)
     #save and load parameter
     torch.save(all_listener_emotion_pred, "./emo_pred.pt")
     torch.save(speaker_emotion_gt, "./speaker_emo_gt.pt")
@@ -1734,14 +1774,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
-    if 'sbg'  in platform.node() or 'dg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/008-Latte-B-4-F64S3-reaction-Amp/checkpoints/0120000.pt")
-        # /data/scratch/acw569/checkpoint/latte_check/023-Latte-S-4-F32S3-reaction-Amp/checkpoints/0210000.pt
-    # /data/scratch/acw569/checkpoint/reaction/0250000.pt
-    # /data/scratch/acw569/checkpoint/latte_check/023-Latte-S-4-F32S3-reaction-Amp/checkpoints
-    # /data/scratch/acw569/checkpoint/latte_check/023-Latte-S-4-F32S3-reaction-Amp/checkpoints/0080000.pt
+    if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
+        parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
-        parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/037-Latte-B-4-F64S3-reaction-Amp/checkpoints/0030000.pt ")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
     #/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt
     

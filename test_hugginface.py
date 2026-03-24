@@ -21,7 +21,13 @@ except Exception as e:
         endpoint="https://hf-mirror.com"
     )
     # 本地加载
-    import torch
+    (1)import torch
     model = utmosv2.create_model(pretrained=False)
-    model.load_state_dict(torch.load(f"{local_repo}/pytorch_model.bin"))
+    model.load_state_dict(torch.load('./fold0_s42_best_model.pth'))
+    mos = model.predict(data=data, sr=16000) 
+
+    (2)python syncnet.py --video [你的视频路径] --visualize
+    (3)test ASR to text? better ASR would result in better results
+    # model.load_state_dict(torch.load(f"{local_repo}/pytorch_model.bin"))
+    
     print("✅ 已手动从镜像下载正确权重并加载成功！")

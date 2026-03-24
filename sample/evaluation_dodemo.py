@@ -363,7 +363,7 @@ def evaluate_LLM(dialogue: str):
 
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32, original_images=None):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
@@ -703,13 +703,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
-    # input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
-
-    # 使用原始图像进行crop，而不是生成的latent
-    if original_images is not None:
-        input_img_list = [np.uint8(127.5*(img.permute(1,2,0).cpu().numpy()+1))[:,:,:,::-1] for img in original_images]
-    else:
-        input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
+    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
     # reverse_input_img_list=input_img_list_single[::-1]#.reverse()
@@ -1262,7 +1256,7 @@ def main(args):
 
             batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1], original_images=video_data['img'][batch_index])     #openai,deepseek
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1])     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
@@ -1466,6 +1460,8 @@ if __name__ == "__main__":
         parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
+        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
+
     #2025 v5 /data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt 
     #2024 v5 /data/scratch/acw569/checkpoint/latte_check_new/054-Latte-S-4-F32S3-reaction-Amp/checkpoints/0170000.pt
     #2025 v4 /data/scratch/acw569/checkpoint/latte_check_new/043-Latte-S-4-F32S3-reaction-Amp/checkpoints/0190000.pt
