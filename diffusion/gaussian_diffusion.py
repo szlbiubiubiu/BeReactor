@@ -652,8 +652,8 @@ class GaussianDiffusion:
             device=device,
             progress=progress,
             eta=eta,
-            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=None,
-            sp_audio_clip=None
+            original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+            sp_audio_clip=sp_audio_clip
         ):
             final = sample
         return final["sample"]
@@ -705,7 +705,7 @@ class GaussianDiffusion:
                     cond_fn=cond_fn,
                     model_kwargs=model_kwargs,
                     eta=eta,
-                    original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=None,sp_audio_clip=sp_audio_clip
+                    original_x=original_x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,sp_audio_clip=sp_audio_clip
                 )
                 yield out
                 img = out["sample"]
