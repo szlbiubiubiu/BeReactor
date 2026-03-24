@@ -1781,7 +1781,7 @@ if __name__ == "__main__":
     if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
         parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
-        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/037-Latte-B-4-F64S3-reaction-Amp/checkpoints/0030000.pt ")
+        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/037-Latte-B-4-F64S3-reaction-Amp/checkpoints/0030000.pt")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
     #/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt
     
