@@ -1300,7 +1300,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     os.system(cmd_img2video)
     
 
-    output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
+    # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
+    output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index)+'.mp4')
     # Use -shortest to ensure video and audio are synchronized
     cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 -c:v copy -c:a aac -shortest {output_vid_name}"
     print(cmd_combine_audio)
