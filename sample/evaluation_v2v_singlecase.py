@@ -508,8 +508,8 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
-    pdb.set_trace()
-    print('batch_index is ',batch_index)
+    # pdb.set_trace()
+    # print('batch_index is ',batch_index)
     # for step,clip_generated in enumerate(input_latent):
 
     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:1')))#.to(torch.device('cuda:0'))
@@ -661,7 +661,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             {"role": "Assistant", "content": current_text})
     realism_score,sentiment_emb=evaluate_LLM(chat)
     # all_text
-    pdb.set_trace()
+    # pdb.set_trace()
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
@@ -1006,7 +1006,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     #     current_text=response[0]['generated_text'][-1]['content']
     #     all_text=all_text+current_text
     #     print(response[0]['generated_text'][-1]['content'])
-    pdb.set_trace()
+    # pdb.set_trace()
     for i in range(len(sentences)):
         if i==0:
             chat = [
@@ -1173,7 +1173,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for bbox, frame in zip(coord_list, frame_list):
         frame=np.squeeze(frame)
         if bbox == coord_placeholder:
@@ -1186,7 +1186,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
         input_latent_list.append(latents)
-    pdb.set_trace()
+    # pdb.set_trace()
     # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
     # latents = vae.get_latents_for_unet(crop_frame)
     # input_latent_list=[]
