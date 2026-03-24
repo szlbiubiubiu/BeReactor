@@ -1293,13 +1293,16 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     pdb.set_trace()
-    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 -t {len(res_frame_list)/fps:.2f} temp.mp4"
     print(cmd_img2video)
+    print(f"Generated {len(res_frame_list)} frames, expected duration: {len(res_frame_list)/fps:.2f}s")
+    print("[Sync Info] Video timing calculated as: frames={}, fps={}, duration={:.2f}s".format(len(res_frame_list), fps, len(res_frame_list)/fps))
     os.system(cmd_img2video)
     
 
     output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
-    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
+    # Use -shortest to ensure video and audio are synchronized
+    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 -c:v copy -c:a aac -shortest {output_vid_name}"
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
     
