@@ -305,12 +305,6 @@ class ReactionDataset(data.Dataset):
             listener_reference = self._transform(listener_reference)
 
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
-        # Convert speaker_audio_clip to tensor if it's numpy array
-        if isinstance(speaker_audio_clip, np.ndarray):
-            speaker_audio_clip = torch.from_numpy(speaker_audio_clip).float()
-        elif isinstance(speaker_audio_clip, int) or speaker_audio_clip == 0:
-            speaker_audio_clip = torch.zeros(self._clip_length, 78)  # 78 is the audio feature dimension
-        
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_emotion': listener_emotion,
                                 'listener_3dmm': listener_3dmm,'listener_reference': listener_reference,'speaker_emotion_path':speaker_emotion_path,'cp':[cp,cp + self._clip_length*self.interval]}
@@ -683,12 +677,6 @@ class ReactionDataset_readvideo(data.Dataset):
             listener_reference = self._transform(img)
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
         # pdb.set_trace()
-        # Convert speaker_audio_clip to tensor if it's numpy array
-        if isinstance(speaker_audio_clip, np.ndarray):
-            speaker_audio_clip = torch.from_numpy(speaker_audio_clip).float()
-        elif isinstance(speaker_audio_clip, int) or speaker_audio_clip == 0:
-            speaker_audio_clip = torch.zeros(self._clip_length, 78)  # 78 is the audio feature dimension
-        
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'speaker_audio_path':speaker_audio_path,
                                 'listener_video_clip': listener_video_clip, 'listener_video_clip_last':listener_video_clip_last,
@@ -1138,12 +1126,6 @@ class ReactionDataset_readvideo_twocrop(data.Dataset):
             listener_reference = self._transform(img)
         # return speaker_video_clip, speaker_audio_clip, speaker_emotion, speaker_3dmm, listener_video_clip, listener_audio_clip, listener_emotion, listener_3dmm, listener_reference
         # pdb.set_trace()
-        # Convert speaker_audio_clip to tensor if it's numpy array
-        if isinstance(speaker_audio_clip, np.ndarray):
-            speaker_audio_clip = torch.from_numpy(speaker_audio_clip).float()
-        elif isinstance(speaker_audio_clip, int) or speaker_audio_clip == 0:
-            speaker_audio_clip = torch.zeros(self._clip_length, 78)  # 78 is the audio feature dimension
-        
         return {'img': speaker_video_clip,'speaker_align_video_clip':speaker_align_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,'listener_video_clip': listener_video_clip,'listener_align_video_clip':listener_align_video_clip,
                                 'listener_video_clip_last':listener_video_clip_last,'listener_emotion': listener_emotion,
@@ -2029,41 +2011,41 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #              load_3dmm_s: bool = True,
     #              load_3dmm_l: bool = True,
     #              normalize_3dmm: str = 'standard',
-    # '''those are for 2025'''
-    if 'server' in platform.node():
-        # dataset=ReactionDataset_2025(root_dir='/data/szl/dataset/react2025',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    # # '''those are for 2025'''
+    # if 'server' in platform.node():
+    #     # dataset=ReactionDataset_2025(root_dir='/data/szl/dataset/react2025',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    # #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    # #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
+    # #                           load_3dmm_l=False,normalize_3dmm='standard')
+        
+    #     dataset=ReactionDataset_2025_readbothcrop(root_dir='/data/szl/dataset/react2025',split='',clip_length=conf.clip_length,crop_size=conf.crop_size,
     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
-    #                           load_3dmm_l=False,normalize_3dmm='standard')
-        
-        dataset=ReactionDataset_2025_readbothcrop(root_dir='/data/szl/dataset/react2025',split='',clip_length=conf.clip_length,crop_size=conf.crop_size,
-                target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
-                              load_3dmm_l=False,normalize_3dmm='standard') #for better visualization, both crop
-        # dataset=ReactionDataset_2025(root_dir='/data/szl/dataset/react2025',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
-        #         target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-        #                       load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
-        #                       load_3dmm_l=False,normalize_3dmm='standard')
-    else:
-        # dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
-        #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-        #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
-        #                           load_3dmm_l=False,normalize_3dmm='standard')
-        dataset=ReactionDataset_2025_readbothcrop(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
-                target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
-                              load_3dmm_l=False,normalize_3dmm='standard',interval=2) #for better visualization, both crop
-        # dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
-        #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-        #                         load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
-        #                         load_3dmm_l=False,normalize_3dmm='standard')
+    #                           load_3dmm_l=False,normalize_3dmm='standard') #for better visualization, both crop
+    #     # dataset=ReactionDataset_2025(root_dir='/data/szl/dataset/react2025',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    #     #         target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #     #                       load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
+    #     #                       load_3dmm_l=False,normalize_3dmm='standard')
+    # else:
+    #     # dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    #     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
+    #     #                           load_3dmm_l=False,normalize_3dmm='standard')
+    #     dataset=ReactionDataset_2025_readbothcrop(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
+    #                           load_3dmm_l=False,normalize_3dmm='standard',interval=2) #for better visualization, both crop
+    #     # dataset=ReactionDataset_2025(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='val',clip_length=conf.clip_length,crop_size=conf.crop_size,
+    #     #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+    #     #                         load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
+    #     #                         load_3dmm_l=False,normalize_3dmm='standard')
 
     # # #react 2024 test
-    # dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
-    #                           clip_length=conf.clip_length,
-    #                           load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
-    #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
-    #                           load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
+    dataset = ReactionDataset_readvideo(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
+                              clip_length=conf.clip_length,
+                              load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
+                              load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=load_3dmm_s,
+                              load_3dmm_l=load_3dmm_l, load_ref=load_ref, repeat_mirrored=repeat_mirrored)
     
     # # '''this is for training'''
     # dataset = ReactionDataset_readvideo_twocrop(conf.dataset_path,conf.real_dataset_path, split, img_size=conf.img_size, crop_size=conf.crop_size,
