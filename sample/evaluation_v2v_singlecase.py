@@ -807,6 +807,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
     # input_img_list[sample]
     bbox_shift=0
+    landmark detection问题
     coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
@@ -1786,7 +1787,7 @@ if __name__ == "__main__":
     if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
         parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
-        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/037-Latte-B-4-F64S3-reaction-Amp/checkpoints/0030000.pt")
+        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
     #/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/0250000.pt
     
