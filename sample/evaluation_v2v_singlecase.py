@@ -741,17 +741,17 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     communicate.save_sync(OUTPUT_audio_FILE)
     # pdb.set_trace()
     # Compute UTMOS MOS score for generated audio
-    # if utmos_available:
-    #     try:
-    #         audio_data, sr = librosa.load(OUTPUT_audio_FILE, sr=16000)
-    #         mos_score = utmos_model.predict(data=audio_data, sr=16000)
-    #         print(f"UTMOS MOS Score: {mos_score}")
-    #         evaluation_score['mos_score'] = float(mos_score) if hasattr(mos_score, 'item') else float(mos_score)
-    #     except Exception as e:
-    #         print(f"UTMOS evaluation failed: {e}")
-    #         evaluation_score['mos_score'] =None
-    # else:
-    #     evaluation_score['mos_score'] =None
+    if utmos_available:
+        try:
+            audio_data, sr = librosa.load(OUTPUT_audio_FILE, sr=16000)
+            mos_score = utmos_model.predict(data=audio_data, sr=16000)
+            print(f"UTMOS MOS Score: {mos_score}")
+            evaluation_score['mos_score'] = float(mos_score) if hasattr(mos_score, 'item') else float(mos_score)
+        except Exception as e:
+            print(f"UTMOS evaluation failed: {e}")
+            evaluation_score['mos_score'] =None
+    else:
+        evaluation_score['mos_score'] =None
     
     # # message in self.stream()
     wavs=[]
