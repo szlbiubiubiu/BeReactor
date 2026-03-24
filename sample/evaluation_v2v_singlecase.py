@@ -948,8 +948,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print(cmd_img2video)
     os.system(cmd_img2video)
     
-
-    output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
+    output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index)+'.mp4')
+    # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
     cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
