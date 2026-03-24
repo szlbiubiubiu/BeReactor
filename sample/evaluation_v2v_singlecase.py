@@ -735,7 +735,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     communicate = edge_tts.Communicate(all_text, VOICE)
     # pdb.set_trace()
     communicate.save_sync(OUTPUT_audio_FILE)
-    pdb.set_trace()
+    # pdb.set_trace()
     # Compute UTMOS MOS score for generated audio
     if utmos_available:
         try:
