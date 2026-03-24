@@ -812,7 +812,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # input_img_list[sample]
     bbox_shift=0
     # landmark detection问题
-    pdb.set_trace()
+    # pdb.set_trace()
     coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
@@ -900,7 +900,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     res_frame_list=[]
     res_frame_list_latent=[]
-    pdb.set_trace()
+    # pdb.set_trace()
     for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
     # for whisper_batch in whisper_chunks:
         # whisper_batch=whisper_chunks
@@ -1663,7 +1663,7 @@ def main(args):
             # print('save path {}'.format(args.save_video_path))
             # pdb.set_trace()
         # continue
-        pdb.set_trace()
+        # pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
