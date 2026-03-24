@@ -1593,6 +1593,7 @@ def main(args):
 
         all_face_images=[]
         #can consider do not use the decode of vae
+        pdb.set_trace()
         dim_out=out_samples.shape
         # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
         #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
