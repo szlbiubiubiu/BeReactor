@@ -468,47 +468,51 @@ def evaluate_LLM(dialogue: str):
     # pdb.set_trace()
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
-    
-    arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-1])
-    valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
-    sentiment_score = re.findall(r'\d+', answer.split('\n')[-3])
-    realism_score = re.findall(r'\d+', answer.split('\n')[-4])
-    # numbers = re.findall(r'\d+', answer.split('\n')[-2])
-    pdb.set_trace()
-    arousal_score = [float(num) for num in arousal_score]
-    valence_score = [float(num) for num in valence_score]
-    sentiment_score = [int(num) for num in sentiment_score]
-    
-    realism_score = [int(num) for num in realism_score]
-    
     all_scores= re.findall(r'-?\d+\.?\d*', answer)
-    # Process arousal_score
-    if len(arousal_score) == 0:
-        arousal_score = 0
-    elif len(arousal_score) == 1:
-        arousal_score = arousal_score[0]
-    
-    # Process valence_score
-    if len(valence_score) == 0:
-        valence_score = 0
-    elif len(valence_score) == 1:
-        valence_score = valence_score[0]
-    
-    # Process sentiment_score
-    if len(sentiment_score) == 0:
-        sentiment_score = 0
-    elif len(sentiment_score) == 1:
-        sentiment_score = sentiment_score[0]
-    
-    # Process realism_score
-    if len(realism_score) == 0:
-        realism_score = 0
-    elif len(realism_score) == 1:
-        realism_score = realism_score[0]
-        
+    arousal_score=all_scores[-1]
+    valence_score=all_scores[-2]
+    sentiment_score=all_scores[-3]
+    realism_score=all_scores[-4]
+    # arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-1])
+    # valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
+    # sentiment_score = re.findall(r'\d+', answer.split('\n')[-3])
+    # realism_score = re.findall(r'\d+', answer.split('\n')[-4])
+    # # numbers = re.findall(r'\d+', answer.split('\n')[-2])
     # pdb.set_trace()
+    # arousal_score = [float(num) for num in arousal_score]
+    # valence_score = [float(num) for num in valence_score]
+    # sentiment_score = [int(num) for num in sentiment_score]
+    
+    # realism_score = [int(num) for num in realism_score]
+    
+    
+    # # Process arousal_score
+    # if len(arousal_score) == 0:
+    #     arousal_score = 0
+    # elif len(arousal_score) == 1:
+    #     arousal_score = arousal_score[0]
+    
+    # # Process valence_score
+    # if len(valence_score) == 0:
+    #     valence_score = 0
+    # elif len(valence_score) == 1:
+    #     valence_score = valence_score[0]
+    
+    # # Process sentiment_score
+    # if len(sentiment_score) == 0:
+    #     sentiment_score = 0
+    # elif len(sentiment_score) == 1:
+    #     sentiment_score = sentiment_score[0]
+    
+    # # Process realism_score
+    # if len(realism_score) == 0:
+    #     realism_score = 0
+    # elif len(realism_score) == 1:
+    #     realism_score = realism_score[0]
+        
+    # # pdb.set_trace()
     # if sentiment_score>7:
-    pdb.set_trace()
+    # pdb.set_trace()
         # a=1
     sentiment_emb=F.one_hot(torch.tensor(sentiment_score),num_classes=10)
     sentiment_emb[-2]=valence_score
