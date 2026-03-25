@@ -474,6 +474,7 @@ def evaluate_LLM(dialogue: str):
     sentiment_score = re.findall(r'\d+', answer.split('\n')[-3])
     realism_score = re.findall(r'\d+', answer.split('\n')[-4])
     # numbers = re.findall(r'\d+', answer.split('\n')[-2])
+    pdb.set_trace()
     arousal_score = [float(num) for num in arousal_score]
     valence_score = [float(num) for num in valence_score]
     sentiment_score = [int(num) for num in sentiment_score]
