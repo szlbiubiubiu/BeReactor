@@ -481,6 +481,7 @@ def evaluate_LLM(dialogue: str):
     
     realism_score = [int(num) for num in realism_score]
     
+    all_scores= re.findall(r'-?\d+\.?\d*', answer)
     # Process arousal_score
     if len(arousal_score) == 0:
         arousal_score = 0
