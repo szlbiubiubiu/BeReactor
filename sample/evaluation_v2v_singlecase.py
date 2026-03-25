@@ -469,10 +469,18 @@ def evaluate_LLM(dialogue: str):
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
     all_scores= re.findall(r'-?\d+\.?\d*', answer)
-    arousal_score=all_scores[-1]
-    valence_score=all_scores[-2]
-    sentiment_score=all_scores[-3]
-    realism_score=all_scores[-4]
+    converted_numbers = []
+    for num_str in all_scores:
+        try:
+            # 优先尝试转换为 int（适合没有小数点的数字）
+            converted_numbers.append(int(num_str))
+        except ValueError:
+            # 如果转 int 失败（说明是小数），则转换为 float
+            converted_numbers.append(float(num_str))
+    arousal_score=converted_numbers[-1]
+    valence_score=converted_numbers[-2]
+    sentiment_score=converted_numbers[-3]
+    realism_score=converted_numbers[-4]
     # arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-1])
     # valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
     # sentiment_score = re.findall(r'\d+', answer.split('\n')[-3])
