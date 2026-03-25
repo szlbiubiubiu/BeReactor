@@ -942,7 +942,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print("pad talking image to original video")
     # pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        
+        if len(original_image_cycle)==0:
+            pdb.set_trace()
+            a=1
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
         # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
