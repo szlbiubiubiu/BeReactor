@@ -982,7 +982,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         bbox=[0,0,t_shape[0],t_shape[1]]
         x1, y1, x2, y2 = bbox
         # try:
-        res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
+        res_frame = cv2.resize(res_frame.astype(np.uint8),(int(x2-x1),(y2-y1)))
         # pdb.set_trace()
         # combine_frame = get_image(ori_frame,res_frame,bbox)
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
