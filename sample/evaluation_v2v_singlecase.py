@@ -469,10 +469,10 @@ def evaluate_LLM(dialogue: str):
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
     
-    arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
-    valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-3])
-    sentiment_score = re.findall(r'\d+', answer.split('\n')[-4])
-    realism_score = re.findall(r'\d+', answer.split('\n')[-5])
+    arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-1])
+    valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
+    sentiment_score = re.findall(r'\d+', answer.split('\n')[-3])
+    realism_score = re.findall(r'\d+', answer.split('\n')[-4])
     # numbers = re.findall(r'\d+', answer.split('\n')[-2])
     arousal_score = [float(num) for num in arousal_score]
     valence_score = [float(num) for num in valence_score]
