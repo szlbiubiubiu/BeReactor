@@ -505,6 +505,9 @@ def evaluate_LLM(dialogue: str):
         realism_score = realism_score[0]
         
     # pdb.set_trace()
+    if sentiment_score>7:
+        pdb.set_trace()
+        a=1
     sentiment_emb=F.one_hot(torch.tensor(sentiment_score),num_classes=10)
     sentiment_emb[-2]=valence_score
     sentiment_emb[-1]=arousal_score
