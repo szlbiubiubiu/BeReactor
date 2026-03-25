@@ -855,7 +855,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
-    laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
+    laten_repeat=max(1,len(whisper_chunks)//len(input_latent_list_cycle))
     # pdb.set_trace()
     vae_encode_latents_new=[]
     for single_latent in original_image_cycle:
