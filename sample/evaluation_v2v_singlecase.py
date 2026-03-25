@@ -982,7 +982,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         bbox=[0,0,t_shape[0],t_shape[1]]
         x1, y1, x2, y2 = bbox
         # try:
-        res_frame = cv2.resize(res_frame.astype(np.uint8),(int(x2-x1),(y2-y1)))
+        res_frame = cv2.resize(res_frame.astype(np.uint8),(int(x2-x1),int(y2-y1)))
         # pdb.set_trace()
         # combine_frame = get_image(ori_frame,res_frame,bbox)
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
@@ -1854,7 +1854,9 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     
     if 'sbg'  in platform.node() or 'dg' in platform.node() or 'xlg' in platform.node():
-        parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
+        # parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
+
+        parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/046-Latte-S-2-F64S3-reaction-Amp/checkpoints/0040000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/123-Latte-S-2-F32S3-reaction-Amp/checkpoints/0210000.pt")
