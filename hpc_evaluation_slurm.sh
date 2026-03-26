@@ -28,8 +28,9 @@ source ~/.bashrc
 # Replace the following line with a program or command
 conda activate latte_new
 
-CUDA_VISIBLE_DEVICES=0 python sample/evaluation_dodemo.py --save_video_path /gpfs/scratch/acw569/results/react/react_2025 #./test
+# CUDA_VISIBLE_DEVICES=0 python sample/evaluation_dodemo.py --save_video_path /gpfs/scratch/acw569/results/react/react_2025 #./test
+CUDA_VISIBLE_DEVICES=0 python sample/evaluation_singlecase.py --save_video_path /gpfs/scratch/acw569/results/react/react_2025 #./test
 
 # CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --nproc_per_node=1 --master-port=25541 train.py
-
+# CUDA_VISIBLE_DEVICES=4,5 python sample/evaluation_dodemo.py --save_video_path /data/szl/code/latte_reaction_new/results
 # For assistance, please email its-research-support@qmul.ac.uk
