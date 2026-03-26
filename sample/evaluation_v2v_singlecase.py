@@ -972,17 +972,48 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print("pad talking image to original video")
     # pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        if len(original_image_cycle)==0:
-            pdb.set_trace()
-            a=1
+        # if len(original_image_cycle)==0:
+        #     pdb.set_trace()
+        #     a=1
+        # ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
+        # # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
+        # # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
+        # t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
+        # bbox=[0,0,t_shape[0],t_shape[1]]
+        # x1, y1, x2, y2 = bbox
+        # # try:
+        # res_frame = cv2.resize(res_frame.astype(np.uint8),(int(x2-x1),int(y2-y1)))
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
         # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
         t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
-        bbox=[0,0,t_shape[0],t_shape[1]]
-        x1, y1, x2, y2 = bbox
+        # bbox=[0,0,t_shape[0],t_shape[1]]
+        
+        bbox=t_shape
+
+        bbox=np.array(bbox)
+        bbox[bbox<0]=0
+        # frame=np.squeeze(frame)
+        # if bbox == coord_placeholder:
+        #     continue
+        # x1, y1, x2, y2 = bbox
+
+        if (bbox == coord_placeholder).all():
+            # continue
+            bbox=[0,0,256,256]
+        # x1, y1, x2, y2 = [0,0,256,256]
+    # else:
+        x1, y1, x2, y2 = bbox#arr[arr < 0] = 0
+        # if not args.without_landmark:
+        # crop_frame = frame[y1:y2, x1:x2]
+
+
+
+
+        # x1, y1, x2, y2 = bbox
+        
         # try:
-        res_frame = cv2.resize(res_frame.astype(np.uint8),(int(x2-x1),int(y2-y1)))
+        res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
         # pdb.set_trace()
         # combine_frame = get_image(ori_frame,res_frame,bbox)
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
