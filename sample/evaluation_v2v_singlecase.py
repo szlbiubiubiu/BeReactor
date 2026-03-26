@@ -1548,7 +1548,7 @@ def main(args):
     for step, video_data in enumerate(loader):
         
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        if step <=247:
+        if step <=295:
             continue
         # if step<280:
         #     continue
