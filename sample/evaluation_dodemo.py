@@ -87,16 +87,17 @@ from transformers import AutoTokenizer
 import soundfile as sf
 
 
-def detect_speech_pauses(whisper_result, audio_file, fps=25):
+def detect_speech_pauses(whisper_result, audio_file, fps=25, max_pauses=4):
     """检测speech中的停顿点（句子结束、显著停顿等）
     
     Args:
         whisper_result: whisper转录结果
         audio_file: 音频文件路径
         fps: 视频帧率
+        max_pauses: 最多检测的停顿点数量 (默认为4)
     
     Returns:
-        pause_frames: 停顿发生的帧号列表
+        pause_frames: 停顿发生的帧号列表，最多max_pauses个
     """
     # 从whisper segments提取时间戳
     pause_frames = []
@@ -115,7 +116,15 @@ def detect_speech_pauses(whisper_result, audio_file, fps=25):
                 if gap > 0.5:
                     pause_frames.append(end_frame + int(gap * fps * 0.5))
     
-    return sorted(list(set(pause_frames)))
+    pause_frames = sorted(list(set(pause_frames)))
+    
+    # 限制停顿点数量，最多max_pauses个
+    if len(pause_frames) > max_pauses:
+        # 均匀分布选择max_pauses个停顿点
+        indices = [int(i * len(pause_frames) / max_pauses) for i in range(max_pauses)]
+        pause_frames = [pause_frames[idx] for idx in indices]
+    
+    return pause_frames
 
 
 def detect_expression_keyframes(speaker_video, fps=25, expression_threshold=0.3):
@@ -1214,8 +1223,7 @@ def main(args):
     )
     
     # 预处理：获取speaker音频的停顿点和关键帧信息
-    pdb.set_trace()
-    print("[Generation Strategy] Detecting speech pauses and expression keyframes...")
+
     # 注意：pause_frames 现在将在循环内部按batch获取
     
     listener_emotion_pred_list=[]
