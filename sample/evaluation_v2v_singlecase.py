@@ -467,20 +467,46 @@ def evaluate_LLM(dialogue: str):
     # )
     # pdb.set_trace()
     # Parse the response content (assuming the output is valid JSON)
-    answer = response.choices[0].message.content.strip()
-    all_scores= re.findall(r'-?\d+\.?\d*', answer)
-    converted_numbers = []
-    for num_str in all_scores:
-        try:
-            # 优先尝试转换为 int（适合没有小数点的数字）
-            converted_numbers.append(int(num_str))
-        except ValueError:
-            # 如果转 int 失败（说明是小数），则转换为 float
-            converted_numbers.append(float(num_str))
-    arousal_score=converted_numbers[-1]
-    valence_score=converted_numbers[-2]
-    sentiment_score=converted_numbers[-3]
-    realism_score=converted_numbers[-4]
+    # answer = response.choices[0].message.content.strip()
+    # all_scores= re.findall(r'-?\d+\.?\d*', answer)
+    # converted_numbers = []
+    # for num_str in all_scores:
+    #     try:
+    #         # 优先尝试转换为 int（适合没有小数点的数字）
+    #         converted_numbers.append(int(num_str))
+    #     except ValueError:
+    #         # 如果转 int 失败（说明是小数），则转换为 float
+    #         converted_numbers.append(float(num_str))
+    # arousal_score=converted_numbers[-1]
+    # valence_score=converted_numbers[-2]
+    # sentiment_score=converted_numbers[-3]
+    # realism_score=converted_numbers[-4]
+
+    arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
+    valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-3])
+    sentiment_score = re.findall(r'\d+', answer.split('\n')[-4])
+    realism_score = re.findall(r'\d+', answer.split('\n')[-5])
+    # numbers = re.findall(r'\d+', answer.split('\n')[-2])
+    arousal_score = [float(num) for num in arousal_score]
+    valence_score = [float(num) for num in valence_score]
+    sentiment_score = [int(num) for num in sentiment_score]
+    
+    realism_score = [int(num) for num in realism_score]
+    if len(arousal_score)==0:
+        arousal_score=0
+        valence_score=0
+        sentiment_score=0
+        realism_score=0
+    elif len(realism_score)==1:
+        # pdb.set_trace()
+        arousal_score=arousal_score[0]
+        valence_score=valence_score[0]
+        sentiment_score=sentiment_score[0]
+        realism_score=realism_score[0]
+
+
+
+
     # arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-1])
     # valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
     # sentiment_score = re.findall(r'\d+', answer.split('\n')[-3])
@@ -1548,7 +1574,7 @@ def main(args):
     for step, video_data in enumerate(loader):
         
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        if step <=314:
+        if step <=343:
             continue
         # if step<280:
         #     continue
