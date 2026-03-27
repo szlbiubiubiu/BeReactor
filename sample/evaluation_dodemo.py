@@ -85,6 +85,7 @@ import platform
 from parler_tts import ParlerTTSForConditionalGeneration
 from transformers import AutoTokenizer
 import soundfile as sf
+import librosa
 
 
 def detect_speech_pauses(whisper_result, audio_file, fps=25, max_pauses=4):
@@ -509,9 +510,9 @@ def evaluate_LLM(dialogue: str):
     
     return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 
-def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
+def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,num_llm_responses=1):
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
@@ -585,10 +586,19 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     random_number=np.random.randint(low=0, high=100)
     # else:
     tone_pos=1
+    # 确保生成至少num_llm_responses个回应
+    num_sentences_to_generate = max(len(sentences), num_llm_responses)
+    print(f"[LLM] Generating {num_llm_responses} LLM responses (sentences: {len(sentences)})")
+    
     # pdb.set_trace()
-    for i in range(len(sentences)):
-        if i>=5:
+    for i in range(num_sentences_to_generate):
+        if i>=5:  # 最多生成5个回应
             break
+        
+        # 如果超过句子数量，使用最后一个句子或通用句子
+        current_sentence_idx = min(i, len(sentences) - 1)
+        current_sentence = sentences[current_sentence_idx]
+        
         if i==0:
             if len(sentences)!=1:
             #     chat = [
@@ -603,13 +613,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
                 +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words in each reply. Return a binary number describing of the response level, 0 means negative and 1 means postive"},
-                {"role": "user", "content": sentences[0]}
+                {"role": "user", "content": current_sentence}
                 ]
             else:
                 chat = [
                 {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
                 +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 100 words(more than 10 words)"},
-                {"role": "user", "content": sentences[0]}
+                {"role": "user", "content": current_sentence}
                 ]
             # {"role": "system", "content": 
             # "Please reply with a tone of emotion level:\
@@ -631,7 +641,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             {"role": "Assistant", "content": current_text})
             chat.append(
                 # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-                {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
+                {"role": "user", "content": current_sentence+". (Please reply with a tone of the following emotion degree:\
             Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
                             expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
                             expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
@@ -642,7 +652,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             )
             # dialogue.append(
             # {"role": "Assistant", "content": current_text})
-            # dialogue.append({"role": "user", "content": sentences[i]})
+            # dialogue.append({"role": "user", "content": current_sentence})
         
         
         
@@ -785,10 +795,32 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
     audio_arr = generation.cpu().numpy().squeeze()
 
-    asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
-    new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
+    # 获取原始speaker音频的长度以保证对齐
+    # asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
+    # new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
+
+
+    speaker_audio, sr_speaker = librosa.load(speaker_audio_path, sr=16000)
+    speaker_duration = len(speaker_audio) / sr_speaker
+    
+    # 生成的音频长度（单位为秒）
+    generated_duration = len(audio_arr) / audio_model.config.sampling_rate
+    
+    # 如果生成的音频太短，需要重复；如果太长，需要裁剪
+    target_samples = int(speaker_duration * audio_model.config.sampling_rate)
+    
+    if len(audio_arr) < target_samples:
+        # 重复补充
+        repeats = (target_samples // len(audio_arr)) + 1
+        audio_arr = np.tile(audio_arr, repeats)[:target_samples]
+    elif len(audio_arr) > target_samples:
+        # 裁剪
+        audio_arr = audio_arr[:target_samples]
+    
+    # 不添加额外的静音，直接保存
+    new_audio = audio_arr.astype(np.float32)
     sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
-    print('audio_generated, path is: ',OUTPUT_audio_FILE)
+    print(f'audio_generated, duration: {len(new_audio)/audio_model.config.sampling_rate:.2f}s, path: {OUTPUT_audio_FILE}')
     # # message in self.stream()
     wavs=[]
     # with open(OUTPUT_audio_FILE, "wb") as file:
@@ -1351,7 +1383,7 @@ def main(args):
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
-            pdb.set_trace()
+            # pdb.set_trace()
             # Log strategy for this clip
             clip_frame_start = index_clip * clip_size
             print(f"[Clip {index_clip}] Strategy: {strategy}, Frame range: {clip_frame_start}-{clip_frame_start+clip_size}")
@@ -1417,7 +1449,7 @@ def main(args):
             if using_cfg:
                 samples=samples[:len(x)//2]
             b, f, c, h, w = samples.shape
-            pdb.set_trace()
+            # pdb.set_trace()
             
             # 按 batch 中每个 instance 单独处理，用 vae.decode 解码，然后组合为 batch 输出
             decoded_batch = []
@@ -1467,9 +1499,9 @@ def main(args):
             # print('save path {}'.format(args.save_video_path))
             
 
-            batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
+            batched_faces,scores=openai_deepseek_talkinghead_genall(
             whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1])     #openai,deepseek
+                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1],num_llm_responses=len(clip_indices))     #openai,deepseek
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
