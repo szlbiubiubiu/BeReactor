@@ -1142,7 +1142,10 @@ def main(args):
 
     #load audio->talking head branch--------------------------------
     # whisper_model = whisper.load_model("base.en")
-    whisper_model = whisper.load_model("medium.en")
+    # Whisper放在GPU 1以节省GPU 0显存
+    whisper_device = 1 if torch.cuda.device_count() > 1 else 0
+    whisper_model = whisper.load_model("medium.en", device=f"cuda:{whisper_device}")
+    print(f"[Memory] Loaded whisper on GPU {whisper_device}")
 
     # result = whisper_model.transcribe(audio_file)
     # print(result["text"])
@@ -1151,10 +1154,13 @@ def main(args):
     ##LLM processing
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device_map="auto")
+    # LLM放在GPU 1以节省GPU 0显存
+    llm_device = 1 if torch.cuda.device_count() > 1 else 0
     if 'server' in platform.node():
-        pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=0)
+        pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=llm_device)
     else:
-        pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=0)
+        pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=llm_device)
+    print(f"[Memory] Loaded llama3 on GPU {llm_device}")
 
     ### deepseek
     # pipe = pipeline("text-generation", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", torch_dtype=torch.float16, device=1)
@@ -1169,6 +1175,14 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     timesteps = torch.tensor([0], device=device)
 
+    # 显示GPU显存分配信息
+    print("\n" + "="*60)
+    print("[GPU Memory Status]")
+    num_gpus = torch.cuda.device_count()
+    for i in range(num_gpus):
+        total_mem, free_mem = torch.cuda.mem_get_info(i)
+        print(f"GPU {i}: Total {total_mem/1e9:.2f} GiB, Free {free_mem/1e9:.2f} GiB")
+    print("="*60 + "\n")
 
     #end audio->talking head----------------------------------------
     using_cfg = args.cfg_scale > 1.0
@@ -1177,6 +1191,7 @@ def main(args):
     latent_size = args.image_size // 8
     args.latent_size = latent_size
     model = get_models(args).to(device)
+    print(f"[Memory] Latte model on GPU 0, GPU 0 current free: {torch.cuda.mem_get_info(0)[0] / 1e9:.2f} GiB")
 
     if args.use_compile:
         model = torch.compile(model)
@@ -1190,6 +1205,7 @@ def main(args):
     diffusion = create_diffusion(str(args.num_sampling_steps))
     # vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     reaction_vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
+    print(f"[Memory] VAE loaded on GPU 0, GPU 0 current free: {torch.cuda.mem_get_info(0)[0] / 1e9:.2f} GiB")
 
 
     # vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae").to(device)
@@ -1248,6 +1264,8 @@ def main(args):
     torch.manual_seed(0)
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
+        # 每个batch开始时清理缓存，释放显存
+        torch.cuda.empty_cache()
         # if step<280:
         #     continue
         # Skip steps until we reach the resumed step
