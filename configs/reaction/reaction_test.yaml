@@ -30,7 +30,7 @@ start_clip_iter: 20000
 local_batch_size: 2 # important 5
 max_train_steps: 1000000
 global_seed: 3407
-num_workers: 8
+num_workers: 2
 log_every: 100
 lr_warmup_steps: 0
 resume_from_checkpoint:
