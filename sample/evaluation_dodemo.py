@@ -1104,8 +1104,6 @@ def main(args):
     device = torch.device("cuda", 0)
     # device = torch.device("cuda", 0)
     clip_size=64 #64
-    audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
-    listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
     # pdb.set_trace()
     print('check test/val matrix..')
@@ -1218,9 +1216,7 @@ def main(args):
     # 预处理：获取speaker音频的停顿点和关键帧信息
     pdb.set_trace()
     print("[Generation Strategy] Detecting speech pauses and expression keyframes...")
-    speaker_whisper_result = whisper_model.transcribe(audio_file)
-    pause_frames = detect_speech_pauses(speaker_whisper_result, audio_file, fps=25)
-    print(f"[Pauses] Detected {len(pause_frames)} pause points: {pause_frames[:10]}...")
+    # 注意：pause_frames 现在将在循环内部按batch获取
     
     listener_emotion_pred_list=[]
     listener_emotion_gt_list=[]
@@ -1250,6 +1246,17 @@ def main(args):
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
         # pdb.set_trace()
+        
+        # 从dataloader中获取audio文件路径
+        speaker_audio_path = video_data['speaker_audio_path'][0] if isinstance(video_data['speaker_audio_path'], (list, tuple)) else video_data['speaker_audio_path']
+        listener_audio_path = video_data['listener_audio_path'][0] if isinstance(video_data['listener_audio_path'], (list, tuple)) else video_data['listener_audio_path']
+        
+        # 获取当前batch的pause_frames
+        pdb.set_trace()
+        print(f"Processing speaker audio: {speaker_audio_path}")
+        speaker_whisper_result = whisper_model.transcribe(speaker_audio_path)
+        pause_frames = detect_speech_pauses(speaker_whisper_result, speaker_audio_path, fps=25)
+        print(f"[Pauses] Detected {len(pause_frames)} pause points: {pause_frames[:10]}...")
         
         out_samples=None
         # pdb.set_trace()
