@@ -467,7 +467,7 @@ def evaluate_LLM(dialogue: str):
     # )
     # pdb.set_trace()
     # Parse the response content (assuming the output is valid JSON)
-    # answer = response.choices[0].message.content.strip()
+    answer = response.choices[0].message.content.strip()
     # all_scores= re.findall(r'-?\d+\.?\d*', answer)
     # converted_numbers = []
     # for num_str in all_scores:
