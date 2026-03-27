@@ -789,7 +789,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # else:
     #     description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
     #     The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
-
+    
     input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
     prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
 
@@ -797,31 +797,31 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     audio_arr = generation.cpu().numpy().squeeze()
 
     # 获取原始speaker音频的长度以保证对齐
-    # asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
-    # new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
+    asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
+    new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
 
-    # pdb.set_trace()
-    # speaker_audio, sr_speaker = librosa.load(speaker_audio_path, sr=16000)
-    # speaker_duration = len(speaker_audio) / sr_speaker
+    pdb.set_trace()
+    speaker_audio, sr_speaker = librosa.load(speaker_audio_path, sr=16000)
+    speaker_duration = len(speaker_audio) / sr_speaker
     
-    # # 生成的音频长度（单位为秒）
-    # generated_duration = len(audio_arr) / audio_model.config.sampling_rate
+    # 生成的音频长度（单位为秒）
+    generated_duration = len(audio_arr) / audio_model.config.sampling_rate
     
-    # # 如果生成的音频太短，需要重复；如果太长，需要裁剪
-    # target_samples = int(speaker_duration * audio_model.config.sampling_rate)
+    # 如果生成的音频太短，需要重复；如果太长，需要裁剪
+    target_samples = int(speaker_duration * audio_model.config.sampling_rate)
     
-    # if len(audio_arr) < target_samples:
-    #     # 重复补充
-    #     repeats = (target_samples // len(audio_arr)) + 1
-    #     audio_arr = np.tile(audio_arr, repeats)[:target_samples]
-    # elif len(audio_arr) > target_samples:
-    #     # 裁剪
-    #     audio_arr = audio_arr[:target_samples]
+    if len(audio_arr) < target_samples:
+        # 重复补充
+        repeats = (target_samples // len(audio_arr)) + 1
+        audio_arr = np.tile(audio_arr, repeats)[:target_samples]
+    elif len(audio_arr) > target_samples:
+        # 裁剪
+        audio_arr = audio_arr[:target_samples]
     
-    # # 不添加额外的静音，直接保存
-    # new_audio = audio_arr.astype(np.float32)
-    # sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
-    # print(f'audio_generated, duration: {len(new_audio)/audio_model.config.sampling_rate:.2f}s, path: {OUTPUT_audio_FILE}')
+    # 不添加额外的静音，直接保存
+    new_audio = audio_arr.astype(np.float32)
+    sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
+    print(f'audio_generated, duration: {len(new_audio)/audio_model.config.sampling_rate:.2f}s, path: {OUTPUT_audio_FILE}')
 
 
 
