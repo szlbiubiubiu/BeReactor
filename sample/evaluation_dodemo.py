@@ -899,6 +899,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # #repeat and concat
     # # input_img_list[sample]
     bbox_shift=0
+    pdb.set_trace()
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
 
 
