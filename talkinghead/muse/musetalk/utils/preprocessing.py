@@ -123,7 +123,8 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
     average_range_minus = []
     average_range_plus = []
     # pdb.set_trace()
-    for fb in tqdm(batches):
+    print(f"[Landmark & BBox] Processing {len(frames)} frames in {len(batches)} batches")
+    for fb in tqdm(batches, desc="[Processing] Landmark & BBox", total=len(batches)):
 
         # if isinstance(fb, torch.Tensor):
         #     fb=fb.cpu().numpy()
@@ -165,6 +166,7 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
             else:
                 coords_list += [f_landmark]
     
+    print(f"[Landmark & BBox] Completed! Processed {len(coords_list)} coordinates")
     # print("********************************************bbox_shift parameter adjustment**********************************************************")
     # print(f"Total frame:「{len(frames)}」 Manually adjust range : [ -{int(sum(average_range_minus) / len(average_range_minus))}~{int(sum(average_range_plus) / len(average_range_plus))} ] , the current value: {upperbondrange}")
     # print("*************************************************************************************************************************************")
