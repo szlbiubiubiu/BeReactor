@@ -87,7 +87,146 @@ from transformers import AutoTokenizer
 import soundfile as sf
 
 
-def chat_with_llama(model, tokenizer, conversation_history):
+def detect_speech_pauses(whisper_result, audio_file, fps=25):
+    """检测speech中的停顿点（句子结束、显著停顿等）
+    
+    Args:
+        whisper_result: whisper转录结果
+        audio_file: 音频文件路径
+        fps: 视频帧率
+    
+    Returns:
+        pause_frames: 停顿发生的帧号列表
+    """
+    # 从whisper segments提取时间戳
+    pause_frames = []
+    
+    if 'segments' in whisper_result:
+        for i, segment in enumerate(whisper_result['segments']):
+            # 句子结束时刻 (通常是反应生成的好时机)
+            end_time = segment['end']
+            end_frame = int(end_time * fps)
+            pause_frames.append(end_frame)
+            
+            # 如果段落间隔>0.5秒，也作为停顿点
+            if i < len(whisper_result['segments']) - 1:
+                next_start = whisper_result['segments'][i+1]['start']
+                gap = next_start - end_time
+                if gap > 0.5:
+                    pause_frames.append(end_frame + int(gap * fps * 0.5))
+    
+    return sorted(list(set(pause_frames)))
+
+
+def detect_expression_keyframes(speaker_video, fps=25, expression_threshold=0.3):
+    """检测speaker面部表情变化较大的关键帧
+    
+    Args:
+        speaker_video: speaker视频 [B, T, C, H, W]
+        fps: 帧率
+        expression_threshold: 表情变化阈值
+    
+    Returns:
+        keyframe_indices: 关键帧的索引列表
+    """
+    # 使用pretrained emotion model来检测表情变化
+    keyframe_indices = []
+    
+    # 为了简化，这里采用基于光流或其他简单特征的启发式方法
+    # 计算相邻帧的差异
+    if len(speaker_video.shape) == 5:  # [B, T, C, H, W]
+        video_seq = speaker_video[0]  # 取第一个batch的视频序列
+    else:
+        video_seq = speaker_video
+    
+    # 计算相邻帧的L2距离来检测变化
+    frame_differences = []
+    for t in range(1, video_seq.shape[0]):
+        diff = torch.norm(video_seq[t] - video_seq[t-1], p=2).item()
+        frame_differences.append(diff)
+    
+    # 找出变化较大的帧（>阈值*平均变化）
+    if frame_differences:
+        avg_diff = np.mean(frame_differences)
+        threshold = avg_diff * expression_threshold
+        
+        for t, diff in enumerate(frame_differences):
+            if diff > threshold:
+                keyframe_indices.append(t + 1)  # +1因为差异是从第1帧开始的
+    
+    return sorted(keyframe_indices)
+
+
+def merge_generation_triggers(pause_frames, keyframe_indices, min_interval=16, fps=25):
+    """合并停顿点和关键帧，生成最优的反应生成时机
+    
+    Args:
+        pause_frames: 停顿帧号列表
+        keyframe_indices: 关键帧索引列表
+        min_interval: 最小生成间隔（帧数）
+        fps: 帧率
+    
+    Returns:
+        generation_points: 建议的生成时机（帧号）
+    """
+    # 合并两个信号，优先考虑停顿点，其次是关键帧
+    all_triggers = []
+    
+    # 停顿点权重更高（停顿=更多语义相关的反应时机）
+    for frame in pause_frames:
+        all_triggers.append((frame, 'pause', 2.0))
+    
+    # 关键帧权重较低
+    for frame in keyframe_indices:
+        all_triggers.append((frame, 'keyframe', 1.0))
+    
+    # 按权重和时间排序
+    all_triggers.sort(key=lambda x: (x[0], -x[2]))
+    
+    # 去除过于接近的触发点（保留权重更高的）
+    generation_points = []
+    for frame, trigger_type, weight in all_triggers:
+        # 检查是否与已选择的点太接近
+        too_close = any(abs(frame - gp['frame']) < min_interval for gp in generation_points)
+        if not too_close:
+            generation_points.append({'frame': frame, 'type': trigger_type, 'weight': weight})
+    
+    return sorted(generation_points, key=lambda x: x['frame'])
+
+
+def get_clip_generation_strategy(index_clip, pause_frames, clip_size=64):
+    """获取当前clip的生成策略信息
+    
+    Args:
+        index_clip: 当前clip索引
+        pause_frames: 停顿帧号列表
+        clip_size: 每个clip的帧数
+    
+    Returns:
+        strategy_info: 包含策略类型和说明的字典
+    """
+    clip_start = index_clip * clip_size
+    clip_end = (index_clip + 1) * clip_size
+    
+    # 检查这个clip是否包含停顿点
+    contains_pause = any(clip_start <= pf < clip_end for pf in pause_frames)
+    
+    if contains_pause:
+        pauses_in_clip = [pf for pf in pause_frames if clip_start <= pf < clip_end]
+        return {
+            'strategy': 'pause-driven',
+            'detail': f'Pause at frame(s): {pauses_in_clip}',
+            'priority': 'high'
+        }
+    else:
+        return {
+            'strategy': 'uniform', 
+            'detail': 'Regular interval',
+            'priority': 'low'
+        }
+
+
+
         # Tokenize the input along with the conversation history
         inputs = tokenizer(conversation_history, return_tensors="pt")
         outputs = model.generate(**inputs, max_length=1000, do_sample=True)
@@ -1075,6 +1214,14 @@ def main(args):
         pin_memory=True,
         drop_last=True
     )
+    
+    # 预处理：获取speaker音频的停顿点和关键帧信息
+    pdb.set_trace()
+    print("[Generation Strategy] Detecting speech pauses and expression keyframes...")
+    speaker_whisper_result = whisper_model.transcribe(audio_file)
+    pause_frames = detect_speech_pauses(speaker_whisper_result, audio_file, fps=25)
+    print(f"[Pauses] Detected {len(pause_frames)} pause points: {pause_frames[:10]}...")
+    
     listener_emotion_pred_list=[]
     listener_emotion_gt_list=[]
     speaker_emotion_gt_list=[]
@@ -1138,8 +1285,31 @@ def main(args):
             sample_fn = model.forward
             model_kwargs = dict(y=None, use_fp16=args.use_fp16)
 
-        # pdb.set_trace()
-        for index_clip in range((video_data['img'].shape)[1]//clip_size):
+        pdb.set_trace()
+        # 智能裁剪：根据停顿和关键帧生成反应
+        total_frames = (video_data['img'].shape)[1]
+        generation_points = merge_generation_triggers(
+            pause_frames, 
+            [],  # keyframe_indices 在实时处理中可根据需要添加
+            min_interval=clip_size,
+            fps=25
+        )
+        
+        # 转换为clip索引
+        clip_indices = []
+        for gen_point in generation_points:
+            clip_idx = gen_point['frame'] // clip_size
+            if clip_idx < total_frames // clip_size:
+                clip_indices.append((clip_idx, gen_point['type']))
+        
+        # 如果没有检测到停顿点，使用默认的均匀分布
+        if not clip_indices:
+            print("[Warning] No pause points detected, using uniform distribution")
+            clip_indices = [(i, 'uniform') for i in range((video_data['img'].shape)[1]//clip_size)]
+        
+        print(f"[Generation] Processing {len(clip_indices)} clips with strategies: {[(idx, typ) for idx, typ in clip_indices[:5]]}...")
+        
+        for index_clip, strategy in clip_indices:
             # if len(listener_ref)<=32:
             #     pdb.set_trace()
             #     a=1
@@ -1148,7 +1318,12 @@ def main(args):
             listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
             listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
             sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
-            if listener_ref.shape[1]<32:
+            pdb.set_trace()
+            # Log strategy for this clip
+            clip_frame_start = index_clip * clip_size
+            print(f"[Clip {index_clip}] Strategy: {strategy}, Frame range: {clip_frame_start}-{clip_frame_start+clip_size}")
+            
+            if listener_ref.shape[1]<args.num_frames:
                 pdb.set_trace()
                 a=1
             # pdb.set_trace()
@@ -1236,6 +1411,11 @@ def main(args):
         # print('save path {}'.format(args.save_video_path))
 
         # pdb.set_trace()
+        # 统计生成策略
+        pause_driven_count = len([1 for _, strat in clip_indices if strat == 'pause'])
+        uniform_count = len([1 for _, strat in clip_indices if strat == 'uniform'])
+        print(f"[Generation Summary] Total clips: {len(clip_indices)}, Pause-driven: {pause_driven_count}, Uniform: {uniform_count}")
+        
         all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
