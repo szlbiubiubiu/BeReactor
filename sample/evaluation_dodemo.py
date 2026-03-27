@@ -799,7 +799,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
     # new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
 
-
+    pdb.set_trace()
     speaker_audio, sr_speaker = librosa.load(speaker_audio_path, sr=16000)
     speaker_duration = len(speaker_audio) / sr_speaker
     
