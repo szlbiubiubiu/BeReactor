@@ -86,6 +86,7 @@ from parler_tts import ParlerTTSForConditionalGeneration
 from transformers import AutoTokenizer
 import soundfile as sf
 import librosa
+import gc
 
 
 def detect_speech_pauses(whisper_result, audio_file, fps=25, max_pauses=4):
@@ -899,7 +900,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # #repeat and concat
     # # input_img_list[sample]
     bbox_shift=0
-    pdb.set_trace()
+    # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
 
 
@@ -1280,30 +1281,28 @@ def main(args):
 
     # 注意：pause_frames 现在将在循环内部按batch获取
     
-    listener_emotion_pred_list=[]
-    listener_emotion_gt_list=[]
-    speaker_emotion_gt_list=[]
-    all_listener_emotion_pred_list=[]
-    all_score=dict()
-    # all_score['']
-
-    all_score['all_realism_score']=0
-    all_score['all_sentiment_score']=0
-    all_score['all_valence_score']=0
-    all_score['all_arousal_score']=0
-    all_score['all_bleu_scores']=0
-    all_score['all_rouge_scores']=0
-    all_score['all_bert_scores']=0
-
-    all_score['all_sentiment_emb']=torch.zeros([len(dataset),10])
+    # Initialize score dictionary - keep only cumulative counts, not lists
+    all_score = dict()
+    all_score['all_realism_score'] = 0.0
+    all_score['all_sentiment_score'] = 0.0
+    all_score['all_valence_score'] = 0.0
+    all_score['all_arousal_score'] = 0.0
+    all_score['all_bleu_scores'] = 0.0
+    all_score['all_rouge_scores'] = 0.0
+    all_score['all_bert_scores'] = 0.0
+    all_score['all_sentiment_emb'] = torch.zeros([len(dataset), 10])
+    
+    processed_batches = 0  # Track processed batches for memory monitoring
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     # double_count=0
     torch.manual_seed(0)
     for step, video_data in enumerate(loader):
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        # 每个batch开始时清理缓存，释放显存
+        
+        # Clean GPU and CPU memory at batch start
         torch.cuda.empty_cache()
+        gc.collect()  # Force CPU garbage collection
         # if step<280:
         #     continue
         # Skip steps until we reach the resumed step
@@ -1316,11 +1315,15 @@ def main(args):
         listener_audio_path = video_data['listener_audio_path'][0] if isinstance(video_data['listener_audio_path'], (list, tuple)) else video_data['listener_audio_path']
         
         # 获取当前batch的pause_frames
-        pdb.set_trace()
+        # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
         print(f"Processing speaker audio: {speaker_audio_path}")
         speaker_whisper_result = whisper_model.transcribe(speaker_audio_path)
         pause_frames = detect_speech_pauses(speaker_whisper_result, speaker_audio_path, fps=25)
         print(f"[Pauses] Detected {len(pause_frames)} pause points: {pause_frames[:10]}...")
+        
+        # Clean up whisper result from memory
+        del speaker_whisper_result
+        gc.collect()
         
         out_samples=None
         # pdb.set_trace()
@@ -1356,7 +1359,7 @@ def main(args):
             sample_fn = model.forward
             model_kwargs = dict(y=None, use_fp16=args.use_fp16)
 
-        pdb.set_trace()
+        # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
         # 智能裁剪：根据停顿和关键帧生成反应
         total_frames = (video_data['img'].shape)[1]
         generation_points = merge_generation_triggers(
@@ -1380,6 +1383,10 @@ def main(args):
         
         print(f"[Generation] Processing {len(clip_indices)} clips with strategies: {[(idx, typ) for idx, typ in clip_indices[:5]]}...")
         
+        # Initialize output samples concatenation list (will be processed per batch)
+        all_face_images = []  # IMPORTANT: Clear this list for each batch
+        out_samples = None
+        
         for index_clip, strategy in clip_indices:
             # if len(listener_ref)<=32:
             #     pdb.set_trace()
@@ -1395,7 +1402,8 @@ def main(args):
             print(f"[Clip {index_clip}] Strategy: {strategy}, Frame range: {clip_frame_start}-{clip_frame_start+clip_size}")
             
             if listener_ref.shape[1]<args.num_frames:
-                pdb.set_trace()
+                # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
+                print(f"Warning: listener_ref shape {listener_ref.shape[1]} < num_frames {args.num_frames}")
                 a=1
             # pdb.set_trace()
             emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
@@ -1468,26 +1476,18 @@ def main(args):
             
             # 组合为 batch: list of (f, 3, H, W) -> (b, f, 3, H, W)
             samples = torch.stack(decoded_batch, dim=0)
+            del decoded_batch  # Free memory immediately
             
             # pdb.set_trace()
             if index_clip==0:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
                 out_samples=torch.cat((out_samples,samples),dim=1)
-        # #save original video
-        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
-
-        # pdb.set_trace()
+            del samples
         # 统计生成策略
         pause_driven_count = len([1 for _, strat in clip_indices if strat == 'pause'])
         uniform_count = len([1 for _, strat in clip_indices if strat == 'uniform'])
         print(f"[Generation Summary] Total clips: {len(clip_indices)}, Pause-driven: {pause_driven_count}, Uniform: {uniform_count}")
-        
-        all_face_images=[]
         # #can consider do not use the decode of vae
         dim_out=out_samples.shape
         print(dim_out)
@@ -1511,14 +1511,12 @@ def main(args):
             # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
             #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
             all_face_images+=batched_faces
-            all_score['all_realism_score']+=scores['realism_score']
+            # Accumulate only numeric values, not lists
+            all_score['all_realism_score'] += float(scores['realism_score']) if isinstance(scores['realism_score'], (int, float, torch.Tensor)) else 0.0
             all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
-            # all_score['all_valence_score']+=scores['valence_score']
-            # all_score['all_arousal_score']+=scores['arousal_score']
-            # pdb.set_trace()
-            all_score['all_bleu_scores']+=scores['bleu_scores']
-            # all_score['all_rouge_scores']+=scores['rouge_scores']
-            all_score['all_bert_scores']+=scores['bert_scores']
+            # Accumulate only the sum/mean of scores, not all details
+            all_score['all_bleu_scores'] += float(np.mean(scores['bleu_scores'])) if scores['bleu_scores'] else 0.0
+            all_score['all_bert_scores'] += float(np.mean(scores['bert_scores'])) if scores['bert_scores'] else 0.0
             # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
             
             # pdb.set_trace()
@@ -1528,7 +1526,20 @@ def main(args):
             # print(video_.shape)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
             
-        # pdb.set_trace()
+            # Explicitly delete large tensors after writing
+            del video_, batched_faces, scores
+            
+        # Clear batch outputs to free memory
+        del out_samples, x, listener_ref, listener_video_clip_last, sp_audio_clip, emo_label, speaker_emo
+        del video_data  # Free video_data from CPU memory
+        
+        processed_batches += 1
+        print(f"[Memory] Processed {processed_batches} batches. Collector stats: {gc.get_count()}")
+        
+        # Force garbage collection every N batches
+        if processed_batches % 5 == 0:
+            gc.collect()
+            print(f"[Memory] Forced garbage collection at batch {processed_batches}")
         # a=1
         # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # # #generate talking head
