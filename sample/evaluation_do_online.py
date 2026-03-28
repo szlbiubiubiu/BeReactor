@@ -82,7 +82,8 @@ import re
 
 import platform
 #it is single forward function
-from kokoro import KPipeline
+from parler_tts import ParlerTTSForConditionalGeneration
+from transformers import AutoTokenizer
 import soundfile as sf
 
 
@@ -222,10 +223,8 @@ import bert_score
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# Kokoro TTS – high quality, controllable emotion/speed/voice
-# pip install kokoro
-_kokoro_pipeline = KPipeline(lang_code='a')  # 'a' = American English
-print(f'[TTS] Kokoro pipeline initialised (device: {audio_device})')
+audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
+tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
 # ─── Timeline-aware temporal frame stretching ────────────────────────────────
 
@@ -661,33 +660,23 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
 
-    sr = 24000  # Kokoro native sample rate
+    sr = audio_model.config.sampling_rate  # (e.g. 44100)
     video_fps_audio = 25  # reference fps used for timeline conversion
     # Fraction of passive window to donate to the active window when segments
-    # are back-to-back (no natural gap).  0.7 means active gets more.
-    _NO_GAP_SPLIT_RATIO = 0.7
+    # are back-to-back (no natural gap).  0.5 = 50 % of passive becomes active.
+    _NO_GAP_SPLIT_RATIO = 0.7#0.7 means active is more
 
     # ── Per-segment audio construction ────────────────────────────────────────
     # For each segment k on the timeline:
     #   • passive window [seg.start … seg.end]  → SILENCE  (speaker is talking)
     #   • active  window [seg.end   … next_seg.start] → TTS of listener reply k
+    #
+    # This aligns audio exactly with the frame stretching done in main().
     # ──────────────────────────────────────────────────────────────────────────
 
-    # ── Kokoro emotion / voice / speed mapping ────────────────────────────────
-    # tone_pos is a numeric level extracted from the LLM reply.
-    # Voices: af_heart (warm), af_bella (expressive), am_echo (calm male),
-    #         am_puck (neutral male), af_sarah (neutral female)
-    _tone = float(tone_pos) if str(tone_pos).replace('.', '', 1).lstrip('-').isdigit() else 1.0
-    if _tone >= 2:
-        _tts_voice = 'af_bella'   # expressive / excited
-        _tts_speed = 1.15
-    elif _tone >= 1:
-        _tts_voice = 'af_heart'   # warm / positive
-        _tts_speed = 1.0
-    else:
-        _tts_voice = 'am_echo'    # calm / subdued
-        _tts_speed = 0.9
-    print(f'[TTS] tone_pos={tone_pos} -> voice={_tts_voice}, speed={_tts_speed}')
+    description_base = "Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise. "
+    +"The tone is positive level of " + str(tone_pos)
+    
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
 
@@ -716,17 +705,15 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         active_durations.append(active_dur)
 
     all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
-
-    # ── Pass 2: one single Kokoro TTS call for all listener replies ───────────
+    pdb.set_trace()
+    # ── Pass 2: one single TTS call for all listener replies ─────────────────
     combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
     if combined_reply_text.strip():
-        _chunks = []
-        for _, _, _audio in _kokoro_pipeline(
-                combined_reply_text, voice=_tts_voice, speed=_tts_speed):
-            _chunks.append(_audio)
-        tts_full = np.concatenate(_chunks).astype(np.float32) if _chunks else np.array([], dtype=np.float32)
-        print(f'[Audio] Kokoro TTS: {len(tts_full)} samples '
-              f'({len(tts_full)/sr:.2f}s) for {len(_seg_list)} segments')
+        input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
+        prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
+        gen_all  = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
+        tts_full = gen_all.cpu().numpy().squeeze().astype(np.float32)
+        print(f'[Audio] Single TTS pass: {len(tts_full)} samples for {len(_seg_list)} segments')
     else:
         tts_full = np.array([], dtype=np.float32)
 
