@@ -923,16 +923,15 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
                 speaker_active[start_idx:end_idx] = True
 
     silent_indices = np.where(~speaker_active)[0]
-    silent_len = len(silent_indices)
-    
-    # 2. 将生成的回复音频填充到speaker不说话（silent）的时间段内
-    if silent_len > 0:
-        if len(audio_arr) < silent_len:
-            repeats = (silent_len // len(audio_arr)) + 1
-            audio_arr_tiled = np.tile(audio_arr, repeats)[:silent_len]
-        else:
-            audio_arr_tiled = audio_arr[:silent_len]
-        new_audio_arr[silent_indices] = audio_arr_tiled
+    if len(silent_indices) > 0:
+        # Group contiguous silent regions
+        breaks = np.where(np.diff(silent_indices) != 1)[0] + 1
+        gap_chunks = np.split(silent_indices, breaks)
+        
+        # Paste the audio block uninterrupted starting from the first available gap
+        first_gap_start = gap_chunks[0][0]
+        insert_len = min(len(audio_arr), target_samples - first_gap_start)
+        new_audio_arr[first_gap_start : first_gap_start + insert_len] = audio_arr[:insert_len]
         
     audio_arr = new_audio_arr
     
