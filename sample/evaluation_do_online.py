@@ -226,6 +226,104 @@ audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch
 audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
 tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
+# ─── Timeline-aware temporal frame stretching ────────────────────────────────
+
+def _fill_frames(result, src_frames, start_idx, end_idx):
+    """Linearly interpolate src_frames into result[start_idx:end_idx]."""
+    if end_idx <= start_idx or len(src_frames) == 0:
+        return
+    n_target = end_idx - start_idx
+    n_src = len(src_frames)
+    for j in range(n_target):
+        if start_idx + j >= len(result):
+            break
+        if n_target == 1 or n_src == 1:
+            result[start_idx + j] = np.array(src_frames[0], dtype=np.uint8)
+            continue
+        src_pos = j * (n_src - 1) / (n_target - 1)
+        lo = int(src_pos)
+        hi = min(lo + 1, n_src - 1)
+        alpha = src_pos - lo
+        if alpha < 1e-6:
+            result[start_idx + j] = np.array(src_frames[lo], dtype=np.uint8)
+        else:
+            blended = (1 - alpha) * np.array(src_frames[lo], dtype=np.float32) + \
+                       alpha       * np.array(src_frames[hi], dtype=np.float32)
+            result[start_idx + j] = np.clip(blended, 0, 255).astype(np.uint8)
+
+
+def stretch_frames_to_timeline(frames, segment_list, target_total_frames,
+                                video_fps=25, frames_per_seg=64):
+    """
+    Stretch N_segs×64 generated frames to exactly target_total_frames,
+    aligning listener timing with the speaker's timeline:
+
+    For each segment k:
+      • passive (first 25% = 16 frames)  → speaker talking window
+                                            [segment[k].start … segment[k].end]
+      • active  (last  75% = 48 frames)  → silence gap
+                                            [segment[k].end … segment[k+1].start]
+                                            (or video end for the last segment)
+
+    Any uncovered leading frames (before segment 0 starts) are filled with the
+    first available frame, keeping the output fully contiguous.
+    """
+    if not frames or target_total_frames <= 0:
+        return frames
+
+    n_segs = len(segment_list)
+    passive_per_seg = int(0.25 * frames_per_seg)   # 16
+    active_per_seg  = frames_per_seg - passive_per_seg  # 48
+
+    result = [None] * target_total_frames
+
+    for seg_i, seg in enumerate(segment_list):
+        seg_start_frame = max(0, int(seg.get('start', 0) * video_fps))
+        seg_end_frame   = min(target_total_frames, int(seg.get('end',   0) * video_fps))
+
+        # silence gap: from end of this segment to start of next
+        if seg_i + 1 < n_segs:
+            next_start_frame = min(target_total_frames,
+                                   int(segment_list[seg_i + 1].get('start', seg_end_frame) * video_fps))
+        else:
+            next_start_frame = target_total_frames
+
+        # Source frames for this segment
+        src_passive = frames[seg_i * frames_per_seg : seg_i * frames_per_seg + passive_per_seg]
+        src_active  = frames[seg_i * frames_per_seg + passive_per_seg : (seg_i + 1) * frames_per_seg]
+
+        # Passive frames → speaker talking window
+        if seg_end_frame > seg_start_frame and src_passive:
+            _fill_frames(result, src_passive, seg_start_frame, seg_end_frame)
+
+        # Active frames → silence gap (listener's turn to speak)
+        if next_start_frame > seg_end_frame and src_active:
+            _fill_frames(result, src_active, seg_end_frame, next_start_frame)
+
+    # Forward-fill any None slots (e.g., gap before first segment)
+    fallback = None
+    for i in range(len(result)):
+        if result[i] is not None:
+            fallback = result[i]
+        elif fallback is not None:
+            result[i] = fallback.copy()
+
+    # Backward-fill leading Nones (before first segment)
+    fallback = None
+    for i in range(len(result) - 1, -1, -1):
+        if result[i] is not None:
+            fallback = result[i]
+        elif fallback is not None:
+            result[i] = fallback.copy()
+
+    # Final safety: replace any remaining None with zeros
+    empty = np.zeros_like(frames[0]) if frames else np.zeros((256, 256, 3), dtype=np.uint8)
+    result = [f if f is not None else empty for f in result]
+
+    return result
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Function to calculate BLEU for multiple chats
 def calculate_bleu_batch(references, candidates):
     smoothie = SmoothingFunction().method4
@@ -1073,7 +1171,7 @@ def main(args):
             segments = result.get("segments", [])
             segments = segments[:4]
             if len(segments) == 0:
-                segments = [{"end": 16/25.0, "text": ""}]
+                segments = [{"start": 0.0, "end": 16/25.0, "text": ""}]
                 
             all_face_images = []
             seg_samples_list = []  # collect [64, C, H, W] per segment
@@ -1176,11 +1274,25 @@ def main(args):
             all_score['all_sentiment_emb'][batch_size*step+batch_index] = scores['sentiment_emb']
             all_score['all_bleu_scores'] += scores['bleu_scores']
             all_score['all_bert_scores'] += scores['bert_scores']
-                
+            
+            # ── Stretch generated frames to match speaker's total frame count ──
+            # T_len is the speaker's total frames (e.g. 751).
+            # valid_segments carries each segment's Whisper start/end timestamps.
+            print(f"Stretching {len(all_face_images)} generated frames → {T_len} speaker frames")
+            all_face_images = stretch_frames_to_timeline(
+                all_face_images,
+                valid_segments,          # list of dicts with 'start'/'end' in seconds
+                target_total_frames=T_len,
+                video_fps=25,
+                frames_per_seg=64
+            )
+            print(f"After stretch: {len(all_face_images)} frames")
+            # ──────────────────────────────────────────────────────────────────
+            
             video_ = np.asarray(np.clip(all_face_images, 0, 255))[:, :, :, ::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
             print(video_save_path)
-            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            imageio.mimwrite(video_save_path, video_, fps=25, quality=9)
             
         # skip over loop variable legacy accumulation log since logic was completely refactored
             
