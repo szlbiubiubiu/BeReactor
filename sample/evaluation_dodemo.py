@@ -884,7 +884,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
 
     # audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
     # tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
-
+    pdb.set_trace()
     prompt = all_text#"Hey, how are you doing today?"
     # if tone_pos:
     description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
@@ -1658,7 +1658,7 @@ def main(args):
                 last_generated_samples = samples
             
             # pdb.set_trace()
-            if index_clip==0:
+            if out_samples is None:
                 out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
             else:
                 out_samples=torch.cat((out_samples,samples),dim=1)
