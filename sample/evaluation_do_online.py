@@ -791,22 +791,19 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
     
-    # total_frames = len(input_latent)
-    # num_silent_frames = int(0.25 * total_frames)
-    # num_talk_frames = total_frames - num_silent_frames
-    
-    # # Process only the talk portion
-    # whisper_chunks_talk = whisper_chunks[num_silent_frames:]
-    # if len(whisper_chunks_talk) < num_talk_frames:
-    #     pad_len = num_talk_frames - len(whisper_chunks_talk)
-    #     if len(whisper_chunks_talk) > 0:
-    #         whisper_chunks_talk = whisper_chunks_talk + [whisper_chunks_talk[-1]] * pad_len
-    #     else:
-    #         whisper_chunks_talk = whisper_chunks[:num_talk_frames] # fallback
-    # elif len(whisper_chunks_talk) > num_talk_frames:
-    #     whisper_chunks_talk = whisper_chunks_talk[:num_talk_frames]
-    
-    # whisper_chunks = whisper_chunks_talk
+    total_frames = len(input_latent)
+    num_silent_frames = 0  # all frames processed through talking head
+    num_talk_frames = total_frames
+
+    # Pad or trim whisper_chunks to match total_frames
+    if len(whisper_chunks) < total_frames:
+        pad_len = total_frames - len(whisper_chunks)
+        if len(whisper_chunks) > 0:
+            whisper_chunks = whisper_chunks + [whisper_chunks[-1]] * pad_len
+        else:
+            whisper_chunks = whisper_chunks * total_frames  # fallback: repeat
+    elif len(whisper_chunks) > total_frames:
+        whisper_chunks = whisper_chunks[:total_frames]
 
     # # #image processing
     # # # crop_frame = cv2.imread(img_path)
@@ -843,7 +840,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
-    input_latent_talk = input_latent#[num_silent_frames:]
+    input_latent_talk = input_latent  # all frames go through talking head
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent_talk+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent_talk.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
@@ -1017,16 +1014,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print("pad talking image to original video")
     
     final_output_frames = []
-    
-    # Save the 25% original silent frames without modification
-    for i in range(num_silent_frames):
-        silent_frame = input_latent[i]
-        silent_img = np.uint8(np.transpose(127.5*(silent_frame+1).cpu().numpy(),(1,2,0)))[:,:,::-1]
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",silent_img)
-        final_output_frames.append(silent_img[:,:,::-1])
 
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        save_idx = i + num_silent_frames
+        save_idx = i
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
         # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
