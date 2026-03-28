@@ -639,9 +639,13 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     result = whisper_model.transcribe(speaker_audio_path)
     print(result["text"])
     
-    # sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-    sentences=[result["text"]]#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-
+    # 按照之前的audio chunk（whisper segments）切分传入大模型的句子数
+    if "segments" in result and len(result["segments"]) > 0:
+        sentences = [segment["text"].strip() for segment in result["segments"] if segment["text"].strip()]
+        if not sentences:
+            sentences = [result["text"]]
+    else:
+        sentences = [result["text"]]
     # sentences=['Have you traveled to Vancouver? What impresses you most?']
     # pdb.set_trace()
     if len(result["text"].split('.'))==1:
