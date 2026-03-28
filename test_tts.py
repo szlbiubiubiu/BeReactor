@@ -1,55 +1,44 @@
+import soundfile as sf
 import torch
-from transformers import AutoTokenizer
+import torchaudio
+from transformers import AutoFeatureExtractor, AutoTokenizer, set_seed
+
 from parler_tts import ParlerTTSForConditionalGeneration
-import scipy.io.wavfile as wavfile
 
-# 1. 加载模型和 Tokenizer
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
-model_name = "parler-tts/parler-tts-mini-v1"
-
-model = ParlerTTSForConditionalGeneration.from_pretrained(model_name).to(device)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# 2. 定义声音的描述（保持不变）
-# 描述越详细，声音越固定
-voice_description = "A female speaker with a slightly high-pitched voice delivers her words quite expressively, in a very clear, close-sounding environment."
-input_ids = tokenizer(voice_description, return_tensors="pt").input_ids.to(device)
-
-# 3. 定义两句不同的话
-text_1 = "Hello! I am speaking with this specific voice."
-text_2 = "Now, I am saying something completely different, but my voice should sound the same."
-
-prompt_input_ids_1 = tokenizer(text_1, return_tensors="pt").input_ids.to(device)
-prompt_input_ids_2 = tokenizer(text_2, return_tensors="pt").input_ids.to(device)
-
-# 4. 固定随机种子并生成第一段音频
-seed = 42 # 选择一个你喜欢的种子
-
-torch.manual_seed(seed)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
-
-generation_1 = model.generate(
-    input_ids=input_ids, 
-    prompt_input_ids=prompt_input_ids_1
+# TODO: Adapt the following as per your requiremens
+init_audio_file = "/data/szl/dataset/react2024/test/Audio_files/NoXI/002_2016-03-17_Paris/Expert_video/5.wav"
+init_prompt = "Here, write the transcript of the init audio"
+description = (
+    "A man speaker speaks quickly with a low-pitched voice. "
+    "The recording is of very high quality, with the speaker's voice sounding clear and very close up."
 )
+prompt = "Is it really working ?should I write more description .   I am not sure how much description I should write to get good results ?"
 
-# 5. 再次固定相同的随机种子，生成第二段音频
-torch.manual_seed(seed)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
+# Load the Models
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model_id = "parler-tts/parler-tts-mini-v1"
+model = ParlerTTSForConditionalGeneration.from_pretrained(model_id).to(device)
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+feature_extractor = AutoFeatureExtractor.from_pretrained(model_id)
 
-generation_2 = model.generate(
-    input_ids=input_ids, 
-    prompt_input_ids=prompt_input_ids_2
-)
+SAMPLING_RATE = model.config.sampling_rate
 
-# 保存音频文件查看效果
-audio_arr_1 = generation_1.cpu().numpy().squeeze()
-audio_arr_2 = generation_2.cpu().numpy().squeeze()
-sample_rate = model.config.sampling_rate
+# Load the init audio
+init_audio, init_sr = torchaudio.load(init_audio_file)
+init_audio = torchaudio.functional.resample(init_audio, init_sr, SAMPLING_RATE)
+init_audio = init_audio.mean(0)  # Take the mean across the channel dim
+# Encode the init audio using the feature extractor
+input_values = feature_extractor(init_audio, sampling_rate=SAMPLING_RATE, return_tensors="pt").input_values.to(device)
 
-wavfile.write("output_sentence_1.wav", sample_rate, audio_arr_1)
-wavfile.write("output_sentence_2.wav", sample_rate, audio_arr_2)
 
-print("音频已生成！两者应该具有相同的音色。")
+input_ids = tokenizer(description, return_tensors="pt").input_ids.to(device)
+# NOTE: concatenate the init_propt and prompt when passing into the model
+prompt_input_ids = tokenizer(init_prompt + " " + prompt, return_tensors="pt").input_ids.to(device)
+set_seed(2)
+
+# Generate the audio
+generation = model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids, input_values=input_values)
+
+# Save the audio
+audio_arr = generation.cpu().numpy().squeeze()
+sf.write("parler_tts_out.wav", audio_arr, SAMPLING_RATE)
