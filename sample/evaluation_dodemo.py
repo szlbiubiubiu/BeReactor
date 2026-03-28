@@ -89,6 +89,53 @@ import librosa
 import gc
 
 
+def get_speaker_speaking_intervals(whisper_result, fps=25, total_frames=None):
+    """从whisper结果计算speaker说话时间段和停顿时间段
+    
+    Args:
+        whisper_result: whisper转录结果
+        fps: 视频帧率
+        total_frames: 视频总帧数（用于限制范围）
+    
+    Returns:
+        speaking_intervals: [(start_frame, end_frame), ...] speaker说话的时间段
+        pause_intervals: [(start_frame, end_frame), ...] listener可反应的停顿时间段
+    """
+    speaking_intervals = []
+    
+    if 'segments' in whisper_result:
+        for segment in whisper_result['segments']:
+            start_time = segment['start']
+            end_time = segment['end']
+            start_frame = int(start_time * fps)
+            end_frame = int(end_time * fps)
+            
+            if total_frames is not None:
+                end_frame = min(end_frame, total_frames)
+            
+            speaking_intervals.append((start_frame, end_frame))
+    
+    # 生成停顿时间段（speaker不说话的时间段）
+    pause_intervals = []
+    if speaking_intervals:
+        # 开头的停顿
+        if speaking_intervals[0][0] > 0:
+            pause_intervals.append((0, speaking_intervals[0][0]))
+        
+        # 中间的停顿
+        for i in range(len(speaking_intervals) - 1):
+            pause_start = speaking_intervals[i][1]
+            pause_end = speaking_intervals[i + 1][0]
+            if pause_end > pause_start:
+                pause_intervals.append((pause_start, pause_end))
+        
+        # 结尾的停顿
+        if total_frames is not None and speaking_intervals[-1][1] < total_frames:
+            pause_intervals.append((speaking_intervals[-1][1], total_frames))
+    
+    return speaking_intervals, pause_intervals
+
+
 def detect_speech_pauses(whisper_result, audio_file, fps=25, max_pauses=4):
     """检测speech中的停顿点（句子结束、显著停顿等）
     
@@ -205,48 +252,104 @@ def merge_generation_triggers(pause_frames, keyframe_indices, min_interval=16, f
     return sorted(generation_points, key=lambda x: x['frame'])
 
 
-def get_clip_generation_strategy(index_clip, pause_frames, clip_size=64):
-    """获取当前clip的生成策略信息
+def is_frame_in_interval(frame, intervals):
+    """检查帧号是否在指定的时间段内
     
     Args:
-        index_clip: 当前clip索引
-        pause_frames: 停顿帧号列表
-        clip_size: 每个clip的帧数
+        frame: 帧号
+        intervals: [(start, end), ...] 时间段列表
     
     Returns:
-        strategy_info: 包含策略类型和说明的字典
+        True if frame is in any interval
+    """
+    for start, end in intervals:
+        if start <= frame < end:
+            return True
+    return False
+
+
+def get_clip_generation_mode(index_clip, clip_size, speaking_intervals, pause_intervals):
+    """获取clip的生成模式
+    
+    Args:
+        index_clip: clip索引
+        clip_size: 每个clip的帧数
+        speaking_intervals: [(start, end), ...] speaker说话的时间段
+        pause_intervals: [(start, end), ...] listener可反应的停顿时间段
+    
+    Returns:
+        mode: 'generate' - 生成新反应, 'hold' - 保持前一帧, 'static' - 使用静态帧
+        reason: 原因说明
     """
     clip_start = index_clip * clip_size
     clip_end = (index_clip + 1) * clip_size
+    clip_mid = (clip_start + clip_end) // 2
     
-    # 检查这个clip是否包含停顿点
-    contains_pause = any(clip_start <= pf < clip_end for pf in pause_frames)
+    # 检查clip是否主要在停顿期间
+    in_pause = is_frame_in_interval(clip_mid, pause_intervals)
+    in_speaking = is_frame_in_interval(clip_mid, speaking_intervals)
     
-    if contains_pause:
-        pauses_in_clip = [pf for pf in pause_frames if clip_start <= pf < clip_end]
-        return {
-            'strategy': 'pause-driven',
-            'detail': f'Pause at frame(s): {pauses_in_clip}',
-            'priority': 'high'
-        }
+    if in_pause:
+        return 'generate', f'In pause interval at frame {clip_mid}'
+    elif in_speaking:
+        return 'hold', f'In speaking interval at frame {clip_mid}, hold last frame'
     else:
-        return {
-            'strategy': 'uniform', 
-            'detail': 'Regular interval',
-            'priority': 'low'
-        }
-
-
-
-        # Tokenize the input along with the conversation history
-        inputs = tokenizer(conversation_history, return_tensors="pt")
-        outputs = model.generate(**inputs, max_length=1000, do_sample=True)
+        # 检查是否接近任何区间边界
+        for start, end in speaking_intervals:
+            if abs(clip_mid - start) < clip_size or abs(clip_mid - end) < clip_size:
+                return 'generate', f'Near speaking interval boundary'
         
-        # Decode the response
-        response = tokenizer.decode(outputs[:, inputs['input_ids'].shape[-1]:][0], skip_special_tokens=True)
-        return response
+        return 'hold', f'Unassigned area, hold last frame at frame {clip_mid}'
 
-# def forward_listener():
+
+def interpolate_frames_with_transition(generated_frames, reference_frames, transition_ratio=0.75, clip_size=64):
+    """对生成帧应用过渡效果：前75%保持生成的反应，后25%逐渐过渡到参考帧
+    
+    Args:
+        generated_frames: 生成的帧 [B, T, C, H, W]
+        reference_frames: 参考帧 [B, T, C, H, W] (可选，用于过渡)
+        transition_ratio: 生成帧的比例（默认0.75为前75%生成，后25%过渡）
+        clip_size: 帧数, 默认64
+    
+    Returns:
+        interpolated_frames: 插值后的帧 [B, T, C, H, W]
+    """
+    B, T, C, H, W = generated_frames.shape
+    interpolated_frames = generated_frames.clone()
+    
+    # 计算过渡区间
+    transition_start = int(T * transition_ratio)
+    transition_end = T
+    transition_length = transition_end - transition_start
+    
+    if transition_length > 0 and reference_frames is not None:
+        # 在过渡区间内逐渐从生成帧过渡到参考帧
+        for frame_idx in range(transition_start, transition_end):
+            # 计算过渡权重：从1.0到0.0（生成帧权重逐渐降低）
+            transition_progress = (frame_idx - transition_start) / transition_length
+            generated_weight = 1.0 - transition_progress  # 生成帧权重从1.0降到0.0
+            ref_weight = transition_progress              # 参考帧权重从0.0升到1.0
+            
+            # 混合生成帧和参考帧
+            interpolated_frames[:, frame_idx, :, :, :] = (
+                generated_weight * generated_frames[:, frame_idx, :, :, :] +
+                ref_weight * reference_frames[:, frame_idx % reference_frames.shape[1], :, :, :]
+            )
+    elif transition_length > 0:
+        # 如果没有参考帧，使用最后一个生成帧作为过渡目标
+        last_frame = generated_frames[:, transition_start - 1:transition_start, :, :, :].clone()
+        
+        for frame_idx in range(transition_start, transition_end):
+            transition_progress = (frame_idx - transition_start) / transition_length
+            generated_weight = 1.0 - transition_progress
+            static_weight = transition_progress
+            
+            interpolated_frames[:, frame_idx, :, :, :] = (
+                generated_weight * generated_frames[:, frame_idx, :, :, :] +
+                static_weight * last_frame[:, 0, :, :, :]
+            )
+    
+    return interpolated_frames
 
 
 class DiffusionVideoAutoencoder(nn.Module):
@@ -1318,6 +1421,16 @@ def main(args):
         # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
         print(f"Processing speaker audio: {speaker_audio_path}")
         speaker_whisper_result = whisper_model.transcribe(speaker_audio_path)
+        total_frames = video_data['img'].shape[1]
+        
+        # 获取speaker说话和停顿的具体时间段
+        speaking_intervals, pause_intervals = get_speaker_speaking_intervals(
+            speaker_whisper_result, fps=25, total_frames=total_frames
+        )
+        print(f"[Speaking intervals] {len(speaking_intervals)} segments: {speaking_intervals[:3]}...")
+        print(f"[Pause intervals] {len(pause_intervals)} segments: {pause_intervals[:3]}...")
+        
+        # 获取停顿点（用于生成触发）
         pause_frames = detect_speech_pauses(speaker_whisper_result, speaker_audio_path, fps=25)
         print(f"[Pauses] Detected {len(pause_frames)} pause points: {pause_frames[:10]}...")
         
@@ -1386,97 +1499,148 @@ def main(args):
         # Initialize output samples concatenation list (will be processed per batch)
         all_face_images = []  # IMPORTANT: Clear this list for each batch
         out_samples = None
+        last_generated_samples = None  # Keep track of last generated frames for "hold" mode
         
         for index_clip, strategy in clip_indices:
-            # if len(listener_ref)<=32:
-            #     pdb.set_trace()
-            #     a=1
+            # Determine generation mode based on speaking/pause intervals
+            gen_mode, reason = get_clip_generation_mode(
+                index_clip, clip_size, speaking_intervals, pause_intervals
+            )
             
-            x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
-            sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
-            # pdb.set_trace()
-            # Log strategy for this clip
+            # Log generation mode
             clip_frame_start = index_clip * clip_size
-            print(f"[Clip {index_clip}] Strategy: {strategy}, Frame range: {clip_frame_start}-{clip_frame_start+clip_size}")
+            print(f"[Clip {index_clip}] Mode: {gen_mode}, Reason: {reason}")
             
-            if listener_ref.shape[1]<args.num_frames:
-                # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
-                print(f"Warning: listener_ref shape {listener_ref.shape[1]} < num_frames {args.num_frames}")
-                a=1
-            # pdb.set_trace()
-            emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
-            speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
-            original_x=x
+            # For "hold" mode during speaker speaking, use interpolation strategy
+            if gen_mode == 'hold':
+                # Get listener reference video
+                listener_ref_clip = video_data['listener_video_clip'].to(device, non_blocking=True)[:, index_clip*clip_size:(index_clip+1)*clip_size]
+                
+                if last_generated_samples is not None:
+                    # Use last generated samples as primary, with interpolation transition
+                    print(f"  -> Using interpolated transition (75% reaction + 25% blend to reference)")
+                    
+                    # Decode last generated samples to pixel space for interpolation
+                    b_last, f_last, c_last, h_last, w_last = last_generated_samples.shape if len(last_generated_samples.shape) == 5 else (last_generated_samples.shape[0], last_generated_samples.shape[1], last_generated_samples.shape[2], last_generated_samples.shape[3], last_generated_samples.shape[4])
+                    decoded_last_batch = []
+                    for batch_idx in range(b_last):
+                        sample_instance = last_generated_samples[batch_idx] if len(last_generated_samples.shape) == 5 else last_generated_samples[batch_idx:batch_idx+1]
+                        # Ensure correct shape for decode
+                        if len(sample_instance.shape) == 4:
+                            sample_instance = sample_instance.unsqueeze(0) if sample_instance.shape[0] != args.num_frames else sample_instance
+                        decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                        decoded_last_batch.append(decoded_instance)
+                    
+                    generated_frames_decoded = torch.stack(decoded_last_batch, dim=0)
+                    del decoded_last_batch
+                    
+                    # Decode reference frames for interpolation
+                    if listener_ref_clip.shape[1] >= args.num_frames:
+                        ref_frames = listener_ref_clip[:, :args.num_frames]
+                        # Apply interpolation: 75% generated + smoothly transition to reference
+                        samples_decoded = interpolate_frames_with_transition(
+                            generated_frames_decoded, ref_frames, 
+                            transition_ratio=0.75, clip_size=clip_size
+                        )
+                        print(f"    Interpolated with reference frames: 75% reaction, 25% blend")
+                    else:
+                        # No good reference, use decay to static
+                        samples_decoded = interpolate_frames_with_transition(
+                            generated_frames_decoded, None,
+                            transition_ratio=0.75, clip_size=clip_size
+                        )
+                        print(f"    Interpolated with decay: 75% reaction, 25% fade to static")
+                    
+                    # Encode back to latent space
+                    samples = reaction_vae.encode(samples_decoded.to(torch.float32)).latent_dist.sample() * 0.18215
+                    samples_pixels = samples_decoded  # Save for later use
+                    
+                elif listener_ref_clip.shape[1] == args.num_frames:
+                    # Use reference frames directly
+                    print(f"  -> Using reference frames for hold period (no prior generation)")
+                    samples_pixels = listener_ref_clip
+                    samples = reaction_vae.encode(listener_ref_clip.to(torch.float32)).latent_dist.sample() * 0.18215
+                    last_generated_samples = samples
+                    
+                else:
+                    # Use first reference frame repeated with decay interpolation
+                    print(f"  -> Using first reference frame (repeated + decay)")
+                    first_ref_frame = listener_ref_clip[:, 0:1]
+                    samples_pixels = first_ref_frame.repeat(1, args.num_frames, 1, 1, 1)
+                    
+                    # Apply decay effect
+                    samples_pixels = interpolate_frames_with_transition(
+                        samples_pixels, None,
+                        transition_ratio=0.75, clip_size=clip_size
+                    )
+                    
+                    samples = reaction_vae.encode(samples_pixels.to(torch.float32)).latent_dist.sample() * 0.18215
+                
+                # Decode the samples for final output
+                b, f, c, h, w = samples.shape if len(samples.shape) == 5 else (samples.shape[0], samples.shape[1], samples.shape[2], samples.shape[3], samples.shape[4])
+                decoded_batch = []
+                for batch_idx in range(b):
+                    sample_instance = samples[batch_idx] if len(samples.shape) == 5 else samples[batch_idx:batch_idx+1]
+                    if len(sample_instance.shape) == 4:
+                        sample_instance = sample_instance.unsqueeze(0) if sample_instance.shape[0] != args.num_frames else sample_instance
+                    decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                    decoded_batch.append(decoded_instance)
+                samples = torch.stack(decoded_batch, dim=0)
+                del decoded_batch
+                
+            else:
+                # Normal generation for pause periods
+                x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
+                listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
+                listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
+                sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
+                
+                if listener_ref.shape[1]<args.num_frames:
+                    # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
+                    print(f"Warning: listener_ref shape {listener_ref.shape[1]} < num_frames {args.num_frames}")
+                
+                emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
+                speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
+                original_x=x
 
-            #classifier free guidance, change half to zero
-            # pdb.set_trace()
-            # listener_ref=torch.flip(listener_ref, dims=(0,))
-            # x=torch.flip(x, dims=(0,))
-            if using_cfg:
-                x_uncon=torch.zeros_like(x)
-                listener_ref_uncon=torch.zeros_like(listener_ref)
-                x=torch.cat([x,x_uncon],dim=0)
-                listener_ref=torch.cat([listener_ref,listener_ref_uncon],dim=0)
-            # # listener_ref=listener_ref
-            # # Create sampling noise:
-            # if args.use_fp16:
-            #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-            # else:
-            #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
-
-            # # Setup classifier-free guidance:
-            # # z = torch.cat([z, z], 0)
-            # if using_cfg:
-            #     z = torch.cat([z, z], 0)
-            #     y = torch.randint(0, args.num_classes, (1,), device=device)
-            #     y_null = torch.tensor([101] * 1, device=device)
-            #     y = torch.cat([y, y_null], dim=0)
-            #     model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            #     sample_fn = model.forward_with_cfg
-            # else:
-            #     sample_fn = model.forward
-            #     model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-            # # pdb.set_trace()
-            # Sample images:
-            # listener_ref=torch.zeros_like(listener_ref)
-            # # x=torch.zeros_like(x)
-            # listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
-            # sp_audio_clip=torch.zeros_like(sp_audio_clip)
-            if args.sample_method == 'ddim':
-                samples = diffusion.ddim_sample_loop(
-                    sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
-                    sp_audio_clip=sp_audio_clip#torch.flip(listener_ref, dims=(0,))
-                )
-            elif args.sample_method == 'ddpm':
-                samples = diffusion.p_sample_loop(
-                    sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
-                    sp_audio_clip=sp_audio_clip
-                )
-            # pdb.set_trace()
-            # print(samples.shape)
-            if args.use_fp16:
-                samples = samples.to(dtype=torch.float16)
-            if using_cfg:
-                samples=samples[:len(x)//2]
-            b, f, c, h, w = samples.shape
-            # pdb.set_trace()
-            
-            # 按 batch 中每个 instance 单独处理，用 vae.decode 解码，然后组合为 batch 输出
-            decoded_batch = []
-            for batch_idx in range(b):
-                # 取出当前 batch instance 的所有 frames: (f, c, h, w)
-                sample_instance = samples[batch_idx]
-                # vae.decode 处理 (f, c, h, w) 批次，返回 (f, 3, H, W)
-                decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
-                decoded_batch.append(decoded_instance)
-            
-            # 组合为 batch: list of (f, 3, H, W) -> (b, f, 3, H, W)
-            samples = torch.stack(decoded_batch, dim=0)
-            del decoded_batch  # Free memory immediately
+                #classifier free guidance, change half to zero
+                if using_cfg:
+                    x_uncon=torch.zeros_like(x)
+                    listener_ref_uncon=torch.zeros_like(listener_ref)
+                    x=torch.cat([x,x_uncon],dim=0)
+                    listener_ref=torch.cat([listener_ref,listener_ref_uncon],dim=0)
+                
+                # Sample images using diffusion
+                if args.sample_method == 'ddim':
+                    samples = diffusion.ddim_sample_loop(
+                        sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                        original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+                        sp_audio_clip=sp_audio_clip
+                    )
+                elif args.sample_method == 'ddpm':
+                    samples = diffusion.p_sample_loop(
+                        sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                        original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
+                        sp_audio_clip=sp_audio_clip
+                    )
+                
+                if args.use_fp16:
+                    samples = samples.to(dtype=torch.float16)
+                if using_cfg:
+                    samples=samples[:len(x)//2]
+                    
+                b, f, c, h, w = samples.shape
+                
+                # VAE decode
+                decoded_batch = []
+                for batch_idx in range(b):
+                    sample_instance = samples[batch_idx]
+                    decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                    decoded_batch.append(decoded_instance)
+                
+                samples = torch.stack(decoded_batch, dim=0)
+                del decoded_batch
+                last_generated_samples = samples
             
             # pdb.set_trace()
             if index_clip==0:
@@ -1530,7 +1694,12 @@ def main(args):
             del video_, batched_faces, scores
             
         # Clear batch outputs to free memory
-        del out_samples, x, listener_ref, listener_video_clip_last, sp_audio_clip, emo_label, speaker_emo
+        if out_samples is not None:
+            del out_samples
+        # Clean up variables that may or may not have been created
+        for var_name in ['x', 'listener_ref', 'listener_video_clip_last', 'sp_audio_clip', 'emo_label', 'speaker_emo']:
+            if var_name in locals():
+                del locals()[var_name]
         del video_data  # Free video_data from CPU memory
         
         processed_batches += 1
