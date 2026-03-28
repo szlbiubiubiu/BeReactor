@@ -897,11 +897,14 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
     
+    final_output_frames = []
+    
     # Save the 25% original silent frames without modification
     for i in range(num_silent_frames):
         silent_frame = input_latent[i]
         silent_img = np.uint8(np.transpose(127.5*(silent_frame+1).cpu().numpy(),(1,2,0)))[:,:,::-1]
         cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",silent_img)
+        final_output_frames.append(silent_img[:,:,::-1])
 
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         save_idx = i + num_silent_frames
@@ -942,6 +945,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
         #clip to -1:1,, or 0-255
         cv2.imwrite(f"{result_img_save_path}/{str(save_idx).zfill(8)}.png",combine_frame)
+        final_output_frames.append(combine_frame[:,:,::-1])
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
@@ -961,19 +965,14 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     os.system(cmd_combine_audio)
     
     # os.remove("./temp.mp4")
-    shutil.rmtree(result_img_save_path)
+    # shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
 
     print('the corresponding speaker path is: ', speaker_audio_path)
-    # pdb.set_trace()
-    # if return_image4emotion:
-    #return emotion image
-    # pdb.set_trace()
-    interval_listener=len(res_frame_list)//num_frame_sp
-    out_images=res_frame_list[::interval_listener]
-    # return out_images[:num_frame_sp],evaluation_score 
     
-    return out_images[:num_frame_sp],evaluation_score 
+    out_images = final_output_frames
+    
+    return out_images[:num_frame_sp],evaluation_score
 
 
 def main(args):
