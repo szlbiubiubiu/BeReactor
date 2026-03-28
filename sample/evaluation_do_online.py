@@ -642,44 +642,71 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
 
     # pdb.set_trace()
-    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(1)+'.wav'
-    # if os.path.exists(OUTPUT_audio_FILE):
-    #     os.remove(OUTPUT_audio_FILE)
+    OUTPUT_audio_FILE = result_img_save_path + '/output_audio' + str(1) + '.wav'
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
-    '''edge tts'''
-    # communicate = edge_tts.Communicate(all_text, VOICE)
-    # # pdb.set_trace()
-    # communicate.save_sync(OUTPUT_audio_FILE)
-    # pdb.set_trace()
 
-    # audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    sr = audio_model.config.sampling_rate  # (e.g. 44100)
+    video_fps_audio = 25  # reference fps used for timeline conversion
 
-    # audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
-    # tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+    # ── Per-segment audio construction ────────────────────────────────────────
+    # For each segment k on the timeline:
+    #   • passive window [seg.start … seg.end]  → SILENCE  (speaker is talking)
+    #   • active  window [seg.end   … next_seg.start] → TTS of listener reply k
+    #
+    # This aligns audio exactly with the frame stretching done in main().
+    # ──────────────────────────────────────────────────────────────────────────
 
-    prompt = all_text#"Hey, how are you doing today?"
-    # if tone_pos:
-    description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive level of "+str(tone_pos)
-    # else:
-    #     description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-    #     The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
+    description_base = (
+        "A male speaker delivers a slightly expressive and animated speech "
+        "with a moderate speed and pitch. The recording is of very high quality, "
+        "with the speaker's voice sounding clear and very close up. "
+        "The tone is positive level of " + str(tone_pos)
+    )
 
-    input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
-    prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
+    segment_audio_parts = []
+    _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
+    for seg_i, seg in enumerate(_seg_list):
+        seg_start_sec  = seg.get('start', 0.0)
+        seg_end_sec    = seg.get('end',   0.64)          # ~16 frames at 25fps
 
-    generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
-    audio_arr = generation.cpu().numpy().squeeze()
+        if seg_i + 1 < n_segments:
+            next_start_sec = _seg_list[seg_i + 1].get('start', seg_end_sec)
+        else:
+            # Last segment: active window runs to time corresponding to total video
+            next_start_sec = num_frame_sp / video_fps_audio
 
-    # Pad audio with exact 25% silence frames so that it matches video
-    total_frames = len(input_latent)
-    num_silent_frames = int(0.25 * total_frames)
-    pad_samples = int(audio_model.config.sampling_rate * (num_silent_frames / fps))
-    asdf_aduio=np.zeros(pad_samples, dtype=np.float32)
-    new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
-    sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
-    print('audio_generated, path is: ',OUTPUT_audio_FILE)
+        # 1. Silence for the passive (speaker-talking) window
+        passive_duration_sec = max(0.0, seg_end_sec - seg_start_sec)
+        passive_silence = np.zeros(int(sr * passive_duration_sec), dtype=np.float32)
+
+        # 2. TTS audio for the active (listener-talking) window
+        active_duration_sec = max(0.0, next_start_sec - seg_end_sec)
+        reply_text = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
+        if reply_text.strip() and active_duration_sec > 0.1:
+            input_ids_seg = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
+            prompt_ids_seg = tokenizer(reply_text, return_tensors="pt").input_ids.to(audio_device)
+            gen_seg = audio_model.generate(input_ids=input_ids_seg, prompt_input_ids=prompt_ids_seg)
+            tts_arr = gen_seg.cpu().numpy().squeeze().astype(np.float32)
+
+            # Crop or pad TTS to exactly fit the active window
+            target_samples = int(sr * active_duration_sec)
+            if len(tts_arr) >= target_samples:
+                tts_arr = tts_arr[:target_samples]
+            else:
+                tts_arr = np.concatenate([tts_arr,
+                                          np.zeros(target_samples - len(tts_arr), dtype=np.float32)])
+        else:
+            tts_arr = np.zeros(int(sr * active_duration_sec), dtype=np.float32)
+
+        segment_audio_parts.append(passive_silence)
+        segment_audio_parts.append(tts_arr)
+        reply_preview = repr(reply_text[:60])
+        print(f'[Audio seg {seg_i}] silence={passive_duration_sec:.2f}s  TTS={active_duration_sec:.2f}s  reply={reply_preview}')
+
+    new_audio = np.concatenate(segment_audio_parts, axis=0)
+    sf.write(OUTPUT_audio_FILE, new_audio, sr)
+    print('audio_generated, path is: ', OUTPUT_audio_FILE)
     # # message in self.stream()
     wavs=[]
     # with open(OUTPUT_audio_FILE, "wb") as file:
