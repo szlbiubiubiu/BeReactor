@@ -678,62 +678,75 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         "The tone is positive level of " + str(tone_pos)
     )
 
-    segment_audio_parts = []
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
-    for seg_i, seg in enumerate(_seg_list):
-        seg_start_sec  = seg.get('start', 0.0)
-        seg_end_sec    = seg.get('end',   0.64)          # ~16 frames at 25fps
 
-        if seg_i + 1 < n_segments:
+    # ── Pass 1: pre-compute per-segment timing ───────────────────────────────
+    passive_silences = []
+    active_durations = []
+    for seg_i, seg in enumerate(_seg_list):
+        seg_start_sec = seg.get('start', 0.0)
+        seg_end_sec   = seg.get('end',   0.64)
+        if seg_i + 1 < len(_seg_list):
             next_start_sec = _seg_list[seg_i + 1].get('start', seg_end_sec)
         else:
-            # Last segment: active window runs to time corresponding to total video
             next_start_sec = num_frame_sp / video_fps_audio
 
-        # 1. Silence for the passive (speaker-talking) window
-        passive_duration_sec = max(0.0, seg_end_sec - seg_start_sec)
-        passive_silence = np.zeros(int(sr * passive_duration_sec), dtype=np.float32)
+        passive_dur = max(0.0, seg_end_sec - seg_start_sec)
+        active_dur  = max(0.0, next_start_sec - seg_end_sec)
 
-        # 2. TTS audio for the active (listener-talking) window
-        active_duration_sec = max(0.0, next_start_sec - seg_end_sec)
-        reply_text = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
+        # No gap between segments → split passive window 50/50
+        if active_dur < 0.05:
+            passive_dur = passive_dur / 2.0
+            active_dur  = passive_dur
+            print(f'[Audio seg {seg_i}] No gap → splitting window: silence={passive_dur:.2f}s  TTS={active_dur:.2f}s')
 
-        # If there is no gap between segments (segments are back-to-back),
-        # split this segment's own speaking window 50% silence + 50% TTS.
-        if active_duration_sec < 0.05:
-            half = passive_duration_sec / 2.0
-            passive_silence = np.zeros(int(sr * half), dtype=np.float32)
-            active_duration_sec = half
-            print(f'[Audio seg {seg_i}] No gap → splitting window: silence={half:.2f}s  TTS={half:.2f}s')
+        passive_silences.append(np.zeros(int(sr * passive_dur), dtype=np.float32))
+        active_durations.append(active_dur)
 
-        if reply_text.strip() and active_duration_sec > 0.05:
-            input_ids_seg = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
-            prompt_ids_seg = tokenizer(reply_text, return_tensors="pt").input_ids.to(audio_device)
-            #每次生成同样的声音
-            seed = 42 # 选择一个你喜欢的种子
+    all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
 
-            torch.manual_seed(seed)
-            if torch.cuda.is_available():
-                torch.cuda.manual_seed_all(seed)
+    # ── Pass 2: one single TTS call for all listener replies ─────────────────
+    combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
+    if combined_reply_text.strip():
+        input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
+        prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
+        gen_all  = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
+        tts_full = gen_all.cpu().numpy().squeeze().astype(np.float32)
+        print(f'[Audio] Single TTS pass: {len(tts_full)} samples for {len(_seg_list)} segments')
+    else:
+        tts_full = np.array([], dtype=np.float32)
 
+    # ── Pass 3: distribute TTS audio to each active window ───────────────────
+    # Proportional split by character count (proxy for spoken duration).
+    char_counts = [len(t) for t in all_reply_texts]
+    total_chars = sum(char_counts)
 
-            gen_seg = audio_model.generate(input_ids=input_ids_seg, prompt_input_ids=prompt_ids_seg)
-            tts_arr = gen_seg.cpu().numpy().squeeze().astype(np.float32)
+    segment_audio_parts = []
+    tts_offset = 0
+    for seg_i in range(len(_seg_list)):
+        reply_text    = all_reply_texts[seg_i]
+        active_dur    = active_durations[seg_i]
+        target_samples = int(sr * active_dur)
 
-            # Crop or pad TTS to exactly fit the active window
-            target_samples = int(sr * active_duration_sec)
-            if len(tts_arr) >= target_samples:
-                tts_arr = tts_arr[:target_samples]
+        if reply_text.strip() and total_chars > 0 and len(tts_full) > 0:
+            frac      = char_counts[seg_i] / total_chars
+            slice_len = max(1, round(len(tts_full) * frac))
+            tts_slice = tts_full[tts_offset: tts_offset + slice_len]
+            tts_offset += slice_len
+
+            # Crop or pad slice to fit the active window exactly
+            if len(tts_slice) >= target_samples:
+                tts_arr = tts_slice[:target_samples]
             else:
-                tts_arr = np.concatenate([tts_arr,
-                                          np.zeros(target_samples - len(tts_arr), dtype=np.float32)])
+                tts_arr = np.concatenate([tts_slice,
+                                          np.zeros(target_samples - len(tts_slice), dtype=np.float32)])
         else:
-            tts_arr = np.zeros(int(sr * active_duration_sec), dtype=np.float32)
+            tts_arr = np.zeros(target_samples, dtype=np.float32)
 
-        segment_audio_parts.append(passive_silence)
+        segment_audio_parts.append(passive_silences[seg_i])
         segment_audio_parts.append(tts_arr)
-        reply_preview = repr(reply_text[:60])
-        print(f'[Audio seg {seg_i}] silence={passive_duration_sec:.2f}s  TTS={active_duration_sec:.2f}s  reply={reply_preview}')
+        passive_dur_log = len(passive_silences[seg_i]) / sr
+        print(f'[Audio seg {seg_i}] silence={passive_dur_log:.2f}s  TTS={active_dur:.2f}s  reply={repr(reply_text[:60])}')
 
     new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
