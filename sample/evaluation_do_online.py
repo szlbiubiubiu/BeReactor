@@ -361,9 +361,9 @@ def evaluate_LLM(dialogue: str):
     
     return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 
-def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_file,whisper_model,audio_processor,
+def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,segment_text=None):
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
@@ -382,16 +382,17 @@ def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_f
         #     valence=torch.cat((valence,valence_sing),dim=0)
         #     arousal=torch.cat((arousal,arousal_sing),dim=0)
 
-    # Use segmented text passed as argument
-    print("Speaker Text for this turn:", speaker_text)
+    # pdb.set_trace()
+    result = whisper_model.transcribe(speaker_audio_path)
+    print(result["text"])
     
-    sentences=[speaker_text]#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
+    sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
     # sentences=['Have you traveled to Vancouver? What impresses you most?']
     # pdb.set_trace()
-    if len(speaker_text.split('.'))==1:
+    if len(result["text"].split('.'))==1:
         # pdb.set_trace()
         a=1
-    #sentences=speaker_text.split('.')
+    #sentences=result["text"].split('.')
     listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
     # print(result["text"])
         
@@ -636,7 +637,11 @@ def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_f
     generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
     audio_arr = generation.cpu().numpy().squeeze()
 
-    asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
+    # Pad audio with exact 25% silence frames so that it matches video
+    total_frames = len(input_latent)
+    num_silent_frames = int(0.25 * total_frames)
+    pad_samples = int(audio_model.config.sampling_rate * (num_silent_frames / fps))
+    asdf_aduio=np.zeros(pad_samples, dtype=np.float32)
     new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
     print('audio_generated, path is: ',OUTPUT_audio_FILE)
@@ -666,6 +671,23 @@ def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_f
     # whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
+    
+    total_frames = len(input_latent)
+    num_silent_frames = int(0.25 * total_frames)
+    num_talk_frames = total_frames - num_silent_frames
+    
+    # Process only the talk portion
+    whisper_chunks_talk = whisper_chunks[num_silent_frames:]
+    if len(whisper_chunks_talk) < num_talk_frames:
+        pad_len = num_talk_frames - len(whisper_chunks_talk)
+        if len(whisper_chunks_talk) > 0:
+            whisper_chunks_talk = whisper_chunks_talk + [whisper_chunks_talk[-1]] * pad_len
+        else:
+            whisper_chunks_talk = whisper_chunks[:num_talk_frames] # fallback
+    elif len(whisper_chunks_talk) > num_talk_frames:
+        whisper_chunks_talk = whisper_chunks_talk[:num_talk_frames]
+    
+    whisper_chunks = whisper_chunks_talk
 
     # # #image processing
     # # # crop_frame = cv2.imread(img_path)
@@ -702,7 +724,8 @@ def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_f
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
-    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
+    input_latent_talk = input_latent[num_silent_frames:]
+    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent_talk+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent_talk.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
     # reverse_input_img_list=input_img_list_single[::-1]#.reverse()
@@ -873,10 +896,15 @@ def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_f
             out_images=res_frame_list[::interval_listener]
         return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
-    print('len(res_frame_list)=',len(res_frame_list))
-    # pdb.set_trace()
+    
+    # Save the 25% original silent frames without modification
+    for i in range(num_silent_frames):
+        silent_frame = input_latent[i]
+        silent_img = np.uint8(np.transpose(127.5*(silent_frame+1).cpu().numpy(),(1,2,0)))[:,:,::-1]
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",silent_img)
+
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        
+        save_idx = i + num_silent_frames
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
         # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
@@ -913,7 +941,7 @@ def openai_deepseek_talkinghead_genall(speaker_text, audio_file,listener_audio_f
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
         combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
         #clip to -1:1,, or 0-255
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        cv2.imwrite(f"{result_img_save_path}/{str(save_idx).zfill(8)}.png",combine_frame)
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
@@ -1094,118 +1122,90 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     # double_count=0
     torch.manual_seed(0)
+    T_len = 0
     for step, video_data in enumerate(loader):
+        if step == 0 and video_data is not None:
+            T_len = video_data['img'].shape[1]
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        # if step<280:
-        #     continue
-        # Skip steps until we reach the resumed step
-        # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
-        #     continue
-        # pdb.set_trace()
         
-        out_samples={"speaking": [], "talking": [], "text": []}
-        # pdb.set_trace()
-        if args.use_fp16:#args.num_frames
-            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-        else:
-            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)#args.num_frames
-        # if args.use_fp16:
-        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-        # else:
-        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
-
-        # Setup classifier-free guidance:
-        # z = torch.cat([z, z], 0)
-        if using_cfg:
-            ###original classifier free guidance
-            # z = torch.cat([z, z], 0)
-            # y = torch.randint(0, args.num_classes, (1,), device=device)
-            # y_null = torch.tensor([101] * 1, device=device)
-            # y = torch.cat([y, y_null], dim=0)
-            # model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            # sample_fn = model.forward_with_cfg
-            #-----------------end original guidance
+        for batch_index in range(batch_size):
+            speaker_audio_path = video_data['speaker_audio_path'][batch_index]
+            listener_audio_path = video_data['listener_audio_path'][batch_index]
             
-            #-----------------begin reaction guidance
-            z = torch.cat([z, z], 0)
-            # y = torch.randint(0, args.num_classes, (1,), device=device)
-            # y_null = torch.tensor([101] * 1, device=device)
-            # y = torch.cat([y, y_null], dim=0)
-            model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            sample_fn = model.forward_with_cfg_reaction
-        else:
-            sample_fn = model.forward
-            model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-
-        # pdb.set_trace()
-        # Instead of generic indices, we will divide the whole video by speaker speaking breaks
-        # We find up to 3-4 segments representing speaker turns.
-        for batch_index_val in range(batch_size):
-            speaker_audio_path = video_data['speaker_audio_path'][batch_index_val]
             result = whisper_model.transcribe(speaker_audio_path)
-            segments = result.get('segments', [{'text': result['text'], 'start': 0.0, 'end': 5.0}])
-            
-            num_turns = min(4, max(3, len(segments)))
-            segs_per_turn = max(1, len(segments) // num_turns)
-            turns = []
-            
-            for i in range(num_turns):
-                start_idx = i * segs_per_turn
-                end_idx = (i + 1) * segs_per_turn if i < num_turns - 1 else len(segments)
-                if start_idx >= len(segments): break
-                turn_segs = segments[start_idx:end_idx]
-                turn_text = " ".join([s['text'] for s in turn_segs])
-                turn_end = turn_segs[-1]['end']
+            segments = result.get("segments", [])
+            segments = segments[:4]
+            if len(segments) == 0:
+                segments = [{"end": 16/25.0, "text": ""}]
                 
-                turns.append({
-                    'text': turn_text,
-                    'end_frame': int(turn_end * 25) # approximate standard video frame rate
-                })
-            
-            # Process those 3-4 turns to generate reactions and split them.
-            for turn_idx, turn in enumerate(turns):
-                end_frame = turn['end_frame']
-                # Determine standard block ending at the silence gap (end_frame)
-                cf_start = max(0, end_frame - clip_size)
-                cf_end = cf_start + clip_size
-                if cf_end > video_data['img'].shape[1]:
-                    cf_end = video_data['img'].shape[1]
-                    cf_start = max(0, cf_end - clip_size)
+            all_face_images=[]
                 
-                x = video_data['img'].to(device, non_blocking=True)[[batch_index_val], cf_start:cf_end]
-                listener_ref = video_data['listener_video_clip'].to(device, non_blocking=True)[[batch_index_val], cf_start:cf_end]
-                listener_video_clip_last = video_data['listener_video_clip_last'].to(device, non_blocking=True)[[batch_index_val], cf_start:cf_end]
-                sp_audio_clip = video_data['speaker_audio_clip'].to(device, non_blocking=True)[[batch_index_val], cf_start:cf_end]
-                emo_label = video_data['listener_emotion'].to(device, non_blocking=True)[[batch_index_val], cf_start:cf_end]
+            for seg_idx, segment in enumerate(segments):
+                end_time = segment["end"]
+                end_frame = int(end_time * 25)
+                start_frame = max(0, end_frame - 16)
+                if start_frame >= T_len:
+                    start_frame = max(0, T_len - clip_size)
+                    
+                out_samples=None
+                if args.use_fp16:
+                    z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device)
+                else:
+                    z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, device=device)
+                    
+                if using_cfg:
+                    z = torch.cat([z, z], 0)
+                    model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+                    sample_fn = model.forward_with_cfg_reaction
+                else:
+                    sample_fn = model.forward
+                    model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+
+                x = video_data['img'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                listener_ref = video_data['listener_video_clip'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                listener_video_clip_last = video_data['listener_video_clip_last'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                sp_audio_clip = video_data['speaker_audio_clip'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                emo_label = video_data['listener_emotion'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
                 
-                if listener_ref.shape[1] < clip_size:
-                    # Pad if needed, though cf calculations prevent this usually
-                    pass
+                act_len = x.shape[1]
+                if act_len < clip_size:
+                    pad_len = clip_size - act_len
+                    if act_len > 0:
+                        x = torch.cat([x, x[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                        listener_ref = torch.cat([listener_ref, listener_ref[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                        listener_video_clip_last = torch.cat([listener_video_clip_last, listener_video_clip_last[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                        sp_audio_clip = torch.cat([sp_audio_clip, sp_audio_clip[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                        emo_label = torch.cat([emo_label, emo_label[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                    else:
+                        print(f"Warning: Segment {seg_idx} has 0 actual length! Skipping this segment.")
+                        continue
+
+                original_x = x
 
                 if using_cfg:
                     x_uncon = torch.zeros_like(x)
                     listener_ref_uncon = torch.zeros_like(listener_ref)
                     x = torch.cat([x, x_uncon], dim=0)
                     listener_ref = torch.cat([listener_ref, listener_ref_uncon], dim=0)
-                
+
                 if args.sample_method == 'ddim':
                     samples = diffusion.ddim_sample_loop(
                         sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                        original_x=x, listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,
+                        original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
                         sp_audio_clip=sp_audio_clip
                     )
                 elif args.sample_method == 'ddpm':
                     samples = diffusion.p_sample_loop(
                         sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                        original_x=x, listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,
+                        original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
                         sp_audio_clip=sp_audio_clip
                     )
-                
+
                 if args.use_fp16:
                     samples = samples.to(dtype=torch.float16)
                 if using_cfg:
                     samples = samples[:len(x)//2]
-                    
+                
                 b, f, c, h, w = samples.shape
                 
                 decoded_batch = []
@@ -1213,48 +1213,33 @@ def main(args):
                     sample_instance = samples[b_idx]
                     decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
                     decoded_batch.append(decoded_instance)
+                
                 samples = torch.stack(decoded_batch, dim=0)
+                out_samples = samples[0] # extracting single instance sequence [64, C, H, W]
                 
-                if turn_idx == 0:
-                    out_samples = {"speaking": [samples[:, :16]], "talking": [samples[:, 16:]], "text": [turn['text']]}
-                else:
-                    out_samples["speaking"].append(samples[:, :16])
-                    out_samples["talking"].append(samples[:, 16:])
-                    out_samples["text"].append(turn['text'])
-        all_face_images=[]
-        # Iterating over the turns to save separate listening/talking versions
-        for batch_index_val in range(batch_size):
-            speaker_p = video_data['speaker_audio_path'][batch_index_val]
-            listener_p = video_data['listener_audio_path'][batch_index_val]
+                # Run the pipeline for this segment via modified talkinghead function
+                batched_faces,scores = openai_deepseek_talkinghead_genall(
+                    audio_file, listener_audio_file, whisper_model, audio_processor,
+                    speaker_audio_path, listener_audio_path,
+                    emo_label, out_samples, pipe, vae, unet, pe,
+                    batch_index=(len(segments)*(batch_size*step+batch_index)+seg_idx),
+                    num_frame_sp=out_samples.shape[0],
+                    segment_text=segment["text"]
+                )
+                all_face_images += batched_faces
+                
+                # Accumulate scores per segment
+                all_score['all_realism_score'] += scores['realism_score']
+                all_score['all_sentiment_emb'][batch_size*step+batch_index] = scores['sentiment_emb']
+                all_score['all_bleu_scores'] += scores['bleu_scores']
+                all_score['all_bert_scores'] += scores['bert_scores']
+                
+            video_ = np.asarray(np.clip(all_face_images, 0, 255))[:, :, :, ::-1]
+            video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
+            print(video_save_path)
+            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
             
-            for turn_idx in range(len(out_samples['speaking'])):
-                speaking_latent = out_samples['speaking'][turn_idx][0] # shape [16, 3, 256, 256]
-                talking_latent = out_samples['talking'][turn_idx][0]   # shape [48, 3, 256, 256]
-                turn_txt = out_samples['text'][turn_idx]
-                
-                # Semantic Generation phase (uses the 75% talking frames)
-                batched_faces,scores=openai_deepseek_talkinghead_genall(turn_txt, audio_file,listener_audio_file,
-                whisper_model,audio_processor,speaker_p,listener_p,
-                        emo_label,talking_latent, pipe,vae, unet, pe,batch_index=turn_idx,num_frame_sp=talking_latent.shape[0])     
-                
-                # Add to metric sums
-                all_score['all_realism_score']+=scores['realism_score']
-                all_score['all_sentiment_emb'][batch_size*step+batch_index_val]=scores['sentiment_emb']
-                all_score['all_bleu_scores']+=scores['bleu_scores']
-                all_score['all_bert_scores']+=scores['bert_scores']
-                
-                # Process and save the Listening (25%) face reaction frames
-                video_listening = np.asarray(np.clip(speaking_latent.cpu().numpy(), -1, 1))
-                video_listening_uint8 = np.uint8((video_listening * 0.5 + 0.5) * 255).transpose(0, 2, 3, 1)[:,:,:,::-1]
-                video_save_path_listening = os.path.join(args.save_video_path, 'generated_LISTENING_' + str(len(out_samples['speaking'])*step+turn_idx)+'.mp4')
-                print(video_save_path_listening)
-                imageio.mimwrite(video_save_path_listening, video_listening_uint8, fps=10, quality=9)
-                
-                # Process and save the Talking Face Reaction (Semantic) frames
-                video_ = np.asarray(np.clip(batched_faces,0,255))[:,:,:,::-1]
-                video_save_path_talking = os.path.join(args.save_video_path, 'generated_TALKING_' + str(len(out_samples['talking'])*step+turn_idx)+'.mp4')
-                print(video_save_path_talking)
-                imageio.mimwrite(video_save_path_talking, video_, fps=10, quality=9)
+        # skip over loop variable legacy accumulation log since logic was completely refactored
             
         # pdb.set_trace()
         # a=1
@@ -1439,7 +1424,7 @@ if __name__ == "__main__":
         parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
-        # parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
+        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
 
     #2025 v5 /data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt 
     #2024 v5 /data/scratch/acw569/checkpoint/latte_check_new/054-Latte-S-4-F32S3-reaction-Amp/checkpoints/0170000.pt
