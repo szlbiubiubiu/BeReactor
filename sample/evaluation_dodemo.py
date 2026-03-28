@@ -907,19 +907,34 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     speaker_audio, sr_speaker = librosa.load(speaker_audio_path, sr=16000)
     speaker_duration = len(speaker_audio) / sr_speaker
     
-    # 生成的音频长度（单位为秒）
-    generated_duration = len(audio_arr) / audio_model.config.sampling_rate
-    
-    # 如果生成的音频太短，需要重复；如果太长，需要裁剪
     target_samples = int(speaker_duration * audio_model.config.sampling_rate)
+    new_audio_arr = np.zeros(target_samples, dtype=np.float32)
+
+    # 1. 确定speaker说话的时间段 (using whisper segments)
+    speaker_active = np.zeros(target_samples, dtype=bool)
+    if 'segments' in result:
+        for segment in result['segments']:
+            start_idx = int(segment['start'] * audio_model.config.sampling_rate)
+            end_idx = int(segment['end'] * audio_model.config.sampling_rate)
+            # 限制在合法的时间范围内
+            start_idx = max(0, min(start_idx, target_samples - 1))
+            end_idx = max(0, min(end_idx, target_samples))
+            if start_idx < end_idx:
+                speaker_active[start_idx:end_idx] = True
+
+    silent_indices = np.where(~speaker_active)[0]
+    silent_len = len(silent_indices)
     
-    if len(audio_arr) < target_samples:
-        # 重复补充
-        repeats = (target_samples // len(audio_arr)) + 1
-        audio_arr = np.tile(audio_arr, repeats)[:target_samples]
-    elif len(audio_arr) > target_samples:
-        # 裁剪
-        audio_arr = audio_arr[:target_samples]
+    # 2. 将生成的回复音频填充到speaker不说话（silent）的时间段内
+    if silent_len > 0:
+        if len(audio_arr) < silent_len:
+            repeats = (silent_len // len(audio_arr)) + 1
+            audio_arr_tiled = np.tile(audio_arr, repeats)[:silent_len]
+        else:
+            audio_arr_tiled = audio_arr[:silent_len]
+        new_audio_arr[silent_indices] = audio_arr_tiled
+        
+    audio_arr = new_audio_arr
     
     # 不添加额外的静音，直接保存
     new_audio = audio_arr.astype(np.float32)
@@ -1006,100 +1021,71 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # pdb.set_trace()  # REMOVED DEBUG BREAKPOINT
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
 
-
-    #reverse and repeat here
-    repeat_times=2
-    coord_list_reverse=coord_list_single[::-1]
-    frame_list_reverse=frame_list_single[::-1]
-    coord_list=repeat_times*(coord_list_single+coord_list_reverse)
-    frame_list=repeat_times*(frame_list_single+frame_list_reverse)
-    # with open(crop_coord_save_path, 'wb') as f:
-    #     pickle.dump(coord_list, f)
-    input_latent_list = []
-    croped_image=[]
-    # pdb.set_trace()
-    # print('len(coord_list)',coord_list)
-    print('len(frame_list)',len(frame_list))
-    for bbox, frame in zip(coord_list, frame_list):
+    input_latent_list_single = []
+    print('len(frame_list_single)',len(frame_list_single))
+    for bbox, frame in zip(coord_list_single, frame_list_single):
         bbox=np.array(bbox)
         bbox[bbox<0]=0
         frame=np.squeeze(frame)
-        # if bbox == coord_placeholder:
-        #     continue
-        # x1, y1, x2, y2 = bbox
 
         if (bbox == coord_placeholder).all():
-            # continue
             x1, y1, x2, y2 = [0,0,256,256]
         else:
-            x1, y1, x2, y2 = bbox#arr[arr < 0] = 0
-        # if not args.without_landmark:
+            x1, y1, x2, y2 = bbox
+            
         crop_frame = frame[y1:y2, x1:x2]
-        # else:
-        #     crop_frame = frame
-        # print('frame.shape:' ,frame.shape)
-        # print('crop_frame.shape:' ,crop_frame.shape)
-        # print('x1, y1, x2, y2:' ,x1, y1, x2, y2)
         crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
-        croped_image.append(torch.unsqueeze(torch.tensor(crop_frame),dim=0))
-        input_latent_list.append(latents)
-    # print(crop_frame.shape)
-    # croped_image=torch.cat(croped_image,dim=0).to(dtype=torch.uint8).cpu().contiguous()
-    # # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    # video_save_path = os.path.join(args.save_video_path, 'sample_test_aftercrop' + str(batch_index)+'.mp4')
-    # # print(video_save_path)
-    # print(croped_image.shape)
-    # imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
-    # print('save path {}'.format(args.save_video_path))
-    # pdb.set_trace()
-    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    # latents = vae.get_latents_for_unet(crop_frame)
-    # input_latent_list=[]
-    # input_latent_list.append(latents)
+        input_latent_list_single.append(latents)
 
-    # #no crop
-    # pdb.set_trace()
-    # input_latent_list=[]
-    # for single_frame in input_latent:
-    #     # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    #     latents = vae.get_latents_for_unet_nonorm(single_frame)
-    #     input_latent_list.append(latents)
+    new_frame_list_single=[]
+    for single_ori_img in frame_list_single:
+        # keep standard orientation format
+        new_frame_list_single.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2)) )
 
-    #input latent start, directly use latent
-    # input_latent_list=input_latent
-    # input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
+    # 1. Timeline Setup
+    target_frames = len(whisper_chunks)
+    speaker_active_frames = np.zeros(target_frames, dtype=bool)
+    if 'segments' in result:
+        for segment in result['segments']:
+            start_frame = int(segment['start'] * fps)
+            end_frame = int(segment['end'] * fps)
+            start_frame = max(0, min(start_frame, target_frames - 1))
+            end_frame = max(0, min(end_frame, target_frames))
+            if start_frame < end_frame:
+                speaker_active_frames[start_frame:end_frame] = True
 
-    #----
-    #use image----
-    input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
+    # 2. Divide generation into 75% reply vs 25% static listener
+    total_gen_frames = len(input_latent_list_single)
+    reply_frames_cutoff = int(total_gen_frames * 0.75)
+    num_reply_frames = reply_frames_cutoff
+    num_listen_frames = total_gen_frames - reply_frames_cutoff
+
+    input_latent_list_cycle = []
+    original_image_cycle = []
+    coord_list_cycle = []
     
-    # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-    # pdb.set_trace()
-    new_frame_list=[]
-    for single_ori_img in frame_list:
-        new_frame_list.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2))   )
-    original_image_cycle=new_frame_list
-    # original_image_cycle= np.split(frame_list,frame_list.shape[0],axis=0)#+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-
+    reply_idx = 0
+    listen_idx = 0
     
-    laten_repeat=max(len(whisper_chunks)//len(input_latent_list_cycle),1)
-    # pdb.set_trace()
-    vae_encode_latents_new=[]
-    for single_latent in original_image_cycle:
-        repeated_latent=laten_repeat * [single_latent]
-        vae_encode_latents_new+=repeated_latent
-    original_image_cycle=vae_encode_latents_new
-    
-    # frame_list_cycle = frame_list + frame_list[::-1]
-    # coord_list_cycle = coord_list + coord_list[::-1]
-    coord_list_cycle = coord_list #+ coord_list[::-1]
-
-    coord_list_cycle_new=[]
-    for single_coord in coord_list_cycle:
-        repeated_coord=laten_repeat * [single_coord]
-        coord_list_cycle_new+=repeated_coord
-    coord_list_cycle=coord_list_cycle_new
+    for i in range(target_frames):
+        if speaker_active_frames[i]:
+            # Listener is silent listening (use the last 25% frames)
+            if num_listen_frames > 0:
+                l_i = reply_frames_cutoff + (listen_idx % num_listen_frames)
+            else:
+                l_i = total_gen_frames - 1
+            input_latent_list_cycle.append(input_latent_list_single[l_i])
+            original_image_cycle.append(new_frame_list_single[l_i])
+            coord_list_cycle.append(coord_list_single[l_i])
+            listen_idx += 1
+        else:
+            # Listener is speaking (use first 75% frames sequentially)
+            rep_i = (reply_idx % num_reply_frames) if num_reply_frames > 0 else 0
+            input_latent_list_cycle.append(input_latent_list_single[rep_i])
+            original_image_cycle.append(new_frame_list_single[rep_i])
+            coord_list_cycle.append(coord_list_single[rep_i])
+            reply_idx += 1
 
 
     video_num = len(whisper_chunks)
