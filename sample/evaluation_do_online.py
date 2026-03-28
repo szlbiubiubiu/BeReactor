@@ -843,7 +843,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
-    input_latent_talk = input_latent[num_silent_frames:]
+    input_latent_talk = input_latent#[num_silent_frames:]
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent_talk+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent_talk.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
