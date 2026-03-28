@@ -1,0 +1,1 @@
+python syncnet.py --video [你的视频路径] --visualize

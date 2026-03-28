@@ -1559,6 +1559,7 @@ def main(args):
                     # Use reference frames directly
                     print(f"  -> Using reference frames for hold period (no prior generation)")
                     samples_pixels = listener_ref_clip
+                    pdb.set_trace()
                     samples = reaction_vae.encode(listener_ref_clip.to(torch.float32)).latent_dist.sample() * 0.18215
                     last_generated_samples = samples
                     
