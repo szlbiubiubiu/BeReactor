@@ -1552,7 +1552,13 @@ def main(args):
                         print(f"    Interpolated with decay: 75% reaction, 25% fade to static")
                     
                     # Encode back to latent space
-                    samples = reaction_vae.encode(samples_decoded.to(torch.float32)).latent_dist.sample() * 0.18215
+                    b_enc = samples_decoded.shape[0] if len(samples_decoded.shape) == 5 else 1
+                    encoded_batch = []
+                    for batch_idx in range(b_enc):
+                        sample_inst = samples_decoded[batch_idx:batch_idx+1] if len(samples_decoded.shape) == 5 else samples_decoded
+                        enc_inst = reaction_vae.encode(sample_inst.to(torch.float32)).latent_dist.sample() * 0.18215
+                        encoded_batch.append(enc_inst)
+                    samples = torch.cat(encoded_batch, dim=0)
                     samples_pixels = samples_decoded  # Save for later use
                     
                 elif listener_ref_clip.shape[1] == args.num_frames:
@@ -1560,7 +1566,13 @@ def main(args):
                     print(f"  -> Using reference frames for hold period (no prior generation)")
                     samples_pixels = listener_ref_clip
                     pdb.set_trace()
-                    samples = reaction_vae.encode(listener_ref_clip.to(torch.float32)).latent_dist.sample() * 0.18215
+                    b_enc = listener_ref_clip.shape[0] if len(listener_ref_clip.shape) == 5 else 1
+                    encoded_batch = []
+                    for batch_idx in range(b_enc):
+                        sample_inst = listener_ref_clip[batch_idx:batch_idx+1] if len(listener_ref_clip.shape) == 5 else listener_ref_clip
+                        enc_inst = reaction_vae.encode(sample_inst.to(torch.float32)).latent_dist.sample() * 0.18215
+                        encoded_batch.append(enc_inst)
+                    samples = torch.cat(encoded_batch, dim=0)
                     last_generated_samples = samples
                     
                 else:
@@ -1575,7 +1587,13 @@ def main(args):
                         transition_ratio=0.75, clip_size=clip_size
                     )
                     
-                    samples = reaction_vae.encode(samples_pixels.to(torch.float32)).latent_dist.sample() * 0.18215
+                    b_enc = samples_pixels.shape[0] if len(samples_pixels.shape) == 5 else 1
+                    encoded_batch = []
+                    for batch_idx in range(b_enc):
+                        sample_inst = samples_pixels[batch_idx:batch_idx+1] if len(samples_pixels.shape) == 5 else samples_pixels
+                        enc_inst = reaction_vae.encode(sample_inst.to(torch.float32)).latent_dist.sample() * 0.18215
+                        encoded_batch.append(enc_inst)
+                    samples = torch.cat(encoded_batch, dim=0)
                 
                 # Decode the samples for final output
                 b, f, c, h, w = samples.shape if len(samples.shape) == 5 else (samples.shape[0], samples.shape[1], samples.shape[2], samples.shape[3], samples.shape[4])
