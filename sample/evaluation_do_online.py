@@ -791,22 +791,22 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
     
-    total_frames = len(input_latent)
-    num_silent_frames = int(0.25 * total_frames)
-    num_talk_frames = total_frames - num_silent_frames
+    # total_frames = len(input_latent)
+    # num_silent_frames = int(0.25 * total_frames)
+    # num_talk_frames = total_frames - num_silent_frames
     
-    # Process only the talk portion
-    whisper_chunks_talk = whisper_chunks[num_silent_frames:]
-    if len(whisper_chunks_talk) < num_talk_frames:
-        pad_len = num_talk_frames - len(whisper_chunks_talk)
-        if len(whisper_chunks_talk) > 0:
-            whisper_chunks_talk = whisper_chunks_talk + [whisper_chunks_talk[-1]] * pad_len
-        else:
-            whisper_chunks_talk = whisper_chunks[:num_talk_frames] # fallback
-    elif len(whisper_chunks_talk) > num_talk_frames:
-        whisper_chunks_talk = whisper_chunks_talk[:num_talk_frames]
+    # # Process only the talk portion
+    # whisper_chunks_talk = whisper_chunks[num_silent_frames:]
+    # if len(whisper_chunks_talk) < num_talk_frames:
+    #     pad_len = num_talk_frames - len(whisper_chunks_talk)
+    #     if len(whisper_chunks_talk) > 0:
+    #         whisper_chunks_talk = whisper_chunks_talk + [whisper_chunks_talk[-1]] * pad_len
+    #     else:
+    #         whisper_chunks_talk = whisper_chunks[:num_talk_frames] # fallback
+    # elif len(whisper_chunks_talk) > num_talk_frames:
+    #     whisper_chunks_talk = whisper_chunks_talk[:num_talk_frames]
     
-    whisper_chunks = whisper_chunks_talk
+    # whisper_chunks = whisper_chunks_talk
 
     # # #image processing
     # # # crop_frame = cv2.imread(img_path)
