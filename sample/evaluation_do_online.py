@@ -683,6 +683,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # 2. TTS audio for the active (listener-talking) window
         active_duration_sec = max(0.0, next_start_sec - seg_end_sec)
         reply_text = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
+        pdb.set_trace()
         if reply_text.strip() and active_duration_sec > 0.1:
             input_ids_seg = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
             prompt_ids_seg = tokenizer(reply_text, return_tensors="pt").input_ids.to(audio_device)
