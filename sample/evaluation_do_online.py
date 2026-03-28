@@ -255,38 +255,50 @@ def _fill_frames(result, src_frames, start_idx, end_idx):
 def stretch_frames_to_timeline(frames, segment_list, target_total_frames,
                                 video_fps=25, frames_per_seg=64):
     """
-    Uniformly distributes N segments across target_total_frames.
-    Each segment slot is divided into 25% passive (listening) and 75% active (talking).
-    This ensures that even if Whisper segments have no gaps, we allocate time
-    for the listener's response in the final video.
+    Stretch N_segs×64 generated frames to exactly target_total_frames,
+    aligning listener timing with the speaker's timeline:
+
+    For each segment k:
+      • passive (first 25% = 16 frames)  → speaker talking window
+                                            [segment[k].start … segment[k].end]
+      • active  (last  75% = 48 frames)  → silence gap
+                                            [segment[k].end … segment[k+1].start]
+                                            (or video end for the last segment)
+
+    Any uncovered leading frames (before segment 0 starts) are filled with the
+    first available frame, keeping the output fully contiguous.
     """
     if not frames or target_total_frames <= 0:
         return frames
 
     n_segs = len(segment_list)
     passive_per_seg = int(0.25 * frames_per_seg)   # 16
-    full_slot_frames = target_total_frames / n_segs
+    active_per_seg  = frames_per_seg - passive_per_seg  # 48
 
     result = [None] * target_total_frames
 
     for seg_i, seg in enumerate(segment_list):
-        slot_start = int(seg_i * full_slot_frames)
-        slot_end   = int((seg_i + 1) * full_slot_frames)
-        
-        # Consistent with audio: 25% passive window, 75% active window
-        boundary = int(slot_start + 0.25 * (slot_end - slot_start))
-        
+        seg_start_frame = max(0, int(seg.get('start', 0) * video_fps))
+        seg_end_frame   = min(target_total_frames, int(seg.get('end',   0) * video_fps))
+
+        # silence gap: from end of this segment to start of next
+        if seg_i + 1 < n_segs:
+            next_start_frame = min(target_total_frames,
+                                   int(segment_list[seg_i + 1].get('start', seg_end_frame) * video_fps))
+        else:
+            next_start_frame = target_total_frames
+
         # Source frames for this segment
         src_passive = frames[seg_i * frames_per_seg : seg_i * frames_per_seg + passive_per_seg]
         src_active  = frames[seg_i * frames_per_seg + passive_per_seg : (seg_i + 1) * frames_per_seg]
 
-        # Passive frames -> first 25% of slot
-        if boundary > slot_start and src_passive:
-            _fill_frames(result, src_passive, slot_start, boundary)
+        # Passive frames → speaker talking window
+        if seg_end_frame > seg_start_frame and src_passive:
+            _fill_frames(result, src_passive, seg_start_frame, seg_end_frame)
 
-        # Active frames -> remaining 75% of slot
-        if slot_end > boundary and src_active:
-            _fill_frames(result, src_active, boundary, slot_end)
+        # Active frames → silence gap (listener's turn to speak)
+        if next_start_frame > seg_end_frame and src_active:
+            _fill_frames(result, src_active, seg_end_frame, next_start_frame)
 
     # Forward-fill any None slots (e.g., gap before first segment)
     fallback = None
@@ -294,27 +306,20 @@ def stretch_frames_to_timeline(frames, segment_list, target_total_frames,
         if result[i] is not None:
             fallback = result[i]
         elif fallback is not None:
-            if hasattr(fallback, 'copy'):
-                result[i] = fallback.copy()
-            else:
-                result[i] = fallback
-    
+            result[i] = fallback.copy()
+
     # Backward-fill leading Nones (before first segment)
     fallback = None
     for i in range(len(result) - 1, -1, -1):
         if result[i] is not None:
             fallback = result[i]
         elif fallback is not None:
-            if hasattr(fallback, 'copy'):
-                result[i] = fallback.copy()
-            else:
-                result[i] = fallback
+            result[i] = fallback.copy()
 
     # Final safety: replace any remaining None with zeros
     empty = np.zeros_like(frames[0]) if frames else np.zeros((256, 256, 3), dtype=np.uint8)
-    for i in range(len(result)):
-        if result[i] is None:
-            result[i] = empty
+    result = [f if f is not None else empty for f in result]
+
     return result
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -457,7 +462,7 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
-        segment_list=None, target_total_frames=751):
+        segment_list=None):
     """
     input_latent: Tensor [N_segs*64, C, H, W] - all dialog segments stacked.
     segment_list: list of dicts with keys 'text', 'start', 'end' - one per 64-frame block.
@@ -636,17 +641,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # # wavs = chat.infer(current_text)
 
 
+    # pdb.set_trace()
     OUTPUT_audio_FILE = result_img_save_path + '/output_audio' + str(1) + '.wav'
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
 
     sr = audio_model.config.sampling_rate  # (e.g. 44100)
     video_fps_audio = 25  # reference fps used for timeline conversion
-    total_duration_sec = target_total_frames / video_fps_audio
 
-    # ── Per-segment audio construction (Uniformly smooth) ─────────────────────
-    # Divide the total video duration into N equal slots for the N segments.
-    # For each slot, allocate 25% for passive (listening) and 75% for active (talking).
+    # ── Per-segment audio construction ────────────────────────────────────────
+    # For each segment k on the timeline:
+    #   • passive window [seg.start … seg.end]  → SILENCE  (speaker is talking)
+    #   • active  window [seg.end   … next_seg.start] → TTS of listener reply k
+    #
+    # This aligns audio exactly with the frame stretching done in main().
     # ──────────────────────────────────────────────────────────────────────────
 
     description_base = (
@@ -658,29 +666,31 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     segment_audio_parts = []
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
-    n_segs_local = len(_seg_list)
-    slot_duration = total_duration_sec / n_segs_local
-
     for seg_i, seg in enumerate(_seg_list):
-        # Calculate windows based on uniform slots (25/75 split)
-        slot_start = seg_i * slot_duration
-        slot_end   = (seg_i + 1) * slot_duration
-        
-        # 25% for passive window (listening)
-        passive_duration_sec = 0.25 * slot_duration
+        seg_start_sec  = seg.get('start', 0.0)
+        seg_end_sec    = seg.get('end',   0.64)          # ~16 frames at 25fps
+
+        if seg_i + 1 < n_segments:
+            next_start_sec = _seg_list[seg_i + 1].get('start', seg_end_sec)
+        else:
+            # Last segment: active window runs to time corresponding to total video
+            next_start_sec = num_frame_sp / video_fps_audio
+
+        # 1. Silence for the passive (speaker-talking) window
+        passive_duration_sec = max(0.0, seg_end_sec - seg_start_sec)
         passive_silence = np.zeros(int(sr * passive_duration_sec), dtype=np.float32)
 
-        # 75% for active window (listener-talking)
-        active_duration_sec = 0.75 * slot_duration
+        # 2. TTS audio for the active (listener-talking) window
+        active_duration_sec = max(0.0, next_start_sec - seg_end_sec)
         reply_text = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
-        
+        pdb.set_trace()
         if reply_text.strip() and active_duration_sec > 0.1:
             input_ids_seg = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
             prompt_ids_seg = tokenizer(reply_text, return_tensors="pt").input_ids.to(audio_device)
             gen_seg = audio_model.generate(input_ids=input_ids_seg, prompt_input_ids=prompt_ids_seg)
             tts_arr = gen_seg.cpu().numpy().squeeze().astype(np.float32)
 
-            # Stretch/Compress/Pad TTS to exactly fit our 75% window
+            # Crop or pad TTS to exactly fit the active window
             target_samples = int(sr * active_duration_sec)
             if len(tts_arr) >= target_samples:
                 tts_arr = tts_arr[:target_samples]
@@ -692,9 +702,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
         segment_audio_parts.append(passive_silence)
         segment_audio_parts.append(tts_arr)
-        
         reply_preview = repr(reply_text[:60])
-        print(f'[Audio seg {seg_i}] slot=[{slot_start:.2f}-{slot_end:.2f}] silence={passive_duration_sec:.2f}s  TTS={active_duration_sec:.2f}s  reply={reply_preview}')
+        print(f'[Audio seg {seg_i}] silence={passive_duration_sec:.2f}s  TTS={active_duration_sec:.2f}s  reply={reply_preview}')
 
     new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
@@ -1285,8 +1294,7 @@ def main(args):
                 emo_label, stacked_out, pipe, vae, unet, pe,
                 batch_index=(batch_size * step + batch_index),
                 num_frame_sp=stacked_out.shape[0],
-                segment_list=valid_segments,
-                target_total_frames=T_len
+                segment_list=valid_segments
             )
             all_face_images += batched_faces
             
