@@ -221,7 +221,7 @@ from rouge_score import rouge_scorer
 import bert_score
 
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
 
 audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
 tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
@@ -968,10 +968,11 @@ def main(args):
     ##LLM processing
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device_map="auto")
+    llm_device = 1 if torch.cuda.device_count() > 1 else 0
     if 'server' in platform.node():
-        pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=0)
+        pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=llm_device)
     else:
-        pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=0)
+        pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=llm_device)
 
     ### deepseek
     # pipe = pipeline("text-generation", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", torch_dtype=torch.float16, device=1)
