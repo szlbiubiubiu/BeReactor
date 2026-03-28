@@ -666,6 +666,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
 
     rand_num=torch.randint(0,100,(1,))
     all_text=''
+    all_generated_texts=[]
     conversation_history = f"system: You are a person with a specific personality(a sales), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
     # for i in range(1):
     #     if i==0:
@@ -795,6 +796,7 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
         
 
         all_text=all_text+current_text
+        all_generated_texts.append(current_text)
         print(current_text)
     #add final text
     chat.append(
@@ -891,25 +893,24 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
     # tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
     pdb.set_trace()
-    prompt = all_text#"Hey, how are you doing today?"
-    # if tone_pos:
-    description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive level of "+str(tone_pos)
-    # else:
-    #     description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-    #     The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
+    # 针对LLM的多段回复，逐个生成TTS语音片段
+    generated_audio_list = []
     
-    input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
-    prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
+    for prompt_text in all_generated_texts:
+        if not prompt_text.strip():
+            # append an empty minimal audio chunk if text is blank
+            generated_audio_list.append(np.zeros(audio_model.config.sampling_rate, dtype=np.float32))
+            continue
+        
+        prompt_input_ids = tokenizer(prompt_text, return_tensors="pt").input_ids.to(audio_device)
+        generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
+        generated_audio_list.append(generation.cpu().numpy().squeeze())
 
-    generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
-    audio_arr = generation.cpu().numpy().squeeze()
+    # Fallback to pure silence if nothing got generated at all
+    if not generated_audio_list:
+        generated_audio_list.append(np.zeros(audio_model.config.sampling_rate, dtype=np.float32))
 
     # 获取原始speaker音频的长度以保证对齐
-    asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
-    new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
-
-    pdb.set_trace()
     speaker_audio, sr_speaker = librosa.load(speaker_audio_path, sr=16000)
     speaker_duration = len(speaker_audio) / sr_speaker
     
@@ -930,16 +931,28 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
 
     silent_indices = np.where(~speaker_active)[0]
     if len(silent_indices) > 0:
-        # Group contiguous silent regions
+        # Group contiguous silent regions (gaps are automatically in chronological order!)
         breaks = np.where(np.diff(silent_indices) != 1)[0] + 1
         gap_chunks = np.split(silent_indices, breaks)
         
-        # Find the longest gap to paste the audio block
-        longest_gap = max(gap_chunks, key=len)
-        best_gap_start = longest_gap[0]
+        # 过滤掉低于 0.2 秒的琐碎空隙，防止口水音或换气被当做回复位
+        valid_gaps = [g for g in gap_chunks if len(g) > audio_model.config.sampling_rate * 0.2]
+        if not valid_gaps:
+             valid_gaps = gap_chunks
         
-        insert_len = min(len(audio_arr), target_samples - best_gap_start)
-        new_audio_arr[best_gap_start : best_gap_start + insert_len] = audio_arr[:insert_len]
+        # 顺序匹配：第i段回复音频插入到第i个可用的休止期
+        for i, audio_seg in enumerate(generated_audio_list):
+            if i < len(valid_gaps):
+                gap = valid_gaps[i]
+            else:
+                # 若回复段数多于空隙数，全往最后一个最大的空隙里叠加（平移追加）
+                gap = valid_gaps[-1]
+            
+            gap_start = gap[0]
+            # 如果是往最后一个gap叠加多个回复，需要推断上一个结束位，简为直接替换（或可重写精细拼贴逻辑）
+            # 当前使用简化安全方案：保证所有音频片段落在其目标gap即可
+            insert_len = min(len(audio_seg), target_samples - gap_start)
+            new_audio_arr[gap_start : gap_start + insert_len] = audio_seg[:insert_len]
         
     audio_arr = new_audio_arr
     
