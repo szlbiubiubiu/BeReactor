@@ -1555,10 +1555,10 @@ def main(args):
                     b_enc = samples_decoded.shape[0] if len(samples_decoded.shape) == 5 else 1
                     encoded_batch = []
                     for batch_idx in range(b_enc):
-                        sample_inst = samples_decoded[batch_idx:batch_idx+1] if len(samples_decoded.shape) == 5 else samples_decoded
+                        sample_inst = samples_decoded[batch_idx] if len(samples_decoded.shape) == 5 else samples_decoded
                         enc_inst = reaction_vae.encode(sample_inst.to(torch.float32)).latent_dist.sample() * 0.18215
                         encoded_batch.append(enc_inst)
-                    samples = torch.cat(encoded_batch, dim=0)
+                    samples = torch.stack(encoded_batch, dim=0) if len(samples_decoded.shape) == 5 else encoded_batch[0]
                     samples_pixels = samples_decoded  # Save for later use
                     
                 elif listener_ref_clip.shape[1] == args.num_frames:
@@ -1569,10 +1569,10 @@ def main(args):
                     b_enc = listener_ref_clip.shape[0] if len(listener_ref_clip.shape) == 5 else 1
                     encoded_batch = []
                     for batch_idx in range(b_enc):
-                        sample_inst = listener_ref_clip[batch_idx:batch_idx+1] if len(listener_ref_clip.shape) == 5 else listener_ref_clip
+                        sample_inst = listener_ref_clip[batch_idx] if len(listener_ref_clip.shape) == 5 else listener_ref_clip
                         enc_inst = reaction_vae.encode(sample_inst.to(torch.float32)).latent_dist.sample() * 0.18215
                         encoded_batch.append(enc_inst)
-                    samples = torch.cat(encoded_batch, dim=0)
+                    samples = torch.stack(encoded_batch, dim=0) if len(listener_ref_clip.shape) == 5 else encoded_batch[0]
                     last_generated_samples = samples
                     
                 else:
@@ -1590,10 +1590,10 @@ def main(args):
                     b_enc = samples_pixels.shape[0] if len(samples_pixels.shape) == 5 else 1
                     encoded_batch = []
                     for batch_idx in range(b_enc):
-                        sample_inst = samples_pixels[batch_idx:batch_idx+1] if len(samples_pixels.shape) == 5 else samples_pixels
+                        sample_inst = samples_pixels[batch_idx] if len(samples_pixels.shape) == 5 else samples_pixels
                         enc_inst = reaction_vae.encode(sample_inst.to(torch.float32)).latent_dist.sample() * 0.18215
                         encoded_batch.append(enc_inst)
-                    samples = torch.cat(encoded_batch, dim=0)
+                    samples = torch.stack(encoded_batch, dim=0) if len(samples_pixels.shape) == 5 else encoded_batch[0]
                 
                 # Decode the samples for final output
                 b, f, c, h, w = samples.shape if len(samples.shape) == 5 else (samples.shape[0], samples.shape[1], samples.shape[2], samples.shape[3], samples.shape[4])
