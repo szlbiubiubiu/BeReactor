@@ -928,10 +928,12 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
         breaks = np.where(np.diff(silent_indices) != 1)[0] + 1
         gap_chunks = np.split(silent_indices, breaks)
         
-        # Paste the audio block uninterrupted starting from the first available gap
-        first_gap_start = gap_chunks[0][0]
-        insert_len = min(len(audio_arr), target_samples - first_gap_start)
-        new_audio_arr[first_gap_start : first_gap_start + insert_len] = audio_arr[:insert_len]
+        # Find the longest gap to paste the audio block
+        longest_gap = max(gap_chunks, key=len)
+        best_gap_start = longest_gap[0]
+        
+        insert_len = min(len(audio_arr), target_samples - best_gap_start)
+        new_audio_arr[best_gap_start : best_gap_start + insert_len] = audio_arr[:insert_len]
         
     audio_arr = new_audio_arr
     
@@ -1042,49 +1044,29 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
         # keep standard orientation format
         new_frame_list_single.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2)) )
 
-    # 1. Timeline Setup
-    target_frames = len(whisper_chunks)
-    speaker_active_frames = np.zeros(target_frames, dtype=bool)
-    if 'segments' in result:
-        for segment in result['segments']:
-            start_frame = int(segment['start'] * fps)
-            end_frame = int(segment['end'] * fps)
-            start_frame = max(0, min(start_frame, target_frames - 1))
-            end_frame = max(0, min(end_frame, target_frames))
-            if start_frame < end_frame:
-                speaker_active_frames[start_frame:end_frame] = True
-
-    # 2. Divide generation into 75% reply vs 25% static listener
-    total_gen_frames = len(input_latent_list_single)
-    reply_frames_cutoff = int(total_gen_frames * 0.75)
-    num_reply_frames = reply_frames_cutoff
-    num_listen_frames = total_gen_frames - reply_frames_cutoff
-
-    input_latent_list_cycle = []
-    original_image_cycle = []
-    coord_list_cycle = []
+    input_latent_list_cycle = input_latent_list_single
+    original_image_cycle = new_frame_list_single
+    coord_list_cycle = coord_list_single
     
-    reply_idx = 0
-    listen_idx = 0
+    laten_repeat=max(len(whisper_chunks)//len(input_latent_list_cycle),1)
+
+    vae_encode_latents_new=[]
+    for single_latent in original_image_cycle:
+        repeated_latent = laten_repeat * [single_latent]
+        vae_encode_latents_new += repeated_latent
+    original_image_cycle = vae_encode_latents_new
     
-    for i in range(target_frames):
-        if speaker_active_frames[i]:
-            # Listener is silent listening (use the last 25% frames)
-            if num_listen_frames > 0:
-                l_i = reply_frames_cutoff + (listen_idx % num_listen_frames)
-            else:
-                l_i = total_gen_frames - 1
-            input_latent_list_cycle.append(input_latent_list_single[l_i])
-            original_image_cycle.append(new_frame_list_single[l_i])
-            coord_list_cycle.append(coord_list_single[l_i])
-            listen_idx += 1
-        else:
-            # Listener is speaking (use first 75% frames sequentially)
-            rep_i = (reply_idx % num_reply_frames) if num_reply_frames > 0 else 0
-            input_latent_list_cycle.append(input_latent_list_single[rep_i])
-            original_image_cycle.append(new_frame_list_single[rep_i])
-            coord_list_cycle.append(coord_list_single[rep_i])
-            reply_idx += 1
+    coord_list_cycle_new=[]
+    for single_coord in coord_list_cycle:
+        repeated_coord = laten_repeat * [single_coord]
+        coord_list_cycle_new += repeated_coord
+    coord_list_cycle = coord_list_cycle_new
+    
+    latent_list_new=[]
+    for single_lat in input_latent_list_cycle:
+        repeated_lat = laten_repeat * [single_lat]
+        latent_list_new += repeated_lat
+    input_latent_list_cycle = latent_list_new
 
 
     video_num = len(whisper_chunks)
