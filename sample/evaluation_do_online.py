@@ -363,175 +363,112 @@ def evaluate_LLM(dialogue: str):
 
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,segment_text=None):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
+        segment_list=None):
+    """
+    input_latent: Tensor [N_segs*64, C, H, W] - all dialog segments stacked.
+    segment_list: list of dicts with keys 'text', 'start', 'end' - one per 64-frame block.
+    """
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
-    # pdb.set_trace()
-    expression=emo_fea['expression'].to(torch.device('cuda:0'))
-    expression_soft_sing=F.softmax(expression,dim=1)
-    valence_sing=emo_fea['valence'].to(torch.device('cuda:0'))
-    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:0'))
-    # if step==0:
-    expression_soft=expression_soft_sing
-    valence=valence_sing
-    arousal=arousal_sing
-        # else:
-        #     expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
-        #     valence=torch.cat((valence,valence_sing),dim=0)
-        #     arousal=torch.cat((arousal,arousal_sing),dim=0)
+    frames_per_seg = 64  # each segment window is always 64 frames
 
-    # pdb.set_trace()
-    result = whisper_model.transcribe(speaker_audio_path)
-    print(result["text"])
-    
-    sentences=['Hi there! Nice to Meet you! Please introduce yourself?']#[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-    # sentences=['Have you traveled to Vancouver? What impresses you most?']
-    # pdb.set_trace()
-    if len(result["text"].split('.'))==1:
-        # pdb.set_trace()
-        a=1
-    #sentences=result["text"].split('.')
-    listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
-    # print(result["text"])
-        
-    listener_reference_sentences=listener_result["text"].split('.')
+    # ---- Derive segment texts from segment_list or fall back to Whisper transcription ----
+    if segment_list is not None and len(segment_list) > 0:
+        seg_texts = [seg.get("text", "").strip() for seg in segment_list]
+        n_segments = len(seg_texts)
+        print(f"[Timeline] Processing {n_segments} speaker segments on timeline")
+    else:
+        result = whisper_model.transcribe(speaker_audio_path)
+        print(result["text"])
+        seg_texts = [result["text"].strip()]
+        n_segments = 1
 
-    # pdb.set_trace()
-    # bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
-    # rouge_scores = calculate_rouge_batch([listener_result["text"]], [result["text"]])
-    # bert_scores = calculate_bertscore_batch([listener_result["text"]], [result["text"]])
+    # ---- Reshape input_latent into [n_segments, 64, C, H, W] ----
+    if input_latent.dim() == 4:
+        total_frames_il = input_latent.shape[0]
+        if total_frames_il == frames_per_seg * n_segments:
+            seg_latents = input_latent.reshape(n_segments, frames_per_seg, *input_latent.shape[1:])
+        elif total_frames_il == frames_per_seg:
+            seg_latents = input_latent.unsqueeze(0)  # single segment [1,64,C,H,W]
+        else:
+            # fallback: use first 64 frames only
+            seg_latents = input_latent[:frames_per_seg].unsqueeze(0)
+            n_segments = 1
+            seg_texts = seg_texts[:1]
+    else:
+        seg_latents = input_latent[:1]
+        n_segments = 1
+        seg_texts = seg_texts[:1]
 
+    # ---- Emotion features from first-segment latent ----
+    id_feats, emo_fea, au_disfa, au_bp4d = encoder_emo.forward_listener(seg_latents[0].to(torch.device('cuda:0')))
+    expression = emo_fea['expression'].to(torch.device('cuda:0'))
+    expression_soft = F.softmax(expression, dim=1)
+    valence = emo_fea['valence'].to(torch.device('cuda:0'))
+    arousal = emo_fea['arousal'].to(torch.device('cuda:0'))
 
+    # ---- Listener reference transcription (once, for scoring) ----
+    listener_result = whisper_model.transcribe(listener_audio_path)
+    listener_reference_sentences = listener_result["text"].split('.')
 
-    rand_num=torch.randint(0,100,(1,))
-    all_text=''
-    conversation_history = f"system: You are a person with a specific personality(a sales), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
-    # for i in range(1):
-    #     if i==0:
-    #         chat = [
-    #         {"role": "system", "content": "You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words"},
-    #         {"role": "user", "content": sentences[0]}
-    #             ]
-    #         a=1
-    #     else:
-    #         chat=response[0]['generated_text']
-    #         chat.append(
-    #             # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-    #             {"role": "user", "content": sentences[i]+". please reply within 10 words"}
-    #         )
-    #     response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-    #     current_text=response[0]['generated_text'][-1]['content']
-    #     all_text=all_text+current_text
-    #     print(response[0]['generated_text'][-1]['content'])
-    # pdb.set_trace()
+    # ---- Rolling conversational LLM dialogue (one turn per timeline segment) ----
     openai_api_key = "None"
     openai_api_base = "http://0.0.0.0:8000/v1"
+    client = OpenAI(api_key=openai_api_key, base_url=openai_api_base)
 
-    client = OpenAI(
-        api_key=openai_api_key,
-        base_url=openai_api_base,
-    )
-    dialogue=[]
-    random_number=np.random.randint(low=0, high=100)
-    # else:
-    tone_pos=1
-    # pdb.set_trace()
-    for i in range(len(sentences)):
-        if i>=5:
-            break
-        if i==0:
-            if len(sentences)!=1:
-            #     chat = [
-            #     {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-            #     +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            #     {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
-            # Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-            #                 expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-            #                 expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-            #             +'. Remove the emotion number in your reply.)'}
-            #     ]
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words in each reply. Return a binary number describing of the response level, 0 means negative and 1 means postive"},
-                {"role": "user", "content": sentences[0]}
-                ]
-            else:
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 100 words(more than 10 words)"},
-                {"role": "user", "content": sentences[0]}
-                ]
-            # {"role": "system", "content": 
-            # "Please reply with a tone of emotion level:\
-            # Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
-            #                     'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
-            #             'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"},            
-            
-            
-            
-            
-            # dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
-            # +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            
-            # {"role": "user", "content": sentences[0]}]
-            a=1
+    random_number = np.random.randint(low=0, high=100)
+    tone_pos = 1
+    all_text = ''
+    current_text = ''
+
+    chat = [
+        {"role": "system", "content": (
+            "We are having a real-time conversation. Pretend you are a person with a specific personality "
+            "(a sales representative), subject to the random seed: " + str(random_number) +
+            ". For each speaker turn, generate a concise response within 30 words that fits the live dialogue flow."
+        )}
+    ]
+
+    seg_reply_texts = []
+    for seg_i, speaker_text in enumerate(seg_texts):
+        # Build user message; from turn 2 onwards, carry forward emotion context
+        if seg_i == 0:
+            user_msg = speaker_text if speaker_text else "Hello."
         else:
-            # chat=response[0]['generated_text']
-            chat.append(
-            {"role": "Assistant", "content": current_text})
-            chat.append(
-                # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-                {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply. )'},#+". please reply within 10 words"}
-            # <| Assistant |><think>\n\n</think>\n\n
-            # chat.append(
-            # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
+            # Append previous assistant turn to maintain dialogue continuity
+            chat.append({"role": "assistant", "content": seg_reply_texts[-1]})
+            emo_hint = (
+                " (Please match the emotional tone — "
+                "Neutral={:.2f}, Happy={:.2f}, Sad={:.2f}, valence={:.2f}, arousal={:.2f}. "
+                "Do not include these scores in your reply.)"
+            ).format(
+                float(expression_soft[:, 0].mean()),
+                float(expression_soft[:, 1].mean()),
+                float(expression_soft[:, 2].mean()),
+                float(valence.mean()),
+                float(arousal.mean())
             )
-            # dialogue.append(
-            # {"role": "Assistant", "content": current_text})
-            # dialogue.append({"role": "user", "content": sentences[i]})
-        
-        
-        
-        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        #below is llama3
-        # pdb.set_trace()
-        text_4_split=response[0]['generated_text'][-1]['content'].split('(')
-        current_text=text_4_split[0]#response[0]['generated_text'][-1]['content'].split('(')
-        if len(text_4_split)==2:
-            # number_string = text_4_split[1].strip(')')
-            # # Convert the resulting string '1' to an integer
-            # tone_pos = int(number_string)
-            tone_pos = re.findall(r"\d+\.?\d*",text_4_split[1])[-1]
-            # print(re.findall(r"\d+\.?\d*",string))  
-            # =
-        
-        # pdb.set_trace()
+            user_msg = (speaker_text if speaker_text else "Please continue.") + emo_hint
 
-        # #deepseek with thinking tag
-        # response = client.chat.completions.create(
-        #     model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-        #     messages=chat,
-        #     temperature=0.2,
-        # )
-        # current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
-        # if len(current_text)==1:
-        #     current_tex=current_text#[0]
-        # else:   
-        #     current_text=current_text[1]
-        
+        chat.append({"role": "user", "content": user_msg})
 
-        all_text=all_text+current_text
-        print(current_text)
-    #add final text
-    chat.append(
-            {"role": "Assistant", "content": current_text})
-    # pdb.set_trace()
+        response = pipe(chat, max_new_tokens=512)
+        text_4_split = response[0]['generated_text'][-1]['content'].split('(')
+        current_text = text_4_split[0]
+        if len(text_4_split) >= 2:
+            found = re.findall(r"\d+\.?\d*", text_4_split[1])
+            if found:
+                tone_pos = found[-1]
+
+        print(f"[Seg {seg_i}] Speaker: {speaker_text!r}")
+        print(f"[Seg {seg_i}] Listener: {current_text!r}")
+        seg_reply_texts.append(current_text)
+        all_text += current_text + " "
+
+    # Close conversation with last assistant turn (needed for scoring)
+    chat.append({"role": "assistant", "content": seg_reply_texts[-1] if seg_reply_texts else ''})
     print(chat)
     realism_score,sentiment_emb=evaluate_LLM(chat)
     # all_text
@@ -1137,7 +1074,8 @@ def main(args):
             if len(segments) == 0:
                 segments = [{"end": 16/25.0, "text": ""}]
                 
-            all_face_images=[]
+            all_face_images = []
+            seg_samples_list = []  # collect [64, C, H, W] per segment
                 
             for seg_idx, segment in enumerate(segments):
                 end_time = segment["end"]
@@ -1146,7 +1084,6 @@ def main(args):
                 if start_frame >= T_len:
                     start_frame = max(0, T_len - clip_size)
                     
-                out_samples=None
                 if args.use_fp16:
                     z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device)
                 else:
@@ -1206,32 +1143,38 @@ def main(args):
                     samples = samples[:len(x)//2]
                 
                 b, f, c, h, w = samples.shape
-                
                 decoded_batch = []
                 for b_idx in range(b):
                     sample_instance = samples[b_idx]
                     decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
                     decoded_batch.append(decoded_instance)
-                
                 samples = torch.stack(decoded_batch, dim=0)
-                out_samples = samples[0] # extracting single instance sequence [64, C, H, W]
-                
-                # Run the pipeline for this segment via modified talkinghead function
-                batched_faces,scores = openai_deepseek_talkinghead_genall(
-                    audio_file, listener_audio_file, whisper_model, audio_processor,
-                    speaker_audio_path, listener_audio_path,
-                    emo_label, out_samples, pipe, vae, unet, pe,
-                    batch_index=(len(segments)*(batch_size*step+batch_index)+seg_idx),
-                    num_frame_sp=out_samples.shape[0],
-                    segment_text=segment["text"]
-                )
-                all_face_images += batched_faces
-                
-                # Accumulate scores per segment
-                all_score['all_realism_score'] += scores['realism_score']
-                all_score['all_sentiment_emb'][batch_size*step+batch_index] = scores['sentiment_emb']
-                all_score['all_bleu_scores'] += scores['bleu_scores']
-                all_score['all_bert_scores'] += scores['bert_scores']
+                seg_out = samples[0]  # [64, C, H, W] for this segment
+                seg_samples_list.append(seg_out)
+
+            # Stack all segment tensors: [N_segs*64, C, H, W]
+            if len(seg_samples_list) == 0:
+                print(f"No valid segments for batch_index={batch_index}, skipping.")
+                continue
+            stacked_out = torch.cat(seg_samples_list, dim=0)  # [N_segs*64, C, H, W]
+            n_valid_segs = len(seg_samples_list)
+            valid_segments = segments[:n_valid_segs]
+
+            # Call talkinghead function ONCE with all N segments stacked + their metadata
+            batched_faces, scores = openai_deepseek_talkinghead_genall(
+                audio_file, listener_audio_file, whisper_model, audio_processor,
+                speaker_audio_path, listener_audio_path,
+                emo_label, stacked_out, pipe, vae, unet, pe,
+                batch_index=(batch_size * step + batch_index),
+                num_frame_sp=stacked_out.shape[0],
+                segment_list=valid_segments
+            )
+            all_face_images += batched_faces
+            
+            all_score['all_realism_score'] += scores['realism_score']
+            all_score['all_sentiment_emb'][batch_size*step+batch_index] = scores['sentiment_emb']
+            all_score['all_bleu_scores'] += scores['bleu_scores']
+            all_score['all_bert_scores'] += scores['bert_scores']
                 
             video_ = np.asarray(np.clip(all_face_images, 0, 255))[:, :, :, ::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
