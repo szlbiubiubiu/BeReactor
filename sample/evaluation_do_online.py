@@ -79,10 +79,12 @@ from tqdm import tqdm
 import copy
 import torch.nn.functional as F
 import re
+import torchaudio
 
 import platform
 #it is single forward function
-from parler_tts import ParlerTTSForConditionalGeneration
+# pip install git+https://github.com/FunAudioLLM/CosyVoice.git
+from cosyvoice.cli.cosyvoice import CosyVoice2
 from transformers import AutoTokenizer
 import soundfile as sf
 
@@ -223,8 +225,11 @@ import bert_score
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
 
-audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
-tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+# CosyVoice2: instruction-based TTS with emotion/speed/voice control.
+# Model weights are downloaded automatically from ModelScope on first use.
+# Supports inference_instruct2(text, instruction, ref_wav_16k, speed=1.0)
+audio_model = CosyVoice2('iic/CosyVoice2-0.5B', load_jit=False, load_onnx=False, load_trt=False)
+_COSYVOICE_SR = 24000  # CosyVoice2 native output sample rate
 
 # ─── Timeline-aware temporal frame stretching ────────────────────────────────
 
@@ -459,6 +464,35 @@ def evaluate_LLM(dialogue: str):
     
     return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 
+
+def _emotion_to_tts_instruction(valence_mean: float, arousal_mean: float,
+                               expression_probs) -> str:
+    """
+    Map video emotion scores to a CosyVoice2 natural-language style instruction.
+    expression_probs: array-like [neutral, happy, sad, ...] softmax probabilities.
+    """
+    expr = np.array(expression_probs)
+    emo_idx = int(np.argmax(expr[:3]))
+    emo_tone = {0: 'composed and neutral', 1: 'warm and cheerful',
+                2: 'soft and empathetic'}.get(emo_idx, 'natural')
+
+    if valence_mean > 0.3:
+        valence_hint = 'positive'
+    elif valence_mean < -0.2:
+        valence_hint = 'gentle and supportive'
+    else:
+        valence_hint = 'balanced'
+
+    if arousal_mean > 0.3:
+        energy_hint = 'engaged and lively delivery'
+    elif arousal_mean < -0.2:
+        energy_hint = 'measured and unhurried delivery'
+    else:
+        energy_hint = 'clear and natural delivery'
+
+    return f"Speak with a {emo_tone}, {valence_hint} tone, with {energy_hint}."
+
+
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
@@ -660,7 +694,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
 
-    sr = audio_model.config.sampling_rate  # (e.g. 44100)
+    sr = _COSYVOICE_SR  # CosyVoice2 native sample rate (24 kHz)
     video_fps_audio = 25  # reference fps used for timeline conversion
     # Fraction of passive window to donate to the active window when segments
     # are back-to-back (no natural gap).  0.5 = 50 % of passive becomes active.
@@ -673,13 +707,6 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     #
     # This aligns audio exactly with the frame stretching done in main().
     # ──────────────────────────────────────────────────────────────────────────
-
-    description_base = (
-        "A male speaker delivers a slightly expressive and animated speech "
-        "with a moderate speed and pitch. The recording is of very high quality, "
-        "with the speaker's voice sounding clear and very close up. "
-        "The tone is positive level of " + str(tone_pos)
-    )
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
 
@@ -708,15 +735,38 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         active_durations.append(active_dur)
 
     all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
-    pdb.set_trace()
-    # ── Pass 2: one single TTS call for all listener replies ─────────────────
+
+    # ── Pass 2: one single CosyVoice2 call for all listener replies ──────────
     combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
     if combined_reply_text.strip():
-        input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
-        prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
-        gen_all  = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
-        tts_full = gen_all.cpu().numpy().squeeze().astype(np.float32)
-        print(f'[Audio] Single TTS pass: {len(tts_full)} samples for {len(_seg_list)} segments')
+        # Clone the listener's voice from their reference audio
+        _ref_wav, _ref_sr = torchaudio.load(listener_audio_path)
+        if _ref_wav.shape[0] > 1:
+            _ref_wav = _ref_wav[:1]  # force mono
+        prompt_wav_16k = torchaudio.functional.resample(_ref_wav, _ref_sr, 16000)
+
+        # Build emotion instruction from video emotion scores
+        _v    = float(valence.mean().cpu())
+        _a    = float(arousal.mean().cpu())
+        _expr = expression_soft[0].detach().cpu().numpy()
+        tts_instruction = _emotion_to_tts_instruction(_v, _a, _expr)
+
+        # Compute speed so natural speech fills the total active window
+        total_active_sec = max(0.1, sum(active_durations))
+        total_words      = sum(len(t.split()) for t in all_reply_texts if t.strip())
+        natural_sec      = max(1.0, total_words / 2.5)  # 2.5 words/sec natural rate
+        tts_speed        = float(np.clip(natural_sec / total_active_sec, 0.7, 1.5))
+        print(f'[TTS] CosyVoice2 instruction="{tts_instruction}"  speed={tts_speed:.2f}x')
+
+        audio_chunks = []
+        for chunk in audio_model.inference_instruct2(
+            combined_reply_text, tts_instruction, prompt_wav_16k,
+            stream=False, speed=tts_speed
+        ):
+            audio_chunks.append(chunk['tts_speech'].numpy().flatten())
+        tts_full = np.concatenate(audio_chunks).astype(np.float32) if audio_chunks \
+                   else np.array([], dtype=np.float32)
+        print(f'[Audio] CosyVoice2: {len(tts_full)} samples for {len(_seg_list)} segments')
     else:
         tts_full = np.array([], dtype=np.float32)
 
