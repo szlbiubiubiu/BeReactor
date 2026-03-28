@@ -1253,7 +1253,7 @@ def main(args):
                 start_frame = max(0, end_frame - 16)
                 if start_frame >= T_len:
                     start_frame = max(0, T_len - clip_size)
-                    
+                torch.manual_seed(0)
                 if args.use_fp16:
                     z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device)
                 else:
