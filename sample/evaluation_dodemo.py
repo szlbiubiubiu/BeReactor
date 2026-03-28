@@ -1044,29 +1044,57 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
         # keep standard orientation format
         new_frame_list_single.append( torch.permute(torch.tensor(single_ori_img[:,:,:,::-1]/127.5-1),(0,3,1,2)) )
 
-    input_latent_list_cycle = input_latent_list_single
-    original_image_cycle = new_frame_list_single
-    coord_list_cycle = coord_list_single
+    target_frames = len(whisper_chunks)
     
-    laten_repeat=max(len(whisper_chunks)//len(input_latent_list_cycle),1)
+    # 1. Timeline Setup
+    speaker_active_frames = np.zeros(target_frames, dtype=bool)
+    if 'segments' in result:
+        for segment in result['segments']:
+            start_frame = int(segment['start'] * fps)
+            end_frame = int(segment['end'] * fps)
+            start_frame = max(0, min(start_frame, target_frames - 1))
+            end_frame = max(0, min(end_frame, target_frames))
+            if start_frame < end_frame:
+                speaker_active_frames[start_frame:end_frame] = True
 
-    vae_encode_latents_new=[]
-    for single_latent in original_image_cycle:
-        repeated_latent = laten_repeat * [single_latent]
-        vae_encode_latents_new += repeated_latent
-    original_image_cycle = vae_encode_latents_new
+    # 2. Extract 75/25 cutoff pools
+    total_gen_frames = len(input_latent_list_single)
+    reply_frames_cutoff = int(total_gen_frames * 0.75)
     
-    coord_list_cycle_new=[]
-    for single_coord in coord_list_cycle:
-        repeated_coord = laten_repeat * [single_coord]
-        coord_list_cycle_new += repeated_coord
-    coord_list_cycle = coord_list_cycle_new
+    # 3. Target requirements
+    target_listen = np.sum(speaker_active_frames)
+    target_reply = target_frames - target_listen
     
-    latent_list_new=[]
-    for single_lat in input_latent_list_cycle:
-        repeated_lat = laten_repeat * [single_lat]
-        latent_list_new += repeated_lat
-    input_latent_list_cycle = latent_list_new
+    input_latent_list_cycle = []
+    original_image_cycle = []
+    coord_list_cycle = []
+    
+    reply_idx = 0
+    listen_idx = 0
+    
+    for i in range(target_frames):
+        if speaker_active_frames[i]:
+            # Listen zone (last 25%)
+            if total_gen_frames - reply_frames_cutoff > 0 and target_listen > 0:
+                l_i = reply_frames_cutoff + int(listen_idx * (total_gen_frames - reply_frames_cutoff) / target_listen)
+                l_i = min(l_i, total_gen_frames - 1)
+            else:
+                l_i = total_gen_frames - 1
+            input_latent_list_cycle.append(input_latent_list_single[l_i])
+            original_image_cycle.append(new_frame_list_single[l_i])
+            coord_list_cycle.append(coord_list_single[l_i])
+            listen_idx += 1
+        else:
+            # Reply zone (first 75%)
+            if reply_frames_cutoff > 0 and target_reply > 0:
+                r_i = int(reply_idx * reply_frames_cutoff / target_reply)
+                r_i = min(r_i, reply_frames_cutoff - 1)
+            else:
+                r_i = 0
+            input_latent_list_cycle.append(input_latent_list_single[r_i])
+            original_image_cycle.append(new_frame_list_single[r_i])
+            coord_list_cycle.append(coord_list_single[r_i])
+            reply_idx += 1
 
 
     video_num = len(whisper_chunks)
@@ -1533,7 +1561,7 @@ def main(args):
                     # Use reference frames directly
                     print(f"  -> Using reference frames for hold period (no prior generation)")
                     samples_pixels = listener_ref_clip
-                    pdb.set_trace()
+                    # pdb.set_trace()
                     b_enc = listener_ref_clip.shape[0] if len(listener_ref_clip.shape) == 5 else 1
                     encoded_batch = []
                     for batch_idx in range(b_enc):
