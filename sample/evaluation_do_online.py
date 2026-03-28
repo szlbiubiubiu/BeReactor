@@ -708,7 +708,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         active_durations.append(active_dur)
 
     all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
-
+    pdb.set_trace()
     # ── Pass 2: one single TTS call for all listener replies ─────────────────
     combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
     if combined_reply_text.strip():
