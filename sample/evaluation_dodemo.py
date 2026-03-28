@@ -1205,7 +1205,8 @@ def openai_deepseek_talkinghead_genall(whisper_model,audio_processor,
     # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
     output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index)+'.mp4')
     
-    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp2.mp4 {output_vid_name}"
+    # Mix both original speaker audio and generated listener audio cleanly, mapping to AAC explicitly so video players don't mute it
+    cmd_combine_audio = f'ffmpeg -y -v warning -i "{OUTPUT_audio_FILE}" -i "{speaker_audio_path}" -i temp2.mp4 -filter_complex "[0:a][1:a]amix=inputs=2:duration=longest[a]" -map 2:v -map "[a]" -c:v copy -c:a aac "{output_vid_name}"'
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
     
