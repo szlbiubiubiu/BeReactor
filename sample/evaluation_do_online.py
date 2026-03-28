@@ -674,8 +674,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # This aligns audio exactly with the frame stretching done in main().
     # ──────────────────────────────────────────────────────────────────────────
 
-    description_base = "Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise. "
-    +"The tone is positive level of " + str(tone_pos)
+    description_base = ("Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise. "
+                        "The tone is positive level of " + str(tone_pos))
     
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
