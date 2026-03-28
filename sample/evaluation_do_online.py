@@ -709,6 +709,14 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         if reply_text.strip() and active_duration_sec > 0.05:
             input_ids_seg = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
             prompt_ids_seg = tokenizer(reply_text, return_tensors="pt").input_ids.to(audio_device)
+            #每次生成同样的声音
+            seed = 42 # 选择一个你喜欢的种子
+
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+
+
             gen_seg = audio_model.generate(input_ids=input_ids_seg, prompt_input_ids=prompt_ids_seg)
             tts_arr = gen_seg.cpu().numpy().squeeze().astype(np.float32)
 
