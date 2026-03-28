@@ -683,8 +683,16 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # 2. TTS audio for the active (listener-talking) window
         active_duration_sec = max(0.0, next_start_sec - seg_end_sec)
         reply_text = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
-        pdb.set_trace()
-        if reply_text.strip() and active_duration_sec > 0.1:
+
+        # If there is no gap between segments (segments are back-to-back),
+        # split this segment's own speaking window 50% silence + 50% TTS.
+        if active_duration_sec < 0.05:
+            half = passive_duration_sec / 2.0
+            passive_silence = np.zeros(int(sr * half), dtype=np.float32)
+            active_duration_sec = half
+            print(f'[Audio seg {seg_i}] No gap → splitting window: silence={half:.2f}s  TTS={half:.2f}s')
+
+        if reply_text.strip() and active_duration_sec > 0.05:
             input_ids_seg = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
             prompt_ids_seg = tokenizer(reply_text, return_tensors="pt").input_ids.to(audio_device)
             gen_seg = audio_model.generate(input_ids=input_ids_seg, prompt_input_ids=prompt_ids_seg)
