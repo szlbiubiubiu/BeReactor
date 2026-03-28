@@ -521,19 +521,32 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     all_text = ''
     current_text = ''
 
+    # TTS speaking rate (words per second) used to cap reply length to fit the listener's reaction window
+    _TTS_WORDS_PER_SEC = 2.5
+
     chat = [
         {"role": "system", "content": (
             "We are having a real-time conversation. Pretend you are a person with a specific personality "
             "(a sales representative), subject to the random seed: " + str(random_number) +
-            ". For each speaker turn, generate a concise response within 30 words that fits the live dialogue flow."
+            ". For each speaker turn, generate a natural response that fits the live dialogue flow. "
+            "Each reply must not exceed the word-count limit stated in the user message."
         )}
     ]
 
     seg_reply_texts = []
     for seg_i, speaker_text in enumerate(seg_texts):
+        # Compute per-segment word limit from speaker's talk duration
+        if segment_list is not None and seg_i < len(segment_list):
+            _seg_info = segment_list[seg_i]
+            _speaker_dur = max(0.5, float(_seg_info.get('end', 0.64)) - float(_seg_info.get('start', 0.0)))
+        else:
+            _speaker_dur = frames_per_seg / 25.0  # fallback: 64 frames @ 25 fps
+        _max_words = max(5, min(50, round(_speaker_dur * _TTS_WORDS_PER_SEC)))
+
         # Build user message; from turn 2 onwards, carry forward emotion context
         if seg_i == 0:
-            user_msg = speaker_text if speaker_text else "Hello."
+            base_text = speaker_text if speaker_text else "Hello."
+            user_msg = f"{base_text} [Reply in at most {_max_words} words.]"
         else:
             # Append previous assistant turn to maintain dialogue continuity
             chat.append({"role": "assistant", "content": seg_reply_texts[-1]})
@@ -548,7 +561,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 float(valence.mean()),
                 float(arousal.mean())
             )
-            user_msg = (speaker_text if speaker_text else "Please continue.") + emo_hint
+            base_text = speaker_text if speaker_text else "Please continue."
+            user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
 
         chat.append({"role": "user", "content": user_msg})
 
