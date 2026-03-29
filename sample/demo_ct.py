@@ -221,10 +221,108 @@ from rouge_score import rouge_scorer
 import bert_score
 
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
 
 audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
 tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+
+# ─── Timeline-aware temporal frame stretching ────────────────────────────────
+
+def _fill_frames(result, src_frames, start_idx, end_idx):
+    """Linearly interpolate src_frames into result[start_idx:end_idx]."""
+    if end_idx <= start_idx or len(src_frames) == 0:
+        return
+    n_target = end_idx - start_idx
+    n_src = len(src_frames)
+    for j in range(n_target):
+        if start_idx + j >= len(result):
+            break
+        if n_target == 1 or n_src == 1:
+            result[start_idx + j] = np.array(src_frames[0], dtype=np.uint8)
+            continue
+        src_pos = j * (n_src - 1) / (n_target - 1)
+        lo = int(src_pos)
+        hi = min(lo + 1, n_src - 1)
+        alpha = src_pos - lo
+        if alpha < 1e-6:
+            result[start_idx + j] = np.array(src_frames[lo], dtype=np.uint8)
+        else:
+            blended = (1 - alpha) * np.array(src_frames[lo], dtype=np.float32) + \
+                       alpha       * np.array(src_frames[hi], dtype=np.float32)
+            result[start_idx + j] = np.clip(blended, 0, 255).astype(np.uint8)
+
+
+def stretch_frames_to_timeline(frames, segment_list, target_total_frames,
+                                video_fps=25, frames_per_seg=64):
+    """
+    Stretch N_segs×64 generated frames to exactly target_total_frames,
+    aligning listener timing with the speaker's timeline:
+
+    For each segment k:
+      • passive (first 25% = 16 frames)  → speaker talking window
+                                            [segment[k].start … segment[k].end]
+      • active  (last  75% = 48 frames)  → silence gap
+                                            [segment[k].end … segment[k+1].start]
+                                            (or video end for the last segment)
+
+    Any uncovered leading frames (before segment 0 starts) are filled with the
+    first available frame, keeping the output fully contiguous.
+    """
+    if not frames or target_total_frames <= 0:
+        return frames
+
+    n_segs = len(segment_list)
+    passive_per_seg = int(0.25 * frames_per_seg)   # 16
+    active_per_seg  = frames_per_seg - passive_per_seg  # 48
+
+    result = [None] * target_total_frames
+
+    for seg_i, seg in enumerate(segment_list):
+        seg_start_frame = max(0, int(seg.get('start', 0) * video_fps))
+        seg_end_frame   = min(target_total_frames, int(seg.get('end',   0) * video_fps))
+
+        # silence gap: from end of this segment to start of next
+        if seg_i + 1 < n_segs:
+            next_start_frame = min(target_total_frames,
+                                   int(segment_list[seg_i + 1].get('start', seg_end_frame) * video_fps))
+        else:
+            next_start_frame = target_total_frames
+
+        # Source frames for this segment
+        src_passive = frames[seg_i * frames_per_seg : seg_i * frames_per_seg + passive_per_seg]
+        src_active  = frames[seg_i * frames_per_seg + passive_per_seg : (seg_i + 1) * frames_per_seg]
+
+        # Passive frames → speaker talking window
+        if seg_end_frame > seg_start_frame and src_passive:
+            _fill_frames(result, src_passive, seg_start_frame, seg_end_frame)
+
+        # Active frames → silence gap (listener's turn to speak)
+        if next_start_frame > seg_end_frame and src_active:
+            _fill_frames(result, src_active, seg_end_frame, next_start_frame)
+
+    # Forward-fill any None slots (e.g., gap before first segment)
+    fallback = None
+    for i in range(len(result)):
+        if result[i] is not None:
+            fallback = result[i]
+        elif fallback is not None:
+            result[i] = fallback.copy()
+
+    # Backward-fill leading Nones (before first segment)
+    fallback = None
+    for i in range(len(result) - 1, -1, -1):
+        if result[i] is not None:
+            fallback = result[i]
+        elif fallback is not None:
+            result[i] = fallback.copy()
+
+    # Final safety: replace any remaining None with zeros
+    empty = np.zeros_like(frames[0]) if frames else np.zeros((256, 256, 3), dtype=np.uint8)
+    result = [f if f is not None else empty for f in result]
+
+    return result
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Function to calculate BLEU for multiple chats
 def calculate_bleu_batch(references, candidates):
@@ -363,177 +461,126 @@ def evaluate_LLM(dialogue: str):
 
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
+        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
+        segment_list=None):
+    """
+    input_latent: Tensor [N_segs*64, C, H, W] - all dialog segments stacked.
+    segment_list: list of dicts with keys 'text', 'start', 'end' - one per 64-frame block.
+    """
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
-    # pdb.set_trace()
-    expression=emo_fea['expression'].to(torch.device('cuda:0'))
-    expression_soft_sing=F.softmax(expression,dim=1)
-    valence_sing=emo_fea['valence'].to(torch.device('cuda:0'))
-    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:0'))
-    # if step==0:
-    expression_soft=expression_soft_sing
-    valence=valence_sing
-    arousal=arousal_sing
-        # else:
-        #     expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
-        #     valence=torch.cat((valence,valence_sing),dim=0)
-        #     arousal=torch.cat((arousal,arousal_sing),dim=0)
+    frames_per_seg = 64  # each segment window is always 64 frames
 
-    # pdb.set_trace()
-    result = whisper_model.transcribe(speaker_audio_path)
-    print(result["text"])
-    
-    sentences=[['Hi there! Nice to Meet you! Please introduce yourself?'],
-                ['Do you like swimming'],['Do you have any questions for me?']]
-                #[result["text"]]#.split('.')  for demo, find a speaker that only speak 1 sentence
-    # sentences=['Have you traveled to Vancouver? What impresses you most?']
-    # pdb.set_trace()
-    if len(result["text"].split('.'))==1:
-        # pdb.set_trace()
-        a=1
-    #sentences=result["text"].split('.')
-    listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
-    # print(result["text"])
-        
-    listener_reference_sentences=listener_result["text"].split('.')
+    # ---- Derive segment texts from segment_list or fall back to Whisper transcription ----
+    if segment_list is not None and len(segment_list) > 0:
+        seg_texts = [seg.get("text", "").strip() for seg in segment_list]
+        n_segments = len(seg_texts)
+        print(f"[Timeline] Processing {n_segments} speaker segments on timeline")
+    else:
+        result = whisper_model.transcribe(speaker_audio_path)
+        print(result["text"])
+        seg_texts = [result["text"].strip()]
+        n_segments = 1
 
-    # pdb.set_trace()
-    # bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
-    # rouge_scores = calculate_rouge_batch([listener_result["text"]], [result["text"]])
-    # bert_scores = calculate_bertscore_batch([listener_result["text"]], [result["text"]])
+    # ---- Reshape input_latent into [n_segments, 64, C, H, W] ----
+    if input_latent.dim() == 4:
+        total_frames_il = input_latent.shape[0]
+        if total_frames_il == frames_per_seg * n_segments:
+            seg_latents = input_latent.reshape(n_segments, frames_per_seg, *input_latent.shape[1:])
+        elif total_frames_il == frames_per_seg:
+            seg_latents = input_latent.unsqueeze(0)  # single segment [1,64,C,H,W]
+        else:
+            # fallback: use first 64 frames only
+            seg_latents = input_latent[:frames_per_seg].unsqueeze(0)
+            n_segments = 1
+            seg_texts = seg_texts[:1]
+    else:
+        seg_latents = input_latent[:1]
+        n_segments = 1
+        seg_texts = seg_texts[:1]
 
+    # ---- Emotion features from first-segment latent ----
+    id_feats, emo_fea, au_disfa, au_bp4d = encoder_emo.forward_listener(seg_latents[0].to(torch.device('cuda:0')))
+    expression = emo_fea['expression'].to(torch.device('cuda:0'))
+    expression_soft = F.softmax(expression, dim=1)
+    valence = emo_fea['valence'].to(torch.device('cuda:0'))
+    arousal = emo_fea['arousal'].to(torch.device('cuda:0'))
 
+    # ---- Listener reference transcription (once, for scoring) ----
+    listener_result = whisper_model.transcribe(listener_audio_path)
+    listener_reference_sentences = listener_result["text"].split('.')
 
-    rand_num=torch.randint(0,100,(1,))
-    all_text=''
-    conversation_history = f"system: You are a person with a specific personality(a sales), subjected to the random seed:."+str(6)+". reply within 30 words(at least 6 words)\n"
-    # for i in range(1):
-    #     if i==0:
-    #         chat = [
-    #         {"role": "system", "content": "You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words"},
-    #         {"role": "user", "content": sentences[0]}
-    #             ]
-    #         a=1
-    #     else:
-    #         chat=response[0]['generated_text']
-    #         chat.append(
-    #             # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-    #             {"role": "user", "content": sentences[i]+". please reply within 10 words"}
-    #         )
-    #     response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-    #     current_text=response[0]['generated_text'][-1]['content']
-    #     all_text=all_text+current_text
-    #     print(response[0]['generated_text'][-1]['content'])
-    # pdb.set_trace()
+    # ---- Rolling conversational LLM dialogue (one turn per timeline segment) ----
     openai_api_key = "None"
     openai_api_base = "http://0.0.0.0:8000/v1"
+    client = OpenAI(api_key=openai_api_key, base_url=openai_api_base)
 
-    client = OpenAI(
-        api_key=openai_api_key,
-        base_url=openai_api_base,
-    )
-    dialogue=[]
-    random_number=np.random.randint(low=0, high=100)
-    # else:
-    tone_pos=1
-    # pdb.set_trace()
-    for i in range(len(sentences)):
-        if i>=5:
-            break
-        if i==0:
-            if len(sentences)!=1:
-            #     chat = [
-            #     {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-            #     +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            #     {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
-            # Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-            #                 expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-            #                 expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-            #             +'. Remove the emotion number in your reply.)'}
-            #     ]
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words in each reply. Return a binary number describing of the response level, 0 means negative and 1 means postive"},
-                {"role": "user", "content": sentences[0]}
-                ]
-            else:
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality(a sales), subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 100 words(more than 10 words)"},
-                {"role": "user", "content": sentences[0]}
-                ]
-            # {"role": "system", "content": 
-            # "Please reply with a tone of emotion level:\
-            # Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
-            #                     'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
-            #             'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"},            
-            
-            
-            
-            
-            # dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
-            # +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            
-            # {"role": "user", "content": sentences[0]}]
-            a=1
+    random_number = np.random.randint(low=0, high=100)
+    tone_pos = 1
+    all_text = ''
+    current_text = ''
+
+    # TTS speaking rate (words per second) used to cap reply length to fit the listener's reaction window
+    _TTS_WORDS_PER_SEC = 2.5
+
+    chat = [
+        {"role": "system", "content": (
+            "We are having a real-time conversation. Pretend you are a person with a specific personality "
+            "(a sales representative), subject to the random seed: " + str(random_number) +
+            ". For each speaker turn, generate a natural response that fits the live dialogue flow. "
+            "Each reply must not exceed the word-count limit stated in the user message."
+        )}
+    ]
+
+    seg_reply_texts = []
+    for seg_i, speaker_text in enumerate(seg_texts):
+        # Compute per-segment word limit from speaker's talk duration
+        if segment_list is not None and seg_i < len(segment_list):
+            _seg_info = segment_list[seg_i]
+            _speaker_dur = max(0.5, float(_seg_info.get('end', 0.64)) - float(_seg_info.get('start', 0.0)))
         else:
-            # chat=response[0]['generated_text']
-            chat.append(
-            {"role": "Assistant", "content": current_text})
-            chat.append(
-                # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-                {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply. )'},#+". please reply within 10 words"}
-            # <| Assistant |><think>\n\n</think>\n\n
-            # chat.append(
-            # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
+            _speaker_dur = frames_per_seg / 25.0  # fallback: 64 frames @ 25 fps
+        _max_words = max(5, min(50, round(_speaker_dur * _TTS_WORDS_PER_SEC)))
+
+        # Build user message; from turn 2 onwards, carry forward emotion context
+        if seg_i == 0:
+            base_text = speaker_text if speaker_text else "Hello."
+            user_msg = f"{base_text} [Reply in at most {_max_words} words.]"
+        else:
+            # Append previous assistant turn to maintain dialogue continuity
+            chat.append({"role": "assistant", "content": seg_reply_texts[-1]})
+            emo_hint = (
+                " (Please match the emotional tone — "
+                "Neutral={:.2f}, Happy={:.2f}, Sad={:.2f}, valence={:.2f}, arousal={:.2f}. "
+                "Do not include these scores in your reply.)"
+            ).format(
+                float(expression_soft[:, 0].mean()),
+                float(expression_soft[:, 1].mean()),
+                float(expression_soft[:, 2].mean()),
+                float(valence.mean()),
+                float(arousal.mean())
             )
-            # dialogue.append(
-            # {"role": "Assistant", "content": current_text})
-            # dialogue.append({"role": "user", "content": sentences[i]})
-        
-        
-        
-        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        #below is llama3
-        # pdb.set_trace()
-        text_4_split=response[0]['generated_text'][-1]['content'].split('(')
-        current_text=text_4_split[0]#response[0]['generated_text'][-1]['content'].split('(')
-        if len(text_4_split)==2:
-            # number_string = text_4_split[1].strip(')')
-            # # Convert the resulting string '1' to an integer
-            # tone_pos = int(number_string)
-            tone_pos = re.findall(r"\d+\.?\d*",text_4_split[1])[-1]
-            # print(re.findall(r"\d+\.?\d*",string))  
-            # =
-        
-        # pdb.set_trace()
+            base_text = speaker_text if speaker_text else "Please continue."
+            user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
 
-        # #deepseek with thinking tag
-        # response = client.chat.completions.create(
-        #     model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-        #     messages=chat,
-        #     temperature=0.2,
-        # )
-        # current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
-        # if len(current_text)==1:
-        #     current_tex=current_text#[0]
-        # else:   
-        #     current_text=current_text[1]
-        
+        chat.append({"role": "user", "content": user_msg})
 
-        all_text=all_text+current_text
-        print(current_text)
-    #add final text
-    chat.append(
-            {"role": "Assistant", "content": current_text})
-    # pdb.set_trace()
+        response = pipe(chat, max_new_tokens=512)
+        text_4_split = response[0]['generated_text'][-1]['content'].split('(')
+        current_text = text_4_split[0]
+        if len(text_4_split) >= 2:
+            found = re.findall(r"\d+\.?\d*", text_4_split[1])
+            if found:
+                tone_pos = found[-1]
+
+        print(f"[Seg {seg_i}] Speaker: {speaker_text!r}")
+        print(f"[Seg {seg_i}] Listener: {current_text!r}")
+        seg_reply_texts.append(current_text)
+        all_text += current_text + " "
+
+    # Close conversation with last assistant turn (needed for scoring)
+    chat.append({"role": "assistant", "content": seg_reply_texts[-1] if seg_reply_texts else ''})
     print(chat)
     realism_score,sentiment_emb=evaluate_LLM(chat)
     # all_text
@@ -609,40 +656,111 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
 
     # pdb.set_trace()
-    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(1)+'.wav'
-    # if os.path.exists(OUTPUT_audio_FILE):
-    #     os.remove(OUTPUT_audio_FILE)
+    OUTPUT_audio_FILE = result_img_save_path + '/output_audio' + str(1) + '.wav'
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
-    '''edge tts'''
-    # communicate = edge_tts.Communicate(all_text, VOICE)
-    # # pdb.set_trace()
-    # communicate.save_sync(OUTPUT_audio_FILE)
-    # pdb.set_trace()
 
-    # audio_device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    sr = audio_model.config.sampling_rate  # (e.g. 44100)
+    video_fps_audio = 25  # reference fps used for timeline conversion
+    # Fraction of passive window to donate to the active window when segments
+    # are back-to-back (no natural gap).  0.5 = 50 % of passive becomes active.
+    _NO_GAP_SPLIT_RATIO = 0.7#0.7 means active is more
 
-    # audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
-    # tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+    # ── Per-segment audio construction ────────────────────────────────────────
+    # For each segment k on the timeline:
+    #   • passive window [seg.start … seg.end]  → SILENCE  (speaker is talking)
+    #   • active  window [seg.end   … next_seg.start] → TTS of listener reply k
+    #
+    # This aligns audio exactly with the frame stretching done in main().
+    # ──────────────────────────────────────────────────────────────────────────
 
-    prompt = all_text#"Hey, how are you doing today?"
-    # if tone_pos:
-    description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-        The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is positive level of "+str(tone_pos)
-    # else:
-    #     description = "A male speaker delivers a slightly expressive and animated speech with a moderate speed and pitch. \
-    #     The recording is of very high quality, with the speaker's voice sounding clear and very close up. The tone is negative."
+    description_base = ("Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise. "
+                        "The tone is positive level of " + str(tone_pos))
+    
 
-    input_ids = tokenizer(description, return_tensors="pt").input_ids.to(audio_device)
-    prompt_input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(audio_device)
+    _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
 
-    generation = audio_model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
-    audio_arr = generation.cpu().numpy().squeeze()
+    # ── Pass 1: pre-compute per-segment timing ───────────────────────────────
+    passive_silences = []
+    active_durations = []
+    for seg_i, seg in enumerate(_seg_list):
+        seg_start_sec = seg.get('start', 0.0)
+        seg_end_sec   = seg.get('end',   0.64)
+        if seg_i + 1 < len(_seg_list):
+            next_start_sec = _seg_list[seg_i + 1].get('start', seg_end_sec)
+        else:
+            next_start_sec = num_frame_sp / video_fps_audio
 
-    asdf_aduio=np.zeros(audio_model.config.sampling_rate*3,dtype=np.float32)
-    new_audio=np.concatenate((asdf_aduio,audio_arr),axis=0)
-    sf.write(OUTPUT_audio_FILE, new_audio, audio_model.config.sampling_rate)
-    print('audio_generated, path is: ',OUTPUT_audio_FILE)
+        passive_dur = max(0.0, seg_end_sec - seg_start_sec)
+        active_dur  = max(0.0, next_start_sec - seg_end_sec)
+
+        # No gap between segments → donate _NO_GAP_SPLIT_RATIO of passive to active
+        if active_dur < 0.05:
+            donated    = passive_dur * _NO_GAP_SPLIT_RATIO
+            passive_dur -= donated
+            active_dur   = donated
+            print(f'[Audio seg {seg_i}] No gap → split({_NO_GAP_SPLIT_RATIO}): silence={passive_dur:.2f}s  TTS={active_dur:.2f}s')
+
+        passive_silences.append(np.zeros(int(sr * passive_dur), dtype=np.float32))
+        active_durations.append(active_dur)
+
+    all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
+    pdb.set_trace()
+    # ── Pass 2: one single TTS call for all listener replies ─────────────────
+    combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
+    if combined_reply_text.strip():
+        input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
+        prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
+        gen_all  = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
+        tts_full = gen_all.cpu().numpy().squeeze().astype(np.float32)
+        print(f'[Audio] Single TTS pass: {len(tts_full)} samples for {len(_seg_list)} segments')
+    else:
+        tts_full = np.array([], dtype=np.float32)
+
+    # ── Pass 3: distribute TTS audio to each active window ───────────────────
+    # Proportional split by character count (proxy for spoken duration).
+    # After slicing, resample the slice to exactly fill the active window so
+    # speech is neither cut off nor padded with silence.
+    char_counts = [len(t) for t in all_reply_texts]
+    total_chars = sum(char_counts)
+
+    segment_audio_parts = []
+    tts_offset = 0
+    for seg_i in range(len(_seg_list)):
+        reply_text     = all_reply_texts[seg_i]
+        active_dur     = active_durations[seg_i]
+        target_samples = int(sr * active_dur)
+
+        if reply_text.strip() and total_chars > 0 and len(tts_full) > 0:
+            frac      = char_counts[seg_i] / total_chars
+            slice_len = max(1, round(len(tts_full) * frac))
+            tts_slice = tts_full[tts_offset: tts_offset + slice_len]
+            tts_offset += slice_len
+
+            # Speed-adjust: resample tts_slice to target_samples so speech fills
+            # the active window exactly (neither cut off nor padded).
+            if len(tts_slice) != target_samples and target_samples > 0:
+                x_old = np.linspace(0, 1, len(tts_slice))
+                x_new = np.linspace(0, 1, target_samples)
+                tts_arr = np.interp(x_new, x_old, tts_slice).astype(np.float32)
+            else:
+                tts_arr = tts_slice[:target_samples] if len(tts_slice) >= target_samples \
+                          else np.concatenate([tts_slice,
+                                               np.zeros(target_samples - len(tts_slice), dtype=np.float32)])
+        else:
+            tts_arr = np.zeros(target_samples, dtype=np.float32)
+
+        segment_audio_parts.append(passive_silences[seg_i])
+        segment_audio_parts.append(tts_arr)
+        passive_dur_log = len(passive_silences[seg_i]) / sr
+        speed_ratio = len(tts_full) * (char_counts[seg_i] / total_chars) / max(1, target_samples) \
+                      if total_chars > 0 and target_samples > 0 else 1.0
+        print(f'[Audio seg {seg_i}] silence={passive_dur_log:.2f}s  TTS={active_dur:.2f}s  '
+              f'speed={speed_ratio:.2f}x  reply={repr(reply_text[:60])}')
+
+    new_audio = np.concatenate(segment_audio_parts, axis=0)
+    sf.write(OUTPUT_audio_FILE, new_audio, sr)
+    print('audio_generated, path is: ', OUTPUT_audio_FILE)
     # # message in self.stream()
     wavs=[]
     # with open(OUTPUT_audio_FILE, "wb") as file:
@@ -669,6 +787,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
+    
+    total_frames = len(input_latent)
+    num_silent_frames = 0  # all frames processed through talking head
+    num_talk_frames = total_frames
+
+    # Pad or trim whisper_chunks to match total_frames
+    if len(whisper_chunks) < total_frames:
+        pad_len = total_frames - len(whisper_chunks)
+        if len(whisper_chunks) > 0:
+            whisper_chunks = whisper_chunks + [whisper_chunks[-1]] * pad_len
+        else:
+            whisper_chunks = whisper_chunks * total_frames  # fallback: repeat
+    elif len(whisper_chunks) > total_frames:
+        whisper_chunks = whisper_chunks[:total_frames]
 
     # # #image processing
     # # # crop_frame = cv2.imread(img_path)
@@ -705,7 +837,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
-    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
+    input_latent_talk = input_latent  # all frames go through talking head
+    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent_talk+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent_talk.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
     # reverse_input_img_list=input_img_list_single[::-1]#.reverse()
@@ -876,10 +1009,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             out_images=res_frame_list[::interval_listener]
         return out_images[:num_frame_sp],evaluation_score
     print("pad talking image to original video")
-    print('len(res_frame_list)=',len(res_frame_list))
-    # pdb.set_trace()
+    
+    final_output_frames = []
+
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        
+        save_idx = i
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
         # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
         # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
@@ -916,7 +1050,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
         combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
         #clip to -1:1,, or 0-255
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
+        cv2.imwrite(f"{result_img_save_path}/{str(save_idx).zfill(8)}.png",combine_frame)
+        final_output_frames.append(combine_frame[:,:,::-1])
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
@@ -936,19 +1071,14 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     os.system(cmd_combine_audio)
     
     # os.remove("./temp.mp4")
-    shutil.rmtree(result_img_save_path)
+    # shutil.rmtree(result_img_save_path)
     print(f"result is save to {output_vid_name}")      
 
     print('the corresponding speaker path is: ', speaker_audio_path)
-    # pdb.set_trace()
-    # if return_image4emotion:
-    #return emotion image
-    # pdb.set_trace()
-    interval_listener=len(res_frame_list)//num_frame_sp
-    out_images=res_frame_list[::interval_listener]
-    # return out_images[:num_frame_sp],evaluation_score 
     
-    return out_images[:num_frame_sp],evaluation_score 
+    out_images = final_output_frames
+    
+    return out_images[:num_frame_sp],evaluation_score
 
 
 def main(args):
@@ -1007,10 +1137,11 @@ def main(args):
     ##LLM processing
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.bfloat16, device_map="auto")
     # pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device_map="auto")
+    llm_device = 1 if torch.cuda.device_count() > 1 else 0
     if 'server' in platform.node():
-        pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=0)
+        pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=llm_device)
     else:
-        pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=0)
+        pipe = pipeline("text-generation", "meta-llama/Meta-Llama-3-8B-Instruct", torch_dtype=torch.float16, device=llm_device)
 
     ### deepseek
     # pipe = pipeline("text-generation", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", torch_dtype=torch.float16, device=1)
@@ -1097,187 +1228,154 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     # double_count=0
     torch.manual_seed(0)
+    T_len = 0
     for step, video_data in enumerate(loader):
+        if step == 0 and video_data is not None:
+            T_len = video_data['img'].shape[1]
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-        # if step<280:
-        #     continue
-        # Skip steps until we reach the resumed step
-        # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
-        #     continue
-        # pdb.set_trace()
         
-        out_samples=None
-        # pdb.set_trace()
-        if args.use_fp16:#args.num_frames
-            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-        else:
-            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)#args.num_frames
-        # if args.use_fp16:
-        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-        # else:
-        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+        for batch_index in range(batch_size):
+            speaker_audio_path = video_data['speaker_audio_path'][batch_index]
+            listener_audio_path = video_data['listener_audio_path'][batch_index]
+            
+            result = whisper_model.transcribe(speaker_audio_path)
+            segments = result.get("segments", [])
+            segments = segments[:4]
+            if len(segments) == 0:
+                segments = [{"start": 0.0, "end": 16/25.0, "text": ""}]
+                
+            all_face_images = []
+            seg_samples_list = []  # collect [64, C, H, W] per segment
+                
+            for seg_idx, segment in enumerate(segments):
+                end_time = segment["end"]
+                end_frame = int(end_time * 25)
+                start_frame = max(0, end_frame - 16)
+                if start_frame >= T_len:
+                    start_frame = max(0, T_len - clip_size)
 
-        # Setup classifier-free guidance:
-        # z = torch.cat([z, z], 0)
-        if using_cfg:
-            ###original classifier free guidance
-            # z = torch.cat([z, z], 0)
-            # y = torch.randint(0, args.num_classes, (1,), device=device)
-            # y_null = torch.tensor([101] * 1, device=device)
-            # y = torch.cat([y, y_null], dim=0)
-            # model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            # sample_fn = model.forward_with_cfg
-            #-----------------end original guidance
-            
-            #-----------------begin reaction guidance
-            z = torch.cat([z, z], 0)
-            # y = torch.randint(0, args.num_classes, (1,), device=device)
-            # y_null = torch.tensor([101] * 1, device=device)
-            # y = torch.cat([y, y_null], dim=0)
-            model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            sample_fn = model.forward_with_cfg_reaction
-        else:
-            sample_fn = model.forward
-            model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+                x = video_data['img'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                listener_ref = video_data['listener_video_clip'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                listener_video_clip_last = video_data['listener_video_clip_last'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                sp_audio_clip = video_data['speaker_audio_clip'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                emo_label = video_data['listener_emotion'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                
+                act_len = x.shape[1]
+                if act_len < clip_size:
+                    pad_len = clip_size - act_len
+                    if act_len > 0:
+                        x = torch.cat([x, x[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                        listener_ref = torch.cat([listener_ref, listener_ref[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                        listener_video_clip_last = torch.cat([listener_video_clip_last, listener_video_clip_last[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                        sp_audio_clip = torch.cat([sp_audio_clip, sp_audio_clip[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                        emo_label = torch.cat([emo_label, emo_label[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                    else:
+                        print(f"Warning: Segment {seg_idx} has 0 actual length! Skipping this segment.")
+                        continue
 
-        # pdb.set_trace()
-        for index_clip in range((video_data['img'].shape)[1]//clip_size):
-            # if len(listener_ref)<=32:
-            #     pdb.set_trace()
-            #     a=1
-            
-            x = video_data['img'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]#.half()
-            listener_video_clip_last=video_data['listener_video_clip_last'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
-            sp_audio_clip=video_data['speaker_audio_clip'].to(device, non_blocking=True)
-            if listener_ref.shape[1]<32:
-                pdb.set_trace()
-                a=1
-            # pdb.set_trace()
-            emo_label=video_data['listener_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
-            speaker_emo=video_data['speaker_emotion'].to(device, non_blocking=True)[:,index_clip*clip_size:(index_clip+1)*clip_size]
-            original_x=x
+                use_real_listener = getattr(args, 'use_real_listener', False)
 
-            #classifier free guidance, change half to zero
-            # pdb.set_trace()
-            # listener_ref=torch.flip(listener_ref, dims=(0,))
-            # x=torch.flip(x, dims=(0,))
-            if using_cfg:
-                x_uncon=torch.zeros_like(x)
-                listener_ref_uncon=torch.zeros_like(listener_ref)
-                x=torch.cat([x,x_uncon],dim=0)
-                listener_ref=torch.cat([listener_ref,listener_ref_uncon],dim=0)
-            # # listener_ref=listener_ref
-            # # Create sampling noise:
-            # if args.use_fp16:
-            #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-            # else:
-            #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+                if not use_real_listener:
+                    # ---- Diffusion model generation ----
+                    torch.manual_seed(0)
+                    if args.use_fp16:
+                        z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device)
+                    else:
+                        z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, device=device)
 
-            # # Setup classifier-free guidance:
-            # # z = torch.cat([z, z], 0)
-            # if using_cfg:
-            #     z = torch.cat([z, z], 0)
-            #     y = torch.randint(0, args.num_classes, (1,), device=device)
-            #     y_null = torch.tensor([101] * 1, device=device)
-            #     y = torch.cat([y, y_null], dim=0)
-            #     model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-            #     sample_fn = model.forward_with_cfg
-            # else:
-            #     sample_fn = model.forward
-            #     model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-            # # pdb.set_trace()
-            # Sample images:
-            # listener_ref=torch.zeros_like(listener_ref)
-            # # x=torch.zeros_like(x)
-            # listener_video_clip_last=torch.zeros_like(listener_video_clip_last)
-            # sp_audio_clip=torch.zeros_like(sp_audio_clip)
-            if args.sample_method == 'ddim':
-                samples = diffusion.ddim_sample_loop(
-                    sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
-                    sp_audio_clip=sp_audio_clip#torch.flip(listener_ref, dims=(0,))
-                )
-            elif args.sample_method == 'ddpm':
-                samples = diffusion.p_sample_loop(
-                    sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                    original_x=x,listener_ref=listener_ref,listener_video_clip_last=listener_video_clip_last,
-                    sp_audio_clip=sp_audio_clip
-                )
-            # pdb.set_trace()
-            # print(samples.shape)
-            if args.use_fp16:
-                samples = samples.to(dtype=torch.float16)
-            if using_cfg:
-                samples=samples[:len(x)//2]
-            b, f, c, h, w = samples.shape
-            pdb.set_trace()
-            
-            # 按 batch 中每个 instance 单独处理，用 vae.decode 解码，然后组合为 batch 输出
-            decoded_batch = []
-            for batch_idx in range(b):
-                # 取出当前 batch instance 的所有 frames: (f, c, h, w)
-                sample_instance = samples[batch_idx]
-                # vae.decode 处理 (f, c, h, w) 批次，返回 (f, 3, H, W)
-                decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
-                decoded_batch.append(decoded_instance)
-            
-            # 组合为 batch: list of (f, 3, H, W) -> (b, f, 3, H, W)
-            samples = torch.stack(decoded_batch, dim=0)
-            
-            # pdb.set_trace()
-            if index_clip==0:
-                out_samples=samples#rearrange(samples, '(b f) c h w -> b f c h w', b=b)
-            else:
-                out_samples=torch.cat((out_samples,samples),dim=1)
-        # #save original video
-        # video_ = ((samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-        # video_save_path = os.path.join(args.save_video_path, 'sample' + '.mp4')
-        # print(video_save_path)
-        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        # print('save path {}'.format(args.save_video_path))
+                    if using_cfg:
+                        z = torch.cat([z, z], 0)
+                        model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+                        sample_fn = model.forward_with_cfg_reaction
+                    else:
+                        sample_fn = model.forward
+                        model_kwargs = dict(y=None, use_fp16=args.use_fp16)
 
-        # pdb.set_trace()
-        all_face_images=[]
-        # #can consider do not use the decode of vae
-        dim_out=out_samples.shape
-        print(dim_out)
-        # all_face_images=openai_deepseek_talkinghead_genall(audio_file,whisper_model,audio_processor,
-        #             emo_label,out_samples.reshape(dim_out[0]*dim_out[1],dim_out[2],dim_out[3],dim_out[4]), pipe,vae, unet, pe,num_frame_sp=dim_out[0]*dim_out[1])     #openai,deepseek
-        # all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images),(0,3,1,2))/127.5-1,device=out_samples.device).float()
-        # pdb.set_trace()
-        for batch_index in range(len(out_samples)):
-            
-            # #save videos before RF
-            # video_ = ((out_samples[batch_index] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-            # video_save_path = os.path.join(args.save_video_path, 'sample_' + str(len(out_samples)*step+batch_index)+'.mp4')
-            # # print(video_save_path)
-            # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-            # print('save path {}'.format(args.save_video_path))
-            
+                    original_x = x
+                    listener_ref_diff = listener_ref
+                    if using_cfg:
+                        x_uncon = torch.zeros_like(x)
+                        listener_ref_uncon = torch.zeros_like(listener_ref)
+                        x = torch.cat([x, x_uncon], dim=0)
+                        listener_ref_diff = torch.cat([listener_ref, listener_ref_uncon], dim=0)
 
-            batched_faces,scores=openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,
-            whisper_model,audio_processor,video_data['speaker_audio_path'][batch_index],video_data['listener_audio_path'][batch_index],
-                    emo_label,out_samples[batch_index], pipe,vae, unet, pe,batch_index=len(out_samples)*step+batch_index,num_frame_sp=dim_out[1])     #openai,deepseek
-            # calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,
-            #         emo_label,out_samples[batch_index], pipe,vae, unet, pe)  #llama
-            all_face_images+=batched_faces
-            all_score['all_realism_score']+=scores['realism_score']
-            all_score['all_sentiment_emb'][batch_size*step+batch_index]=scores['sentiment_emb']
-            # all_score['all_valence_score']+=scores['valence_score']
-            # all_score['all_arousal_score']+=scores['arousal_score']
-            # pdb.set_trace()
-            all_score['all_bleu_scores']+=scores['bleu_scores']
-            # all_score['all_rouge_scores']+=scores['rouge_scores']
-            all_score['all_bert_scores']+=scores['bert_scores']
-            # video_ = np.transpose(np.asarray(batched_faces),(0,3,1,2))#.permute(0, 2, 3, 1).contiguous()
+                    if args.sample_method == 'ddim':
+                        samples = diffusion.ddim_sample_loop(
+                            sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                            original_x=x, listener_ref=listener_ref_diff, listener_video_clip_last=listener_video_clip_last,
+                            sp_audio_clip=sp_audio_clip
+                        )
+                    elif args.sample_method == 'ddpm':
+                        samples = diffusion.p_sample_loop(
+                            sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                            original_x=x, listener_ref=listener_ref_diff, listener_video_clip_last=listener_video_clip_last,
+                            sp_audio_clip=sp_audio_clip
+                        )
+
+                    if args.use_fp16:
+                        samples = samples.to(dtype=torch.float16)
+                    if using_cfg:
+                        samples = samples[:len(x)//2]
+
+                    b, f, c, h, w = samples.shape
+                    decoded_batch = []
+                    for b_idx in range(b):
+                        sample_instance = samples[b_idx]
+                        decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                        decoded_batch.append(decoded_instance)
+                    samples = torch.stack(decoded_batch, dim=0)
+                    seg_out = samples[0]  # [64, C, H, W] for this segment
+                else:
+                    # ---- Use real listener video instead of diffusion output ----
+                    print(f"[Seg {seg_idx}] Using real listener video for talking head alignment")
+                    seg_out = listener_ref[0]  # [64, C, H, W], range [-1, 1]
+
+                seg_samples_list.append(seg_out)
+
+            # Stack all segment tensors: [N_segs*64, C, H, W]
+            if len(seg_samples_list) == 0:
+                print(f"No valid segments for batch_index={batch_index}, skipping.")
+                continue
+            stacked_out = torch.cat(seg_samples_list, dim=0)  # [N_segs*64, C, H, W]
+            n_valid_segs = len(seg_samples_list)
+            valid_segments = segments[:n_valid_segs]
+
+            # Call talkinghead function ONCE with all N segments stacked + their metadata
+            batched_faces, scores = openai_deepseek_talkinghead_genall(
+                audio_file, listener_audio_file, whisper_model, audio_processor,
+                speaker_audio_path, listener_audio_path,
+                emo_label, stacked_out, pipe, vae, unet, pe,
+                batch_index=(batch_size * step + batch_index),
+                num_frame_sp=stacked_out.shape[0],
+                segment_list=valid_segments
+            )
+            all_face_images += batched_faces
             
-            # pdb.set_trace()
-            video_ = np.asarray(np.clip(batched_faces,0,255))[:,:,:,::-1]
-            video_save_path = os.path.join(args.save_video_path, 'generated_RF_' + str(len(out_samples)*step+batch_index)+'.mp4')
+            all_score['all_realism_score'] += scores['realism_score']
+            all_score['all_sentiment_emb'][batch_size*step+batch_index] = scores['sentiment_emb']
+            all_score['all_bleu_scores'] += scores['bleu_scores']
+            all_score['all_bert_scores'] += scores['bert_scores']
+            
+            # ── Stretch generated frames to match speaker's total frame count ──
+            # T_len is the speaker's total frames (e.g. 751).
+            # valid_segments carries each segment's Whisper start/end timestamps.
+            print(f"Stretching {len(all_face_images)} generated frames → {T_len} speaker frames")
+            all_face_images = stretch_frames_to_timeline(
+                all_face_images,
+                valid_segments,          # list of dicts with 'start'/'end' in seconds
+                target_total_frames=T_len,
+                video_fps=25,
+                frames_per_seg=64
+            )
+            print(f"After stretch: {len(all_face_images)} frames")
+            # ──────────────────────────────────────────────────────────────────
+            
+            video_ = np.asarray(np.clip(all_face_images, 0, 255))[:, :, :, ::-1]
+            video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
             print(video_save_path)
-            # print(video_.shape)
-            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+            imageio.mimwrite(video_save_path, video_, fps=25, quality=9)
+            
+        # skip over loop variable legacy accumulation log since logic was completely refactored
             
         # pdb.set_trace()
         # a=1
@@ -1462,7 +1560,7 @@ if __name__ == "__main__":
         parser.add_argument("--ckpt", type=str, default="/gpfs/scratch/acw569/checkpoint/latte_check_new/021-Latte-B-4-F64S3-reaction-Amp/checkpoints/0060000.pt")
     else:
         parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
-        parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
+        # parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024 f64?
 
     #2025 v5 /data/scratch/acw569/checkpoint/latte_check_new/055-Latte-S-4-F32S3-reaction-Amp/checkpoints/0120000.pt 
     #2024 v5 /data/scratch/acw569/checkpoint/latte_check_new/054-Latte-S-4-F32S3-reaction-Amp/checkpoints/0170000.pt
@@ -1475,8 +1573,11 @@ if __name__ == "__main__":
     
     #wrong label:/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt
     parser.add_argument("--save_video_path", type=str, default="./sample_videos/")
+    parser.add_argument("--use_real_listener", action="store_true",
+                        help="Use real listener video instead of diffusion-generated video for talking head alignment")
     args = parser.parse_args()
     omega_conf = OmegaConf.load(args.config)
     omega_conf.ckpt = args.ckpt
     omega_conf.save_video_path = args.save_video_path
+    omega_conf.use_real_listener = args.use_real_listener
     main(omega_conf)
