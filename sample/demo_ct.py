@@ -748,8 +748,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # ── Pass 3: distribute TTS audio to each active window ───────────────────
     # Proportional split by character count (proxy for spoken duration).
-    # After slicing, resample the slice to exactly fill the active window so
-    # speech is neither cut off nor padded with silence.
+    # Keep the generated speech at its original speed. If the active window is
+    # shorter than the slice, truncate; if it is longer, pad with silence.
     char_counts = [len(t) for t in all_reply_texts]
     total_chars = sum(char_counts)
 
@@ -766,26 +766,24 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             tts_slice = tts_full[tts_offset: tts_offset + slice_len]
             tts_offset += slice_len
 
-            # Speed-adjust: resample tts_slice to target_samples so speech fills
-            # the active window exactly (neither cut off nor padded).
-            if len(tts_slice) != target_samples and target_samples > 0:
-                x_old = np.linspace(0, 1, len(tts_slice))
-                x_new = np.linspace(0, 1, target_samples)
-                tts_arr = np.interp(x_new, x_old, tts_slice).astype(np.float32)
+            if target_samples > 0:
+                if len(tts_slice) >= target_samples:
+                    tts_arr = tts_slice[:target_samples]
+                else:
+                    tts_arr = np.concatenate([
+                        tts_slice,
+                        np.zeros(target_samples - len(tts_slice), dtype=np.float32)
+                    ])
             else:
-                tts_arr = tts_slice[:target_samples] if len(tts_slice) >= target_samples \
-                          else np.concatenate([tts_slice,
-                                               np.zeros(target_samples - len(tts_slice), dtype=np.float32)])
+                tts_arr = np.array([], dtype=np.float32)
         else:
             tts_arr = np.zeros(target_samples, dtype=np.float32)
 
         segment_audio_parts.append(passive_silences[seg_i])
         segment_audio_parts.append(tts_arr)
         passive_dur_log = len(passive_silences[seg_i]) / sr
-        speed_ratio = len(tts_full) * (char_counts[seg_i] / total_chars) / max(1, target_samples) \
-                      if total_chars > 0 and target_samples > 0 else 1.0
         print(f'[Audio seg {seg_i}] silence={passive_dur_log:.2f}s  TTS={active_dur:.2f}s  '
-              f'speed={speed_ratio:.2f}x  reply={repr(reply_text[:60])}')
+              f'samples={len(tts_arr)}  reply={repr(reply_text[:60])}')
 
     new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
