@@ -878,7 +878,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     bbox_shift=0
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
 
-
+    pdb.set_trace()
     #reverse and repeat here
     repeat_times=2
     coord_list_reverse=coord_list_single[::-1]
@@ -1111,8 +1111,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
     
-    # os.remove("./temp.mp4")
-    # shutil.rmtree(result_img_save_path)
+    png_files = [f for f in os.listdir(result_img_save_path) if f.endswith('.png')]
+    for png_file in png_files:
+        os.remove(os.path.join(result_img_save_path, png_file))
+
     print(f"result is save to {output_vid_name}")      
 
     print('the corresponding speaker path is: ', speaker_audio_path)
