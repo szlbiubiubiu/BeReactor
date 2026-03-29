@@ -878,13 +878,19 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     bbox_shift=0
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
 
-    # pdb.set_trace()
-    #reverse and repeat here
-    repeat_times=2
-    coord_list_reverse=coord_list_single[::-1]
-    frame_list_reverse=frame_list_single[::-1]
-    coord_list=repeat_times*(coord_list_single+coord_list_reverse)
-    frame_list=repeat_times*(frame_list_single+frame_list_reverse)
+    # Build a mirrored cycle with per-frame repetition so length matches speaker frames.
+    base_len = len(coord_list_single)
+    if base_len == 0:
+        coord_list, frame_list = [], []
+    else:
+        per_frame_repeat = max(1, (num_frame_sp + (2 * base_len) - 1) // (2 * base_len))
+        coord_forward = [coord for coord in coord_list_single for _ in range(per_frame_repeat)]
+        frame_forward = [frame for frame in frame_list_single for _ in range(per_frame_repeat)]
+        coord_cycle = coord_forward + coord_forward[::-1]
+        frame_cycle = frame_forward + frame_forward[::-1]
+        coord_list = coord_cycle[:num_frame_sp]
+        frame_list = frame_cycle[:num_frame_sp]
+        print(f"[TalkingHead] base={base_len}, per_frame_repeat={per_frame_repeat}, expanded={len(frame_list)} (target={num_frame_sp})")
     # with open(crop_coord_save_path, 'wb') as f:
     #     pickle.dump(coord_list, f)
     input_latent_list = []
@@ -945,16 +951,18 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # ── Align input_latent_list length to speaker total frames (num_frame_sp) ──
     # Repeat (forward + reverse) until we have at least num_frame_sp latents so
     # the talking-head output covers the full speaker video duration.
-    if len(input_latent_list) > 0 and num_frame_sp > len(input_latent_list):
-        extended = []
-        forward = input_latent_list
-        reverse = input_latent_list[::-1]
-        toggle = True
-        while len(extended) < num_frame_sp:
-            extended += forward if toggle else reverse
-            toggle = not toggle
-        input_latent_list = extended[:num_frame_sp]
-        print(f"[TalkingHead] input_latent_list repeated to {len(input_latent_list)} frames (speaker={num_frame_sp})")
+
+    
+    # if len(input_latent_list) > 0 and num_frame_sp > len(input_latent_list):
+    #     extended = []
+    #     forward = input_latent_list
+    #     reverse = input_latent_list[::-1]
+    #     toggle = True
+    #     while len(extended) < num_frame_sp:
+    #         extended += forward if toggle else reverse
+    #         toggle = not toggle
+    #     input_latent_list = extended[:num_frame_sp]
+    #     print(f"[TalkingHead] input_latent_list repeated to {len(input_latent_list)} frames (speaker={num_frame_sp})")
 
     #----
     #use image----
