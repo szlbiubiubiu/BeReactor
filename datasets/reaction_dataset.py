@@ -1945,7 +1945,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,
                 'speaker_video_clip_crop':speaker_video_clip_crop, 'speaker_emotion': speaker_emotion_clip,
                                 'speaker_3dmm': speaker_params_clip,
-                                'speaker_video_path':video_path,'speaker_audio_path':speaker_audio_path,
+                                'speaker_video_path':speaker_video_path,'speaker_audio_path':speaker_audio_path,
                                 'listener_video_clip': listener_video_clip, 'listener_align_video_clip':listener_video_clip,
                                 'listener_video_clip_crop':listener_video_clip_crop,
                                 'listener_video_clip_last':listener_video_clip_last,
