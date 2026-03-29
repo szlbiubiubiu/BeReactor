@@ -1374,7 +1374,46 @@ def main(args):
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=25, quality=9)
-            
+
+            # ── Side-by-side comparison video (speaker left | reaction right) ─
+            try:
+                speaker_video_path_sbs = video_data['speaker_video_path'][batch_index]
+                global_idx = batch_size * step + batch_index
+                final_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(global_idx) + '.mp4')
+                side_by_side_name = os.path.join(args.save_video_path, 'side_by_side_' + str(global_idx) + '.mp4')
+                temp_speaker_vid = './temp_speaker_sbs.mp4'
+
+                # Step 1: build video-only clip from speaker frames/mp4
+                if os.path.isdir(speaker_video_path_sbs):
+                    # NoXI format: frames named 1.png, 2.png, ...
+                    cmd_sp = (f"ffmpeg -y -v warning -r 25 -start_number 1 "
+                              f"-i {speaker_video_path_sbs}/%d.png "
+                              f"-vf 'scale=256:256,format=yuv420p' -crf 18 {temp_speaker_vid}")
+                else:
+                    # REACT2024/2025 format: .mp4 file
+                    cmd_sp = (f"ffmpeg -y -v warning -i {speaker_video_path_sbs} "
+                              f"-vf 'scale=256:256,format=yuv420p' -an -crf 18 {temp_speaker_vid}")
+                os.system(cmd_sp)
+
+                # Step 2: hstack speaker(video+audio) | reaction(video+audio)
+                # input 0: temp_speaker_vid  (video only)
+                # input 1: speaker_audio_path (speaker wav)
+                # input 2: final_vid_name     (reaction video + listener TTS audio)
+                filter_sbs = ("[0:v]scale=256:256[left];[2:v]scale=256:256[right];"
+                              "[left][right]hstack=inputs=2[v];"
+                              "[1:a][2:a]amerge=inputs=2[a]")
+                cmd_sbs = (f"ffmpeg -y -v warning "
+                           f"-i {temp_speaker_vid} "
+                           f"-i {speaker_audio_path} "
+                           f"-i {final_vid_name} "
+                           f"-filter_complex '{filter_sbs}' "
+                           f"-map '[v]' -map '[a]' -ac 2 {side_by_side_name}")
+                os.system(cmd_sbs)
+                print(f"Side-by-side video saved to {side_by_side_name}")
+            except Exception as _e:
+                print(f"[Warning] Side-by-side video generation failed: {_e}")
+            # ──────────────────────────────────────────────────────────────────
+
         # skip over loop variable legacy accumulation log since logic was completely refactored
             
         # pdb.set_trace()
