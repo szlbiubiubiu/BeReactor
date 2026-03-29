@@ -680,6 +680,7 @@ class ReactionDataset_readvideo(data.Dataset):
         return {'img': speaker_video_clip, 'index': index,'speaker_audio_clip': speaker_audio_clip,'speaker_emotion': speaker_emotion,
                                 'speaker_3dmm': speaker_3dmm,
                                 'speaker_video_path':speaker_video_path,'speaker_audio_path':speaker_audio_path,
+                                'listener_video_path': listener_video_path,
                                 'listener_video_clip': listener_video_clip, 'listener_video_clip_last':listener_video_clip_last,
                                 'listener_emotion': listener_emotion,
                                 'listener_3dmm': listener_3dmm,'listener_audio_path':listener_audio_path,

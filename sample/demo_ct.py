@@ -1378,62 +1378,17 @@ def main(args):
                         print(f"Warning: Segment {seg_idx} has 0 actual length! Skipping this segment.")
                         continue
 
-                use_real_listener = getattr(args, 'use_real_listener', False)
-
-                if not use_real_listener:
-                    # ---- Diffusion model generation ----
-                    torch.manual_seed(0)
-                    if args.use_fp16:
-                        z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device)
-                    else:
-                        z = torch.randn(1, args.num_frames, 4, latent_size, latent_size, device=device)
-
-                    if using_cfg:
-                        z = torch.cat([z, z], 0)
-                        model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-                        sample_fn = model.forward_with_cfg_reaction
-                    else:
-                        sample_fn = model.forward
-                        model_kwargs = dict(y=None, use_fp16=args.use_fp16)
-
-                    original_x = x
-                    listener_ref_diff = listener_ref
-                    if using_cfg:
-                        x_uncon = torch.zeros_like(x)
-                        listener_ref_uncon = torch.zeros_like(listener_ref)
-                        x = torch.cat([x, x_uncon], dim=0)
-                        listener_ref_diff = torch.cat([listener_ref, listener_ref_uncon], dim=0)
-
-                    if args.sample_method == 'ddim':
-                        samples = diffusion.ddim_sample_loop(
-                            sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                            original_x=x, listener_ref=listener_ref_diff, listener_video_clip_last=listener_video_clip_last,
-                            sp_audio_clip=sp_audio_clip
-                        )
-                    elif args.sample_method == 'ddpm':
-                        samples = diffusion.p_sample_loop(
-                            sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-                            original_x=x, listener_ref=listener_ref_diff, listener_video_clip_last=listener_video_clip_last,
-                            sp_audio_clip=sp_audio_clip
-                        )
-
-                    if args.use_fp16:
-                        samples = samples.to(dtype=torch.float16)
-                    if using_cfg:
-                        samples = samples[:len(x)//2]
-
-                    b, f, c, h, w = samples.shape
-                    decoded_batch = []
-                    for b_idx in range(b):
-                        sample_instance = samples[b_idx]
-                        decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
-                        decoded_batch.append(decoded_instance)
-                    samples = torch.stack(decoded_batch, dim=0)
-                    seg_out = samples[0]  # [64, C, H, W] for this segment
-                else:
-                    # ---- Use real listener video instead of diffusion output ----
-                    print(f"[Seg {seg_idx}] Using real listener video for talking head alignment")
-                    seg_out = listener_ref[0]  # [64, C, H, W], range [-1, 1]
+                # ---- Use real listener video: 64 frames from the GAP (starting at segment end) ----
+                listener_video_path_gap = video_data['listener_video_path'][batch_index]
+                gap_start_frame = min(end_frame, max(0, T_len - clip_size))
+                print(f"[Seg {seg_idx}] Loading real listener GAP frames: start={gap_start_frame} from {listener_video_path_gap}")
+                seg_out = load_video_clip_from_path(
+                    listener_video_path_gap,
+                    gap_start_frame,
+                    clip_size,
+                    target_h,
+                    target_w,
+                ).to(device)  # [64, C, H, W], range [-1, 1]
 
                 seg_samples_list.append(seg_out)
             pdb.set_trace()
