@@ -1095,46 +1095,6 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     return out_images[:num_frame_sp],evaluation_score
 
 
-def select_pause_segments(segments, audio_total_sec, min_pause_sec=0.4, max_segs=4):
-    """
-    From Whisper speech segments, select up to `max_segs` segments that are
-    followed by the longest silences/pauses.  These are the moments where the
-    listener is most likely to react.
-
-    Each returned segment dict gets an extra key 'pause_after' (seconds).
-    The last segment always counts (silence = remaining audio duration).
-    """
-    if not segments:
-        return segments
-
-    # Compute pause after each segment
-    candidates = []
-    for i, seg in enumerate(segments):
-        if i + 1 < len(segments):
-            pause = max(0.0, segments[i + 1]['start'] - seg['end'])
-        else:
-            pause = max(0.0, audio_total_sec - seg['end'])
-        candidates.append((pause, i, dict(seg, pause_after=pause)))
-
-    # Keep only segments where the following pause meets the minimum threshold
-    qualifying = [c for c in candidates if c[0] >= min_pause_sec]
-
-    # If none qualify, fall back to the segment with the longest pause
-    if not qualifying:
-        qualifying = [max(candidates, key=lambda c: c[0])]
-
-    # Sort by pause length descending, take top max_segs, then re-sort by time
-    qualifying.sort(key=lambda c: c[0], reverse=True)
-    selected = qualifying[:max_segs]
-    selected.sort(key=lambda c: c[1])  # restore chronological order
-
-    result = [c[2] for c in selected]
-    print(f"[PauseSelect] {len(result)}/{len(segments)} segments selected "
-          f"(min_pause={min_pause_sec}s): "
-          + ", ".join(f"seg{c[1]}(pause={c[0]:.2f}s)" for c in selected))
-    return result
-
-
 def main(args):
     # # Setup PyTorch:
     # # torch.manual_seed(args.seed)
@@ -1293,14 +1253,57 @@ def main(args):
             listener_audio_path = video_data['listener_audio_path'][batch_index]
             pdb.set_trace()
             result = whisper_model.transcribe(speaker_audio_path)
-            all_segments = result.get("segments", [])
-            # Determine total audio duration from Whisper result or fall back to T_len/25
-            audio_total_sec = all_segments[-1]['end'] if all_segments else T_len / 25.0
-            # Select segments followed by the longest pauses (natural listener reaction windows)
-            segments = select_pause_segments(all_segments, audio_total_sec,
-                                             min_pause_sec=0.4, max_segs=4)
+            all_whisper_segments = result.get("segments", [])
+            full_transcript = result.get("text", "").strip()
+
+            # ── Use LLM to find natural listener response points ──────────────
+            # Build a formatted list of Whisper segments with gaps for the LLM
+            seg_info_for_llm = []
+            for si, seg in enumerate(all_whisper_segments):
+                gap_after = 0.0
+                if si + 1 < len(all_whisper_segments):
+                    gap_after = all_whisper_segments[si + 1].get("start", seg["end"]) - seg["end"]
+                seg_info_for_llm.append(
+                    f"[{si}] ({seg['start']:.2f}s-{seg['end']:.2f}s) \"{seg.get('text','').strip()}\"  gap_after={gap_after:.2f}s"
+                )
+            seg_info_str = "\n".join(seg_info_for_llm)
+
+            llm_select_prompt = [
+                {"role": "system", "content": (
+                    "You are a conversation analyst. Given a speaker's transcript with timestamps and gaps, "
+                    "select the segments after which the listener should naturally respond. "
+                    "Prefer segments followed by longer pauses (gaps), semantic completions, or natural turn-taking points. "
+                    "Select at most 4 segments. "
+                    "Reply ONLY with a JSON list of segment indices, e.g. [0, 3, 5]. No explanation."
+                )},
+                {"role": "user", "content": (
+                    f"Full transcript: \"{full_transcript}\"\n\n"
+                    f"Segments with gaps:\n{seg_info_str}\n\n"
+                    "Which segment indices should the listener respond after?"
+                )}
+            ]
+
+            # try:
+            llm_select_response = pipe(llm_select_prompt, max_new_tokens=64)
+            llm_select_text = llm_select_response[0]['generated_text'][-1]['content'].strip()
+            import json as _json
+            selected_indices = _json.loads(llm_select_text)
+            # Validate: must be list of ints within range
+            selected_indices = [int(i) for i in selected_indices if 0 <= int(i) < len(all_whisper_segments)]
+            selected_indices = selected_indices[:4]
+            print(f"[LLM] Selected response points: {selected_indices} from {len(all_whisper_segments)} segments")
+            # except Exception as _e:
+                # print(f"[LLM] Failed to parse response indices ({_e}), falling back to first 4 segments")
+                # selected_indices = list(range(min(4, len(all_whisper_segments))))
+
+            if len(selected_indices) == 0:
+                selected_indices = list(range(min(4, len(all_whisper_segments))))
+
+            segments = [all_whisper_segments[i] for i in selected_indices]
             if len(segments) == 0:
-                segments = [{"start": 0.0, "end": 16/25.0, "text": "", "pause_after": audio_total_sec}]
+                segments = [{"start": 0.0, "end": 16/25.0, "text": ""}]
+            print(f"[Segments] Using {len(segments)} response segments: "
+                  f"{[(s['start'], s['end'], s.get('text','')[:30]) for s in segments]}")
                 
             all_face_images = []
             seg_samples_list = []  # collect [64, C, H, W] per segment
