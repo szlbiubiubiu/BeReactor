@@ -491,13 +491,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
         segment_list=None):
     """
-    input_latent: Tensor [N_segs*64, C, H, W] - all dialog segments stacked.
-    segment_list: list of dicts with keys 'text', 'start', 'end' - one per 64-frame block.
+    input_latent: Tensor [N_segs*frames_per_seg, C, H, W] - all dialog segments stacked.
+    segment_list: list of dicts with keys 'text', 'start', 'end' - one per frame block.
     """
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
-
-    frames_per_seg = 64  # each segment window is always 64 frames
 
     # ---- Derive segment texts from segment_list or fall back to Whisper transcription ----
     if segment_list is not None and len(segment_list) > 0:
@@ -510,6 +508,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         seg_texts = [result["text"].strip()]
         n_segments = 1
 
+    frames_per_seg = max(1, input_latent.shape[0] // max(1, n_segments))
+    print(f"[Timeline] Using {frames_per_seg} frames per segment")
+
     # ---- Reshape input_latent into [n_segments, 64, C, H, W] ----
     if input_latent.dim() == 4:
         total_frames_il = input_latent.shape[0]
@@ -518,7 +519,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         elif total_frames_il == frames_per_seg:
             seg_latents = input_latent.unsqueeze(0)  # single segment [1,64,C,H,W]
         else:
-            # fallback: use first 64 frames only
+            # fallback: use the first segment-sized block only
             seg_latents = input_latent[:frames_per_seg].unsqueeze(0)
             n_segments = 1
             seg_texts = seg_texts[:1]
@@ -568,7 +569,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             _seg_info = segment_list[seg_i]
             _speaker_dur = max(0.5, float(_seg_info.get('end', 0.64)) - float(_seg_info.get('start', 0.0)))
         else:
-            _speaker_dur = frames_per_seg / 25.0  # fallback: 64 frames @ 25 fps
+            _speaker_dur = frames_per_seg / 25.0  # fallback duration from visual block size
         _max_words = max(5, min(50, round(_speaker_dur * _TTS_WORDS_PER_SEC)))
 
         # Build user message; from turn 2 onwards, carry forward emotion context
@@ -1291,57 +1292,40 @@ def main(args):
             all_whisper_segments = result.get("segments", [])
             full_transcript = result.get("text", "").strip()
 
-            # ── Use LLM to find natural listener response points ──────────────
-            # Build a formatted list of Whisper segments with gaps for the LLM
-            seg_info_for_llm = []
-            for si, seg in enumerate(all_whisper_segments):
-                gap_after = 0.0
-                if si + 1 < len(all_whisper_segments):
-                    gap_after = all_whisper_segments[si + 1].get("start", seg["end"]) - seg["end"]
-                seg_info_for_llm.append(
-                    f"[{si}] ({seg['start']:.2f}s-{seg['end']:.2f}s) \"{seg.get('text','').strip()}\"  gap_after={gap_after:.2f}s"
-                )
-            seg_info_str = "\n".join(seg_info_for_llm)
+            # ── Recompute and keep only the segment followed by the maximum GAP ──
+            video_end_sec = T_len / 25.0
+            gap_candidates = []
+            for whisper_seg_idx, seg in enumerate(all_whisper_segments):
+                gap_start_sec = float(seg.get("end", 0.0))
+                if whisper_seg_idx + 1 < len(all_whisper_segments):
+                    gap_end_sec = float(all_whisper_segments[whisper_seg_idx + 1].get("start", gap_start_sec))
+                else:
+                    gap_end_sec = video_end_sec
+                gap_len_sec = max(0.0, gap_end_sec - gap_start_sec)
+                gap_candidates.append((gap_len_sec, whisper_seg_idx, gap_start_sec, gap_end_sec))
 
-            llm_select_prompt = [
-                {"role": "system", "content": (
-                    "You are a conversation analyst. Given a speaker's transcript with timestamps and gaps, "
-                    "select the segments after which the listener should naturally respond. "
-                    "Prefer segments followed by longer pauses (gaps), semantic completions, or natural turn-taking points. "
-                    "Select at most 4 segments. "
-                    "Reply ONLY with a JSON list of segment indices, e.g. [0, 3, 5]. No explanation."
-                )},
-                {"role": "user", "content": (
-                    f"Full transcript: \"{full_transcript}\"\n\n"
-                    f"Segments with gaps:\n{seg_info_str}\n\n"
-                    "Which segment indices should the listener respond after?"
-                )}
-            ]
-
-            # try:
-            llm_select_response = pipe(llm_select_prompt, max_new_tokens=64)
-            llm_select_text = llm_select_response[0]['generated_text'][-1]['content'].strip()
-            import json as _json
-            selected_indices = _json.loads(llm_select_text)
-            # Validate: must be list of ints within range
-            selected_indices = [int(i) for i in selected_indices if 0 <= int(i) < len(all_whisper_segments)]
-            selected_indices = selected_indices[:4]
-            print(f"[LLM] Selected response points: {selected_indices} from {len(all_whisper_segments)} segments")
-            # except Exception as _e:
-                # print(f"[LLM] Failed to parse response indices ({_e}), falling back to first 4 segments")
-                # selected_indices = list(range(min(4, len(all_whisper_segments))))
-
-            if len(selected_indices) == 0:
-                selected_indices = list(range(min(4, len(all_whisper_segments))))
-
-            segments = [all_whisper_segments[i] for i in selected_indices]
-            if len(segments) == 0:
-                segments = [{"start": 0.0, "end": 16/25.0, "text": ""}]
-            print(f"[Segments] Using {len(segments)} response segments: "
-                  f"{[(s['start'], s['end'], s.get('text','')[:30]) for s in segments]}")
+            if gap_candidates:
+                max_gap_len_sec, max_gap_idx, max_gap_start_sec, max_gap_end_sec = max(gap_candidates, key=lambda item: item[0])
+                selected_segment = dict(all_whisper_segments[max_gap_idx])
+                selected_segment['gap_start'] = max_gap_start_sec
+                selected_segment['gap_end'] = max_gap_end_sec
+                selected_segment['gap_duration'] = max_gap_len_sec
+                segments = [selected_segment]
+                print(f"[Segments] Using maximum GAP segment: index={max_gap_idx}, gap={max_gap_len_sec:.2f}s, text={selected_segment.get('text', '')[:30]!r}")
+            else:
+                fallback_segment = {
+                    "start": 0.0,
+                    "end": 16 / 25.0,
+                    "text": full_transcript,
+                    "gap_start": 16 / 25.0,
+                    "gap_end": video_end_sec,
+                    "gap_duration": max(0.0, video_end_sec - 16 / 25.0),
+                }
+                segments = [fallback_segment]
+                print("[Segments] Whisper returned no segments, using fallback segment")
                 
             all_face_images = []
-            seg_samples_list = []  # collect [64, C, H, W] per segment
+            seg_samples_list = []  # collect [256, C, H, W] per segment
                 
             for seg_idx, segment in enumerate(segments):
                 end_time = segment["end"]
@@ -1378,25 +1362,34 @@ def main(args):
                         print(f"Warning: Segment {seg_idx} has 0 actual length! Skipping this segment.")
                         continue
 
-                # ---- Use real listener video: 64 frames from the GAP (starting at segment end) ----
+                # ---- Use the maximum GAP: 128 forward frames + reversed copy => 256 frames ----
                 listener_video_path_gap = video_data['listener_video_path'][batch_index]
-                gap_start_frame = min(end_frame, max(0, T_len - clip_size))
-                print(f"[Seg {seg_idx}] Loading real listener GAP frames: start={gap_start_frame} from {listener_video_path_gap}")
-                seg_out = load_video_clip_from_path(
+                gap_start_frame = int(segment.get('gap_start', end_time) * 25)
+                gap_end_frame = int(segment.get('gap_end', T_len / 25.0) * 25)
+                gap_available = max(0, gap_end_frame - gap_start_frame)
+                gap_clip_size = 128
+                if gap_available > gap_clip_size:
+                    gap_clip_start = gap_start_frame + (gap_available - gap_clip_size) // 2
+                else:
+                    gap_clip_start = gap_start_frame
+
+                print(f"[Seg {seg_idx}] Loading maximum GAP frames: start={gap_clip_start}, available={gap_available}, path={listener_video_path_gap}")
+                seg_out_half = load_video_clip_from_path(
                     listener_video_path_gap,
-                    gap_start_frame,
-                    clip_size,
+                    gap_clip_start,
+                    gap_clip_size,
                     target_h,
                     target_w,
-                ).to(device)  # [64, C, H, W], range [-1, 1]
+                ).to(device)
+                seg_out = torch.cat([seg_out_half, torch.flip(seg_out_half, dims=[0])], dim=0)
 
                 seg_samples_list.append(seg_out)
             pdb.set_trace()
-            # Stack all segment tensors: [N_segs*64, C, H, W]
+            # Stack all segment tensors: [N_segs*256, C, H, W]
             if len(seg_samples_list) == 0:
                 print(f"No valid segments for batch_index={batch_index}, skipping.")
                 continue
-            stacked_out = torch.cat(seg_samples_list, dim=0)  # [N_segs*64, C, H, W]
+            stacked_out = torch.cat(seg_samples_list, dim=0)  # [N_segs*256, C, H, W]
             n_valid_segs = len(seg_samples_list)
             valid_segments = segments[:n_valid_segs]
 
@@ -1425,7 +1418,7 @@ def main(args):
                 valid_segments,          # list of dicts with 'start'/'end' in seconds
                 target_total_frames=T_len,
                 video_fps=25,
-                frames_per_seg=64
+                frames_per_seg=max(1, stacked_out.shape[0] // max(1, n_valid_segs))
             )
             print(f"After stretch: {len(all_face_images)} frames")
             # ──────────────────────────────────────────────────────────────────
