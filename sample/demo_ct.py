@@ -1377,12 +1377,8 @@ def main(args):
             side_by_side_name = os.path.join(args.save_video_path, 'side_by_side_' + str(global_idx) + '.mp4')
             temp_speaker_vid = './temp_speaker_sbs.mp4'
 
-            # Step 1: build speaker video from video_data['img'] tensor ([-1,1] → [0,255] RGB)
-            speaker_frames_tensor = video_data['img'][batch_index]  # [T, C, H, W], range [-1,1]
-            speaker_frames_np = (
-                (speaker_frames_tensor * 0.5 + 0.5) * 255
-            ).clamp(0, 255).to(torch.uint8).cpu().permute(0, 2, 3, 1).numpy()  # [T, H, W, C]
-            imageio.mimwrite(temp_speaker_vid, speaker_frames_np, fps=25, quality=9)
+            # Step 1: use full speaker video (all frames) from dataset path
+            temp_speaker_vid = video_data['speaker_video_path'][batch_index]
 
             # Step 2: hstack speaker(video+audio) | reaction(video+audio)
             # input 0: temp_speaker_vid  (video only)
