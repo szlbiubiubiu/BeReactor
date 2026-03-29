@@ -1821,8 +1821,8 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
             # listener's (ground-truth) face video clip
             listener_video_clip = torch.zeros(size=(0,))
             if self.load_video_l:
-                video_path = os.fspath(Path(self._video_dir) / listener_path.with_suffix('.mp4'))
-                vr = VideoReader(video_path, ctx=cpu(0))
+                listener_video_path = os.fspath(Path(self._video_dir) / listener_path.with_suffix('.mp4'))
+                vr = VideoReader(listener_video_path, ctx=cpu(0))
                 vr_crop= VideoReader(os.fspath(Path(self.crop_video_dir) / listener_path.with_suffix('.mp4')), ctx=cpu(0))
                 clip = []
                 for i in range(cp, cp + self._clip_length*self.interval,self.interval):
@@ -1838,7 +1838,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
                 else:
                     listener_video_clip = torch.stack(clip, dim=0)
                 #above is uncropped video, below is cropped video
-                video_path = os.fspath(Path(self._video_dir) / listener_path.with_suffix('.mp4'))
+                listener_video_path = os.fspath(Path(self._video_dir) / listener_path.with_suffix('.mp4'))
                 clip = []
                 for i in range(cp, cp + self._clip_length*self.interval,self.interval):
                     if i >= len(vr_crop):
@@ -1855,7 +1855,7 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
 
                 #load listener past clip
                 clip=[]
-                vr = VideoReader(video_path, ctx=cpu(0))
+                vr = VideoReader(listener_video_path, ctx=cpu(0))
                 for i in range(last_cp, last_cp + self._clip_length*self.interval,self.interval):
                     if i >= len(vr):
                         break
@@ -1947,7 +1947,6 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
                 'speaker_video_clip_crop':speaker_video_clip_crop, 'speaker_emotion': speaker_emotion_clip,
                                 'speaker_3dmm': speaker_params_clip,
                                 'speaker_video_path':speaker_video_path,'speaker_audio_path':speaker_audio_path,
-                                'speaker_video_path':speaker_video_path,
                                 'listener_video_path':listener_video_path,
                                 'listener_video_clip': listener_video_clip, 'listener_align_video_clip':listener_video_clip,
                                 'listener_video_clip_crop':listener_video_clip_crop,
