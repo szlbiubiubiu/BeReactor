@@ -705,7 +705,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         active_durations.append(active_dur)
 
     all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
-    pdb.set_trace()
+    # pdb.set_trace()
     # ── Pass 2: one single TTS call for all listener replies ─────────────────
     combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
     if combined_reply_text.strip():
@@ -1372,23 +1372,17 @@ def main(args):
             pdb.set_trace()
             # ── Side-by-side comparison video (speaker left | reaction right) ─
             # try:
-            speaker_video_path_sbs = video_data['speaker_video_path'][batch_index]
             global_idx = batch_size * step + batch_index
             final_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(global_idx) + '.mp4')
             side_by_side_name = os.path.join(args.save_video_path, 'side_by_side_' + str(global_idx) + '.mp4')
             temp_speaker_vid = './temp_speaker_sbs.mp4'
 
-            # Step 1: build video-only clip from speaker frames/mp4
-            if os.path.isdir(speaker_video_path_sbs):
-                # NoXI format: frames named 1.png, 2.png, ...
-                cmd_sp = (f"ffmpeg -y -v warning -r 25 -start_number 1 "
-                            f"-i {speaker_video_path_sbs}/%d.png "
-                            f"-vf 'scale=256:256,format=yuv420p' -crf 18 {temp_speaker_vid}")
-            else:
-                # REACT2024/2025 format: .mp4 file
-                cmd_sp = (f"ffmpeg -y -v warning -i {speaker_video_path_sbs} "
-                            f"-vf 'scale=256:256,format=yuv420p' -an -crf 18 {temp_speaker_vid}")
-            os.system(cmd_sp)
+            # Step 1: build speaker video from video_data['img'] tensor ([-1,1] → [0,255] RGB)
+            speaker_frames_tensor = video_data['img'][batch_index]  # [T, C, H, W], range [-1,1]
+            speaker_frames_np = (
+                (speaker_frames_tensor * 0.5 + 0.5) * 255
+            ).clamp(0, 255).to(torch.uint8).cpu().permute(0, 2, 3, 1).numpy()  # [T, H, W, C]
+            imageio.mimwrite(temp_speaker_vid, speaker_frames_np, fps=25, quality=9)
 
             # Step 2: hstack speaker(video+audio) | reaction(video+audio)
             # input 0: temp_speaker_vid  (video only)
