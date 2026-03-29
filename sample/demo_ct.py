@@ -489,17 +489,21 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
-        segment_list=None):
+        segment_list=None,audio_segment_list=None):
     """
-    input_latent: Tensor [N_segs*frames_per_seg, C, H, W] - all dialog segments stacked.
-    segment_list: list of dicts with keys 'text', 'start', 'end' - one per frame block.
+    input_latent: Tensor [N_video_segs*frames_per_seg, C, H, W] - all visual segments stacked.
+    segment_list: video segment list, usually the single maximum-gap segment.
+    audio_segment_list: audio/dialogue segment list, up to 4 selected segments.
     """
     # pdb.set_trace()
     # for step,clip_generated in enumerate(input_latent):
 
+    visual_segment_list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
+    dialogue_segment_list = audio_segment_list if audio_segment_list else visual_segment_list
+
     # ---- Derive segment texts from segment_list or fall back to Whisper transcription ----
-    if segment_list is not None and len(segment_list) > 0:
-        seg_texts = [seg.get("text", "").strip() for seg in segment_list]
+    if dialogue_segment_list is not None and len(dialogue_segment_list) > 0:
+        seg_texts = [seg.get("text", "").strip() for seg in dialogue_segment_list]
         n_segments = len(seg_texts)
         print(f"[Timeline] Processing {n_segments} speaker segments on timeline")
     else:
@@ -508,25 +512,22 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         seg_texts = [result["text"].strip()]
         n_segments = 1
 
-    frames_per_seg = max(1, input_latent.shape[0] // max(1, n_segments))
-    print(f"[Timeline] Using {frames_per_seg} frames per segment")
+    n_visual_segments = max(1, len(visual_segment_list))
+    frames_per_seg = max(1, input_latent.shape[0] // n_visual_segments)
+    print(f"[Timeline] Using {frames_per_seg} frames per visual segment")
 
     # ---- Reshape input_latent into [n_segments, 64, C, H, W] ----
     if input_latent.dim() == 4:
         total_frames_il = input_latent.shape[0]
-        if total_frames_il == frames_per_seg * n_segments:
-            seg_latents = input_latent.reshape(n_segments, frames_per_seg, *input_latent.shape[1:])
+        if total_frames_il == frames_per_seg * n_visual_segments:
+            seg_latents = input_latent.reshape(n_visual_segments, frames_per_seg, *input_latent.shape[1:])
         elif total_frames_il == frames_per_seg:
             seg_latents = input_latent.unsqueeze(0)  # single segment [1,64,C,H,W]
         else:
             # fallback: use the first segment-sized block only
             seg_latents = input_latent[:frames_per_seg].unsqueeze(0)
-            n_segments = 1
-            seg_texts = seg_texts[:1]
     else:
         seg_latents = input_latent[:1]
-        n_segments = 1
-        seg_texts = seg_texts[:1]
 
     # ---- Emotion features from first-segment latent ----
     pdb.set_trace()
@@ -565,8 +566,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     seg_reply_texts = []
     for seg_i, speaker_text in enumerate(seg_texts):
         # Compute per-segment word limit from speaker's talk duration
-        if segment_list is not None and seg_i < len(segment_list):
-            _seg_info = segment_list[seg_i]
+        if dialogue_segment_list is not None and seg_i < len(dialogue_segment_list):
+            _seg_info = dialogue_segment_list[seg_i]
             _speaker_dur = max(0.5, float(_seg_info.get('end', 0.64)) - float(_seg_info.get('start', 0.0)))
         else:
             _speaker_dur = frames_per_seg / 25.0  # fallback duration from visual block size
@@ -707,7 +708,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                         "The tone is positive level of " + str(tone_pos))
     
 
-    _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
+    _seg_list: list = dialogue_segment_list if dialogue_segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
 
     # ── Pass 1: pre-compute per-segment timing ───────────────────────────────
     passive_silences = []
@@ -1301,7 +1302,7 @@ def main(args):
             all_whisper_segments = result.get("segments", [])
             full_transcript = result.get("text", "").strip()
 
-            # ── Recompute and keep only the segment followed by the maximum GAP ──
+            # ── Recompute GAPs: audio uses top-4 segments, video uses only max-gap segment ──
             video_end_sec = T_len / 25.0
             gap_candidates = []
             for whisper_seg_idx, seg in enumerate(all_whisper_segments):
@@ -1314,13 +1315,25 @@ def main(args):
                 gap_candidates.append((gap_len_sec, whisper_seg_idx, gap_start_sec, gap_end_sec))
 
             if gap_candidates:
-                max_gap_len_sec, max_gap_idx, max_gap_start_sec, max_gap_end_sec = max(gap_candidates, key=lambda item: item[0])
-                selected_segment = dict(all_whisper_segments[max_gap_idx])
-                selected_segment['gap_start'] = max_gap_start_sec
-                selected_segment['gap_end'] = max_gap_end_sec
-                selected_segment['gap_duration'] = max_gap_len_sec
-                segments = [selected_segment]
-                print(f"[Segments] Using maximum GAP segment: index={max_gap_idx}, gap={max_gap_len_sec:.2f}s, text={selected_segment.get('text', '')[:30]!r}")
+                sorted_gap_candidates = sorted(gap_candidates, key=lambda item: item[0], reverse=True)
+
+                audio_segments = []
+                for gap_len_sec, seg_idx_sel, gap_start_sec, gap_end_sec in sorted(sorted_gap_candidates[:4], key=lambda item: item[1]):
+                    selected_audio_segment = dict(all_whisper_segments[seg_idx_sel])
+                    selected_audio_segment['gap_start'] = gap_start_sec
+                    selected_audio_segment['gap_end'] = gap_end_sec
+                    selected_audio_segment['gap_duration'] = gap_len_sec
+                    audio_segments.append(selected_audio_segment)
+
+                max_gap_len_sec, max_gap_idx, max_gap_start_sec, max_gap_end_sec = sorted_gap_candidates[0]
+                selected_video_segment = dict(all_whisper_segments[max_gap_idx])
+                selected_video_segment['gap_start'] = max_gap_start_sec
+                selected_video_segment['gap_end'] = max_gap_end_sec
+                selected_video_segment['gap_duration'] = max_gap_len_sec
+                video_segments = [selected_video_segment]
+
+                print(f"[Audio Segments] Using {len(audio_segments)} segments: {[seg.get('text', '')[:30] for seg in audio_segments]}")
+                print(f"[Video Segment] Using maximum GAP segment: index={max_gap_idx}, gap={max_gap_len_sec:.2f}s, text={selected_video_segment.get('text', '')[:30]!r}")
             else:
                 fallback_segment = {
                     "start": 0.0,
@@ -1330,13 +1343,14 @@ def main(args):
                     "gap_end": video_end_sec,
                     "gap_duration": max(0.0, video_end_sec - 16 / 25.0),
                 }
-                segments = [fallback_segment]
-                print("[Segments] Whisper returned no segments, using fallback segment")
+                audio_segments = [fallback_segment]
+                video_segments = [fallback_segment]
+                print("[Segments] Whisper returned no segments, using fallback segment for audio and video")
                 
             all_face_images = []
             seg_samples_list = []  # collect [256, C, H, W] per segment
                 
-            for seg_idx, segment in enumerate(segments):
+            for seg_idx, segment in enumerate(video_segments):
                 end_time = segment["end"]
                 end_frame = int(end_time * 25)
                 start_frame = max(0, end_frame - 16)
@@ -1400,7 +1414,7 @@ def main(args):
                 continue
             stacked_out = torch.cat(seg_samples_list, dim=0)  # [N_segs*256, C, H, W]
             n_valid_segs = len(seg_samples_list)
-            valid_segments = segments[:n_valid_segs]
+            valid_video_segments = video_segments[:n_valid_segs]
 
             # Call talkinghead function ONCE with all N segments stacked + their metadata
             batched_faces, scores = openai_deepseek_talkinghead_genall(
@@ -1409,7 +1423,8 @@ def main(args):
                 emo_label, stacked_out, pipe, vae, unet, pe,
                 batch_index=(batch_size * step + batch_index),
                 num_frame_sp=T_len,
-                segment_list=valid_segments
+                segment_list=valid_video_segments,
+                audio_segment_list=audio_segments
             )
             all_face_images += batched_faces
             
@@ -1424,7 +1439,7 @@ def main(args):
             print(f"Stretching {len(all_face_images)} generated frames → {T_len} speaker frames")
             all_face_images = stretch_frames_to_timeline(
                 all_face_images,
-                valid_segments,          # list of dicts with 'start'/'end' in seconds
+                valid_video_segments,          # list of dicts with 'start'/'end' in seconds
                 target_total_frames=T_len,
                 video_fps=25,
                 frames_per_seg=max(1, stacked_out.shape[0] // max(1, n_valid_segs))
