@@ -1242,15 +1242,22 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     # double_count=0
     torch.manual_seed(0)
-    T_len = 0
     for step, video_data in enumerate(loader):
-        if step == 0 and video_data is not None:
-            T_len = video_data['img'].shape[1]
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
         
         for batch_index in range(batch_size):
             speaker_audio_path = video_data['speaker_audio_path'][batch_index]
             listener_audio_path = video_data['listener_audio_path'][batch_index]
+            speaker_video_path = video_data['speaker_video_path'][batch_index]
+
+            # Use the real speaker video frame count instead of dataloader clip length.
+            cap = cv2.VideoCapture(speaker_video_path)
+            T_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            cap.release()
+            if T_len <= 0:
+                T_len = int(video_data['img'].shape[1])
+                print(f"[Warning] Failed to read frame count from {speaker_video_path}, fallback to dataloader length: {T_len}")
+
             pdb.set_trace()
             result = whisper_model.transcribe(speaker_audio_path)
             all_whisper_segments = result.get("segments", [])
@@ -1407,7 +1414,7 @@ def main(args):
                 speaker_audio_path, listener_audio_path,
                 emo_label, stacked_out, pipe, vae, unet, pe,
                 batch_index=(batch_size * step + batch_index),
-                num_frame_sp=stacked_out.shape[0],
+                num_frame_sp=T_len,
                 segment_list=valid_segments
             )
             all_face_images += batched_faces
