@@ -752,7 +752,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # shorter than the slice, truncate; if it is longer, pad with silence.
     char_counts = [len(t) for t in all_reply_texts]
     total_chars = sum(char_counts)
-
+    pdb.set_trace() 
     segment_audio_parts = []
     tts_offset = 0
     for seg_i in range(len(_seg_list)):
@@ -778,13 +778,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 tts_arr = np.array([], dtype=np.float32)
         else:
             tts_arr = np.zeros(target_samples, dtype=np.float32)
-
+        
         segment_audio_parts.append(passive_silences[seg_i])
         segment_audio_parts.append(tts_arr)
         passive_dur_log = len(passive_silences[seg_i]) / sr
         print(f'[Audio seg {seg_i}] silence={passive_dur_log:.2f}s  TTS={active_dur:.2f}s  '
               f'samples={len(tts_arr)}  reply={repr(reply_text[:60])}')
-
+    pdb.set_trace() 
     new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
