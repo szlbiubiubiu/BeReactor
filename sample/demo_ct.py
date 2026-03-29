@@ -1436,7 +1436,7 @@ def main(args):
                     seg_out = listener_ref[0]  # [64, C, H, W], range [-1, 1]
 
                 seg_samples_list.append(seg_out)
-
+            pdb.set_trace()
             # Stack all segment tensors: [N_segs*64, C, H, W]
             if len(seg_samples_list) == 0:
                 print(f"No valid segments for batch_index={batch_index}, skipping.")
