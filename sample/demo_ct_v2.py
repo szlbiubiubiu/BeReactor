@@ -156,10 +156,51 @@ def llm_select_response_segments(pipe, full_transcript, segments):
         indices = [int(n) for n in nums if int(n) < len(segments)]
         if not indices:
             indices = list(range(len(segments)))
+
+    # ── Post-processing: fix noisy LLM output ──────────────────────────────
+    # 1. Deduplicate and clamp to valid range
+    seen = set()
+    unique_indices = []
+    for idx in indices:
+        if isinstance(idx, (int, float)):
+            idx = int(idx)
+        else:
+            continue
+        if 0 <= idx < len(segments) and idx not in seen:
+            seen.add(idx)
+            unique_indices.append(idx)
+    indices = unique_indices
+    print(f"[LLM Timing] Raw LLM output: {raw!r}")
+    print(f"[LLM Timing] Deduplicated indices: {indices}")
+
+    # 2. Compute the gap (silence) after each selected segment and prefer the
+    #    segment with the largest gap — that's the most natural response window.
+    #    Keep at least one segment; if multiple segments share the max gap, keep
+    #    all of them.
+    if len(indices) > 1:
+        gap_info = []   # list of (gap_seconds, idx)
+        for idx in indices:
+            seg_end = segments[idx].get('end', 0.0)
+            # Find the start of the next segment in the *full* segment list
+            if idx + 1 < len(segments):
+                next_start = segments[idx + 1].get('start', seg_end)
+            else:
+                # Last segment: gap extends to "infinity" — use a large value
+                next_start = seg_end + 999.0
+            gap = max(0.0, next_start - seg_end)
+            gap_info.append((gap, idx))
+        max_gap = max(g for g, _ in gap_info)
+        # Keep all segments whose gap is within 80 % of the max gap (tolerance
+        # for cases where several gaps are similarly large)
+        gap_threshold = max_gap * 0.8
+        indices = [idx for gap, idx in gap_info if gap >= gap_threshold]
+        print(f"[LLM Timing] Gaps: {[(f'{g:.2f}s', i) for g, i in gap_info]}  "
+              f"→ kept indices with gap ≥ {gap_threshold:.2f}s: {indices}")
+
     selected = [segments[i] for i in indices if 0 <= i < len(segments)]
     if not selected:
         selected = segments
-    print(f"[LLM Timing] Selected segments for listener response: {indices}")
+    print(f"[LLM Timing] Final selected segment indices: {indices}")
     return selected
 
 
