@@ -1573,11 +1573,11 @@ if __name__ == "__main__":
     
     #wrong label:/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt
     parser.add_argument("--save_video_path", type=str, default="./sample_videos/")
-    parser.add_argument("--use_real_listener", action="store_true",
-                        help="Use real listener video instead of diffusion-generated video for talking head alignment")
+    # parser.add_argument("--use_real_listener", action="store_true",
+    #                     help="Use real listener video instead of diffusion-generated video for talking head alignment")
     args = parser.parse_args()
     omega_conf = OmegaConf.load(args.config)
     omega_conf.ckpt = args.ckpt
     omega_conf.save_video_path = args.save_video_path
-    omega_conf.use_real_listener = args.use_real_listener
+    omega_conf.use_real_listener = True#args.use_real_listener
     main(omega_conf)
