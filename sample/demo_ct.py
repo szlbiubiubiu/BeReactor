@@ -528,6 +528,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         seg_texts = seg_texts[:1]
 
     # ---- Emotion features from first-segment latent ----
+    pdb.set_trace()
     id_feats, emo_fea, au_disfa, au_bp4d = encoder_emo.forward_listener(seg_latents[0].to(torch.device('cuda:0')))
     expression = emo_fea['expression'].to(torch.device('cuda:0'))
     expression_soft = F.softmax(expression, dim=1)
