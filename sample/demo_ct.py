@@ -915,6 +915,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # input_latent_list=input_latent
     # input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
 
+    # ── Align input_latent_list length to speaker total frames (num_frame_sp) ──
+    # Repeat (forward + reverse) until we have at least num_frame_sp latents so
+    # the talking-head output covers the full speaker video duration.
+    if len(input_latent_list) > 0 and num_frame_sp > len(input_latent_list):
+        extended = []
+        forward = input_latent_list
+        reverse = input_latent_list[::-1]
+        toggle = True
+        while len(extended) < num_frame_sp:
+            extended += forward if toggle else reverse
+            toggle = not toggle
+        input_latent_list = extended[:num_frame_sp]
+        print(f"[TalkingHead] input_latent_list repeated to {len(input_latent_list)} frames (speaker={num_frame_sp})")
+
     #----
     #use image----
     input_latent_list_cycle = input_latent_list #+ input_latent_list[::-1]
