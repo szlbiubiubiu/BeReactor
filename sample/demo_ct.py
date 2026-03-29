@@ -1370,11 +1370,6 @@ def main(args):
             print(f"After stretch: {len(all_face_images)} frames")
             # ──────────────────────────────────────────────────────────────────
             
-            video_ = np.asarray(np.clip(all_face_images, 0, 255))[:, :, :, ::-1]
-            video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
-            print(video_save_path)
-            imageio.mimwrite(video_save_path, video_, fps=25, quality=9)
-
             # ── Side-by-side comparison video (speaker left | reaction right) ─
             try:
                 speaker_video_path_sbs = video_data['speaker_video_path'][batch_index]
