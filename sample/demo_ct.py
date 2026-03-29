@@ -322,6 +322,33 @@ def stretch_frames_to_timeline(frames, segment_list, target_total_frames,
 
     return result
 
+
+def load_video_clip_from_path(video_path, start_frame, clip_size, target_h, target_w):
+    """Load [clip_size, 3, H, W] from a video file, normalized to [-1, 1]."""
+    cap = cv2.VideoCapture(video_path)
+    if start_frame > 0:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+    frames = []
+    for _ in range(clip_size):
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.resize(frame, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
+        frame = (frame.astype(np.float32) / 127.5) - 1.0
+        frame = torch.from_numpy(frame).permute(2, 0, 1)
+        frames.append(frame)
+    cap.release()
+
+    if len(frames) == 0:
+        frames = [torch.zeros((3, target_h, target_w), dtype=torch.float32) for _ in range(clip_size)]
+    elif len(frames) < clip_size:
+        last_frame = frames[-1]
+        frames.extend([last_frame.clone() for _ in range(clip_size - len(frames))])
+
+    return torch.stack(frames, dim=0)
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Function to calculate BLEU for multiple chats
@@ -1255,8 +1282,8 @@ def main(args):
             T_len = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             cap.release()
             if T_len <= 0:
-                T_len = int(video_data['img'].shape[1])
-                print(f"[Warning] Failed to read frame count from {speaker_video_path}, fallback to dataloader length: {T_len}")
+                T_len = int(video_data['speaker_audio_clip'][batch_index].shape[0])
+                print(f"[Warning] Failed to read frame count from {speaker_video_path}, fallback to speaker audio length: {T_len}")
 
             pdb.set_trace()
             result = whisper_model.transcribe(speaker_audio_path)
@@ -1322,7 +1349,16 @@ def main(args):
                 if start_frame >= T_len:
                     start_frame = max(0, T_len - clip_size)
 
-                x = video_data['img'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
+                target_h = int(video_data['listener_video_clip'].shape[-2])
+                target_w = int(video_data['listener_video_clip'].shape[-1])
+                speaker_clip = load_video_clip_from_path(
+                    speaker_video_path,
+                    start_frame,
+                    clip_size,
+                    target_h,
+                    target_w,
+                )
+                x = speaker_clip.unsqueeze(0).to(device, non_blocking=True)
                 listener_ref = video_data['listener_video_clip'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
                 listener_video_clip_last = video_data['listener_video_clip_last'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
                 sp_audio_clip = video_data['speaker_audio_clip'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
