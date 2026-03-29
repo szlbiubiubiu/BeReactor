@@ -1656,8 +1656,8 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
         speaker_path = self.speaker_path_list[index]  # e.g., speaker/session*/Camera-2024-06-21-103121-103102
         listener_path = self.listener_path_list[index]  # e.g., listener/session*/Camera-2024-06-21-103121-103102
 
-        video_path = os.fspath(Path(self._video_dir) / speaker_path.with_suffix('.mp4'))
-        vr = VideoReader(video_path, ctx=cpu(0))
+        speaker_video_path = os.fspath(Path(self._video_dir) / speaker_path.with_suffix('.mp4'))
+        vr = VideoReader(speaker_video_path, ctx=cpu(0))
         vr_crop = VideoReader(os.fspath(Path(self.crop_video_dir) / speaker_path.with_suffix('.mp4')), ctx=cpu(0))
         total_length = len(vr)  # length from 58 to more than 20000
         if not self.load_video_s:
