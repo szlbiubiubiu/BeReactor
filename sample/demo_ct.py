@@ -878,7 +878,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     bbox_shift=0
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
 
-    pdb.set_trace()
+    # pdb.set_trace()
     #reverse and repeat here
     repeat_times=2
     coord_list_reverse=coord_list_single[::-1]
@@ -997,6 +997,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # if len(input_latent_list_cycle)==0:
     #     pdb.set_trace()
     #     a=1
+    pdb.set_trace()
     gen = datagen_reaction(whisper_chunks,input_latent_list_cycle,batch_size)
     
     res_frame_list=[]
