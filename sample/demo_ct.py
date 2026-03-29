@@ -1095,6 +1095,46 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     return out_images[:num_frame_sp],evaluation_score
 
 
+def select_pause_segments(segments, audio_total_sec, min_pause_sec=0.4, max_segs=4):
+    """
+    From Whisper speech segments, select up to `max_segs` segments that are
+    followed by the longest silences/pauses.  These are the moments where the
+    listener is most likely to react.
+
+    Each returned segment dict gets an extra key 'pause_after' (seconds).
+    The last segment always counts (silence = remaining audio duration).
+    """
+    if not segments:
+        return segments
+
+    # Compute pause after each segment
+    candidates = []
+    for i, seg in enumerate(segments):
+        if i + 1 < len(segments):
+            pause = max(0.0, segments[i + 1]['start'] - seg['end'])
+        else:
+            pause = max(0.0, audio_total_sec - seg['end'])
+        candidates.append((pause, i, dict(seg, pause_after=pause)))
+
+    # Keep only segments where the following pause meets the minimum threshold
+    qualifying = [c for c in candidates if c[0] >= min_pause_sec]
+
+    # If none qualify, fall back to the segment with the longest pause
+    if not qualifying:
+        qualifying = [max(candidates, key=lambda c: c[0])]
+
+    # Sort by pause length descending, take top max_segs, then re-sort by time
+    qualifying.sort(key=lambda c: c[0], reverse=True)
+    selected = qualifying[:max_segs]
+    selected.sort(key=lambda c: c[1])  # restore chronological order
+
+    result = [c[2] for c in selected]
+    print(f"[PauseSelect] {len(result)}/{len(segments)} segments selected "
+          f"(min_pause={min_pause_sec}s): "
+          + ", ".join(f"seg{c[1]}(pause={c[0]:.2f}s)" for c in selected))
+    return result
+
+
 def main(args):
     # # Setup PyTorch:
     # # torch.manual_seed(args.seed)
@@ -1253,10 +1293,14 @@ def main(args):
             listener_audio_path = video_data['listener_audio_path'][batch_index]
             pdb.set_trace()
             result = whisper_model.transcribe(speaker_audio_path)
-            segments = result.get("segments", [])
-            segments = segments[:4]
+            all_segments = result.get("segments", [])
+            # Determine total audio duration from Whisper result or fall back to T_len/25
+            audio_total_sec = all_segments[-1]['end'] if all_segments else T_len / 25.0
+            # Select segments followed by the longest pauses (natural listener reaction windows)
+            segments = select_pause_segments(all_segments, audio_total_sec,
+                                             min_pause_sec=0.4, max_segs=4)
             if len(segments) == 0:
-                segments = [{"start": 0.0, "end": 16/25.0, "text": ""}]
+                segments = [{"start": 0.0, "end": 16/25.0, "text": "", "pause_after": audio_total_sec}]
                 
             all_face_images = []
             seg_samples_list = []  # collect [64, C, H, W] per segment
