@@ -310,6 +310,7 @@ class ReactionDataset(data.Dataset):
                                 'listener_3dmm': listener_3dmm,'listener_reference': listener_reference,'speaker_emotion_path':speaker_emotion_path,'cp':[cp,cp + self._clip_length*self.interval]}
     def __len__(self):
         return self._len
+
 class ReactionDataset_readvideo(data.Dataset):
     """Custom data.Dataset compatible with data.DataLoader."""
 
@@ -1970,6 +1971,51 @@ class ReactionDataset_2025_readbothcrop(data.Dataset):
         return self._len
 
 
+class ReactionDataset_2025_readbothcrop_readwholevideo(ReactionDataset_2025_readbothcrop):
+    """
+    Keep clip sampling behavior from ReactionDataset_2025_readbothcrop,
+    and additionally expose whole-video / whole-audio lengths.
+    """
+
+    def __getitem__(self, index):
+        sample = super().__getitem__(index)
+
+        speaker_path = self.speaker_path_list[index]
+        listener_path = self.listener_path_list[index]
+
+        speaker_video_path = os.fspath(Path(self._video_dir) / speaker_path.with_suffix('.mp4'))
+        listener_video_path = os.fspath(Path(self._video_dir) / listener_path.with_suffix('.mp4'))
+
+        speaker_video_total_length = len(VideoReader(speaker_video_path, ctx=cpu(0)))
+        listener_video_total_length = len(VideoReader(listener_video_path, ctx=cpu(0)))
+
+        if self.audio_feature_type == 'wav2vec':
+            speaker_audio_path = os.fspath(Path(self._audio_dir) / speaker_path.with_suffix('.npy'))
+            listener_audio_path = os.fspath(Path(self._audio_dir) / listener_path.with_suffix('.npy'))
+            speaker_audio_total_length = int(np.load(speaker_audio_path).shape[0])
+            listener_audio_total_length = int(np.load(listener_audio_path).shape[0])
+            speaker_audio_total_seconds = -1.0
+            listener_audio_total_seconds = -1.0
+        else:
+            speaker_audio_path = os.fspath(Path(self._audio_dir) / speaker_path.with_suffix('.wav'))
+            listener_audio_path = os.fspath(Path(self._audio_dir) / listener_path.with_suffix('.wav'))
+            speaker_audio_wav, speaker_sr = sf.read(speaker_audio_path)
+            listener_audio_wav, listener_sr = sf.read(listener_audio_path)
+            speaker_audio_total_length = int(len(speaker_audio_wav))
+            listener_audio_total_length = int(len(listener_audio_wav))
+            speaker_audio_total_seconds = float(speaker_audio_total_length / max(1, speaker_sr))
+            listener_audio_total_seconds = float(listener_audio_total_length / max(1, listener_sr))
+
+        sample['speaker_video_total_length'] = torch.tensor(speaker_video_total_length)
+        sample['listener_video_total_length'] = torch.tensor(listener_video_total_length)
+        sample['speaker_audio_total_length'] = torch.tensor(speaker_audio_total_length)
+        sample['listener_audio_total_length'] = torch.tensor(listener_audio_total_length)
+        sample['speaker_audio_total_seconds'] = torch.tensor(speaker_audio_total_seconds, dtype=torch.float32)
+        sample['listener_audio_total_seconds'] = torch.tensor(listener_audio_total_seconds, dtype=torch.float32)
+
+        return sample
+
+
 class ReactionDataset_2025_readbothcrop_backup(data.Dataset):
     def __init__(self,
                  root_dir: str = './data',  # /path/to/dataset
@@ -2459,7 +2505,7 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
     #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
     #                           load_3dmm_l=False,normalize_3dmm='standard')
         
-        dataset=ReactionDataset_2025_readbothcrop(root_dir='/data/szl/dataset/react2025',split='',clip_length=conf.clip_length,crop_size=conf.crop_size,
+        dataset=ReactionDataset_2025_readbothcrop_readwholevideo(root_dir='/data/szl/dataset/react2025',split='',clip_length=conf.clip_length,crop_size=conf.crop_size,
                 target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
                               load_3dmm_l=False,normalize_3dmm='standard',interval=1) #for better visualization, both crop
@@ -2472,7 +2518,7 @@ def get_dataset(conf, split, load_audio=True, load_video_s=False, load_video_l=F
         #             target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
         #                           load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
         #                           load_3dmm_l=False,normalize_3dmm='standard')
-        dataset=ReactionDataset_2025_readbothcrop(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
+        dataset=ReactionDataset_2025_readbothcrop_readwholevideo(root_dir='/gpfs/scratch/acw569/dataset/2025data_v2/',split='train',clip_length=conf.clip_length,crop_size=conf.crop_size,
                 target_size=conf.img_size,fps=25,load_audio=load_audio, load_video_s=load_video_s, load_video_l=load_video_l,
                               load_emotion_s=load_emotion_s, load_emotion_l=load_emotion_l, load_3dmm_s=False,
                               load_3dmm_l=False,normalize_3dmm='standard',interval=2) #for better visualization, both crop
