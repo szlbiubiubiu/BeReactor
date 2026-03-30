@@ -210,6 +210,20 @@ encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_i
                     au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:0'))#.cuda()
 
 
+# Initialize UTMOS model for audio quality evaluation.
+try:
+    import utmosv2
+    import librosa
+    utmos_model = utmosv2.create_model(pretrained=False)
+    utmos_model.load_state_dict(torch.load('./fold0_s42_best_model.pth'))
+    utmos_model = utmos_model.to(torch.device('cuda:0'))
+    utmos_model.eval()
+    utmos_available = True
+except Exception as e:
+    print(f"UTMOS model initialization failed: {e}")
+    utmos_available = False
+
+
 
 from openai import OpenAI
 import openai
@@ -761,6 +775,20 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
+
+    # Compute UTMOSv2 score for generated audio.
+    if utmos_available:
+        try:
+            utmos_audio, _ = librosa.load(OUTPUT_audio_FILE, sr=16000)
+            mos_score = utmos_model.predict(data=utmos_audio, sr=16000)
+            evaluation_score['mos_score'] = float(mos_score) if hasattr(mos_score, 'item') else float(mos_score)
+            print(f"UTMOS MOS Score: {evaluation_score['mos_score']:.4f}")
+        except Exception as e:
+            print(f"UTMOS evaluation failed: {e}")
+            evaluation_score['mos_score'] = None
+    else:
+        evaluation_score['mos_score'] = None
+
     # # message in self.stream()
     wavs=[]
     # with open(OUTPUT_audio_FILE, "wb") as file:
@@ -1222,6 +1250,11 @@ def main(args):
     all_score['all_bleu_scores']=0
     all_score['all_rouge_scores']=0
     all_score['all_bert_scores']=0
+    all_score['all_mos_scores']=0
+    all_score['all_language_mse']=0
+    all_score['all_processed_samples']=0
+    all_score['all_valid_mos_count']=0
+    all_score['all_sentiment_emb_sum']=torch.zeros(10)
 
     all_score['all_sentiment_emb']=torch.zeros([len(dataset),10])
     # pdb.set_trace()
@@ -1340,11 +1373,42 @@ def main(args):
                 segment_list=valid_segments
             )
             all_face_images += batched_faces
-            
+            pdb.set_trace()
             all_score['all_realism_score'] += scores['realism_score']
-            all_score['all_sentiment_emb'][batch_size*step+batch_index] = scores['sentiment_emb']
+            current_sentiment_emb = scores['sentiment_emb'].detach().cpu().float()
+            all_score['all_sentiment_emb'][batch_size*step+batch_index] = current_sentiment_emb
+            all_score['all_sentiment_emb_sum'] += current_sentiment_emb.squeeze(0)
             all_score['all_bleu_scores'] += scores['bleu_scores']
             all_score['all_bert_scores'] += scores['bert_scores']
+
+            current_language_target = torch.mean(emo_label[:, :, :10].detach().cpu().float(), dim=1)
+            current_language_mse = torch.nn.functional.mse_loss(current_sentiment_emb, current_language_target).item()
+            all_score['all_language_mse'] += current_language_mse
+
+            all_score['all_processed_samples'] += 1
+            current_mos = scores.get('mos_score')
+            if current_mos is not None:
+                all_score['all_mos_scores'] += current_mos
+                all_score['all_valid_mos_count'] += 1
+
+            processed_count = all_score['all_processed_samples']
+            avg_realism_score = all_score['all_realism_score'] / processed_count
+            avg_sentiment_emb = all_score['all_sentiment_emb_sum'] / processed_count
+            avg_bert_scores = all_score['all_bert_scores'] / processed_count
+            avg_language_mse = all_score['all_language_mse'] / processed_count
+            if all_score['all_valid_mos_count'] > 0:
+                avg_utmosv2_score = all_score['all_mos_scores'] / all_score['all_valid_mos_count']
+            else:
+                avg_utmosv2_score = None
+
+            print(f"[Running Avg][{processed_count}] realism_score: {avg_realism_score:.4f}")
+            print(f"[Running Avg][{processed_count}] sentiment_emb: {avg_sentiment_emb}")
+            print(f"[Running Avg][{processed_count}] bert_scores: {avg_bert_scores:.4f}")
+            if avg_utmosv2_score is None:
+                print(f"[Running Avg][{processed_count}] utmosv2_score: N/A")
+            else:
+                print(f"[Running Avg][{processed_count}] utmosv2_score: {avg_utmosv2_score:.4f}")
+            print(f"[Running Avg][{processed_count}] language_mse: {avg_language_mse:.6f}")
             
             # ── Stretch generated frames to match speaker's total frame count ──
             # T_len is the speaker's total frames (e.g. 751).
