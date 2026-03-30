@@ -719,7 +719,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         active_durations.append(active_dur)
 
     all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
-    pdb.set_trace()
+    # pdb.set_trace()
     # ── Pass 2: one single TTS call for all listener replies ─────────────────
     combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
     combined_reply_text = combined_reply_text.replace('.', ';').replace('!', ';')
@@ -1374,7 +1374,7 @@ def main(args):
                 segment_list=valid_segments
             )
             all_face_images += batched_faces
-            pdb.set_trace()
+            # pdb.set_trace()
             all_score['all_realism_score'] += scores['realism_score']
             current_sentiment_emb = scores['sentiment_emb'].detach().cpu().float()
             all_score['all_sentiment_emb'][batch_size*step+batch_index] = current_sentiment_emb
