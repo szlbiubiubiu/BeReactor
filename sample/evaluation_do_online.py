@@ -722,6 +722,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     pdb.set_trace()
     # ── Pass 2: one single TTS call for all listener replies ─────────────────
     combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
+    combined_reply_text = combined_reply_text.replace('.', ';').replace('!', ';')
     if combined_reply_text.strip():
         input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
         prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
