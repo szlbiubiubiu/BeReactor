@@ -460,10 +460,27 @@ def evaluate_LLM(dialogue: str):
         realism_score=realism_score[0]
         
     # pdb.set_trace()
-    sentiment_emb=F.one_hot(torch.tensor(sentiment_score),num_classes=10)
-    sentiment_emb[-2]=valence_score
-    sentiment_emb[-1]=arousal_score
-    sentiment_emb=torch.unsqueeze(sentiment_emb,dim=0)
+    # Build a float embedding so valence/arousal can be assigned safely.
+    if isinstance(sentiment_score, list):
+        sentiment_idx = sentiment_score[0] if len(sentiment_score) > 0 else 0
+    else:
+        sentiment_idx = int(sentiment_score)
+    sentiment_idx = max(0, min(9, int(sentiment_idx)))
+
+    if isinstance(valence_score, list):
+        valence_value = float(valence_score[0]) if len(valence_score) > 0 else 0.0
+    else:
+        valence_value = float(valence_score)
+
+    if isinstance(arousal_score, list):
+        arousal_value = float(arousal_score[0]) if len(arousal_score) > 0 else 0.0
+    else:
+        arousal_value = float(arousal_score)
+
+    sentiment_emb = F.one_hot(torch.tensor(sentiment_idx), num_classes=10).to(torch.float32)
+    sentiment_emb[-2] = valence_value
+    sentiment_emb[-1] = arousal_value
+    sentiment_emb = torch.unsqueeze(sentiment_emb, dim=0)
     # try:
     #     import json
     #     result = json.loads(answer)
