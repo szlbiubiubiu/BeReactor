@@ -436,11 +436,23 @@ def evaluate_LLM(dialogue: str):
     # pdb.set_trace()
     # Parse the response content (assuming the output is valid JSON)
     answer = response.choices[0].message.content.strip()
-    
-    arousal_score = re.findall(r'\d+\.\d+', answer.split('\n')[-2])
-    valence_score = re.findall(r'\d+\.\d+', answer.split('\n')[-3])
-    sentiment_score = re.findall(r'\d+', answer.split('\n')[-4])
-    realism_score = re.findall(r'\d+', answer.split('\n')[-5])
+
+    lines = answer.splitlines()
+
+    def safe_line_from_end(offset_from_end: int) -> str:
+        if len(lines) >= offset_from_end:
+            return lines[-offset_from_end]
+        return ""
+
+    arousal_line = safe_line_from_end(2)
+    valence_line = safe_line_from_end(3)
+    sentiment_line = safe_line_from_end(4)
+    realism_line = safe_line_from_end(5)
+
+    arousal_score = re.findall(r'-?\d+(?:\.\d+)?', arousal_line)
+    valence_score = re.findall(r'-?\d+(?:\.\d+)?', valence_line)
+    sentiment_score = re.findall(r'\d+', sentiment_line)
+    realism_score = re.findall(r'\d+', realism_line)
     # numbers = re.findall(r'\d+', answer.split('\n')[-2])
     arousal_score = [float(num) for num in arousal_score]
     valence_score = [float(num) for num in valence_score]
