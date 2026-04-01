@@ -42,6 +42,7 @@ import shutil
 from pathlib import Path
 
 import torch
+from tqdm import tqdm
 
 # ── VBench 支持 custom_input 模式的维度（不需要标准 prompt 列表）────────────
 CUSTOM_INPUT_DIMENSIONS = [
@@ -101,7 +102,7 @@ def collect_videos_flat(root_dir: str, tmp_dir: str) -> str:
     os.makedirs(flat_dir, exist_ok=True)
 
     seen_names = {}
-    for fpath in video_files:
+    for fpath in tqdm(video_files, desc="平铺视频文件", unit="file", ncols=80):
         fname = os.path.basename(fpath)
         if fname in seen_names:
             # 文件名冲突：在文件名前拼接父文件夹前缀
@@ -151,15 +152,23 @@ def run_vbench_evaluate(
     my_vbench = VBench(device, info_json, output_dir)
 
     results = {}
-    for dim in dimensions:
+    dim_pbar = tqdm(
+        dimensions,
+        desc="VBench 维度评测",
+        unit="dim",
+        ncols=80,
+        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]",
+    )
+    for dim in dim_pbar:
         eval_mode = mode
         # 语义类维度必须用 standard_mode 或 vbench_category
         if dim not in CUSTOM_INPUT_DIMENSIONS:
             eval_mode = "vbench_standard"
 
-        print(f"\n{'='*60}")
-        print(f"[VBench] 正在评测维度: {dim}  (mode={eval_mode})")
-        print(f"{'='*60}")
+        dim_pbar.set_postfix_str(dim, refresh=True)
+        tqdm.write(f"\n{'='*60}")
+        tqdm.write(f"[VBench] 正在评测维度: {dim}  (mode={eval_mode})")
+        tqdm.write(f"{'='*60}")
         try:
             my_vbench.evaluate(
                 videos_path=videos_path,
@@ -178,16 +187,17 @@ def run_vbench_evaluate(
                     score_val = dim_result[dim]
                     if isinstance(score_val, (list, tuple)):
                         score_val = score_val[0]
-                    print(f"  ✓ {dim}: {float(score_val):.4f}")
+                    tqdm.write(f"  ✓ {dim}: {float(score_val):.4f}")
                 else:
-                    print(f"  ✓ {dim}: 结果已保存，请查看 {result_file}")
+                    tqdm.write(f"  ✓ {dim}: 结果已保存，请查看 {result_file}")
             else:
-                print(f"  [WARN] 未找到结果文件: {result_file}")
+                tqdm.write(f"  [WARN] 未找到结果文件: {result_file}")
                 results[dim] = None
         except Exception as e:
-            print(f"  [ERROR] 评测 {dim} 失败: {e}")
+            tqdm.write(f"  [ERROR] 评测 {dim} 失败: {e}")
             results[dim] = None
 
+    dim_pbar.close()
     return results
 
 
