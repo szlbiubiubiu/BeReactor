@@ -582,6 +582,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     ]
 
     seg_reply_texts = []
+    emotion_names = ["Neutral", "Happy", "Sad", "Surprise", "Fear", "Disgust", "Anger", "Contempt"]
     for seg_i, speaker_text in enumerate(seg_texts):
         # Compute per-segment word limit from speaker's talk duration
         if segment_list is not None and seg_i < len(segment_list):
@@ -591,27 +592,28 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             _speaker_dur = frames_per_seg / 25.0  # fallback: 64 frames @ 25 fps
         _max_words = max(5, min(50, round(_speaker_dur * _TTS_WORDS_PER_SEC)))
 
+        # Derive current speaker emotion from this segment latent and pass it to LLM.
+        _, seg_emo_fea, _, _ = encoder_emo.forward_listener(seg_latents[seg_i].to(torch.device('cuda:0')))
+        seg_expression_soft = F.softmax(seg_emo_fea['expression'].to(torch.device('cuda:0')), dim=1)
+        seg_emotion_probs = torch.mean(seg_expression_soft, dim=0)
+        seg_emotion_idx = int(torch.argmax(seg_emotion_probs).item())
+        seg_emotion_name = emotion_names[seg_emotion_idx] if 0 <= seg_emotion_idx < len(emotion_names) else "Neutral"
+        seg_valence = float(seg_emo_fea['valence'].to(torch.device('cuda:0')).mean())
+        seg_arousal = float(seg_emo_fea['arousal'].to(torch.device('cuda:0')).mean())
+        emo_hint = (
+            " Speaker emotion state: primary_emotion={name}, valence={valence:.2f}, arousal={arousal:.2f}."
+            " Respond naturally to this emotional state and do not output the numeric scores."
+        ).format(name=seg_emotion_name, valence=seg_valence, arousal=seg_arousal)
+
         # Build user message; from turn 2 onwards, carry forward emotion context
         if seg_i == 0:
             base_text = speaker_text if speaker_text else "Hello."
-            user_msg = f"{base_text} [Reply in at most {_max_words} words.]"
+            user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
         else:
             # Append previous assistant turn to maintain dialogue continuity
             chat.append({"role": "assistant", "content": seg_reply_texts[-1]})
-            emo_hint = (
-                " (Please match the emotional tone — "
-                "Neutral={:.2f}, Happy={:.2f}, Sad={:.2f}, valence={:.2f}, arousal={:.2f}. "
-                "Do not include these scores in your reply.)"
-            ).format(
-                float(expression_soft[:, 0].mean()),
-                float(expression_soft[:, 1].mean()),
-                float(expression_soft[:, 2].mean()),
-                float(valence.mean()),
-                float(arousal.mean())
-            )
             base_text = speaker_text if speaker_text else "Please continue."
-            # user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
-            user_msg = f"{base_text}[Reply in at most {_max_words} words.]"
+            user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
 
         chat.append({"role": "user", "content": user_msg})
 
