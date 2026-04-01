@@ -465,7 +465,7 @@ def evaluate_LLM(dialogue: str):
         sentiment_idx = sentiment_score[0] if len(sentiment_score) > 0 else 0
     else:
         sentiment_idx = int(sentiment_score)
-    sentiment_idx = max(0, min(9, int(sentiment_idx)))
+    sentiment_idx = max(0, min(7, int(sentiment_idx)))
 
     if isinstance(valence_score, list):
         valence_value = float(valence_score[0]) if len(valence_score) > 0 else 0.0
@@ -476,6 +476,11 @@ def evaluate_LLM(dialogue: str):
         arousal_value = float(arousal_score[0]) if len(arousal_score) > 0 else 0.0
     else:
         arousal_value = float(arousal_score)
+
+    if isinstance(realism_score, list):
+        realism_score = int(realism_score[0]) if len(realism_score) > 0 else 0
+    else:
+        realism_score = int(realism_score)
 
     sentiment_emb = F.one_hot(torch.tensor(sentiment_idx), num_classes=10).to(torch.float32)
     sentiment_emb[-2] = valence_value
@@ -593,7 +598,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 float(arousal.mean())
             )
             base_text = speaker_text if speaker_text else "Please continue."
-            user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
+            # user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
+            user_msg = f"{base_text}[Reply in at most {_max_words} words.]"
 
         chat.append({"role": "user", "content": user_msg})
 
@@ -625,6 +631,15 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     evaluation_score['bleu_scores']=bleu_scores[0]
 
     evaluation_score['bert_scores']=bert_scores[0]
+
+    # Emotion classification difference: visual(8-class) vs LLM(8-class).
+    visual_emotion_probs = torch.mean(expression_soft, dim=0)
+    visual_emotion_class = int(torch.argmax(visual_emotion_probs).item())
+    llm_emotion_probs = sentiment_emb[0, :8]
+    llm_emotion_class = int(torch.argmax(llm_emotion_probs).item())
+    evaluation_score['visual_emotion_class'] = visual_emotion_class
+    evaluation_score['llm_emotion_class'] = llm_emotion_class
+    evaluation_score['emotion_cls_diff'] = int(visual_emotion_class != llm_emotion_class)
     # pdb.set_trace()
     # # #text to audio
     # # pdb.set_trace()
@@ -1273,6 +1288,7 @@ def main(args):
     all_score['all_processed_samples']=0
     all_score['all_valid_mos_count']=0
     all_score['all_sentiment_emb_sum']=torch.zeros(10)
+    all_score['all_emotion_cls_diff']=0
 
     all_score['all_sentiment_emb']=torch.zeros([len(dataset),10])
     # pdb.set_trace()
@@ -1398,6 +1414,7 @@ def main(args):
             all_score['all_sentiment_emb_sum'] += current_sentiment_emb.squeeze(0)
             all_score['all_bleu_scores'] += scores['bleu_scores']
             all_score['all_bert_scores'] += scores['bert_scores']
+            all_score['all_emotion_cls_diff'] += scores.get('emotion_cls_diff', 0)
 
             current_language_target = torch.mean(emo_label[:, :, :10].detach().cpu().float(), dim=1)
             current_language_mse = torch.nn.functional.mse_loss(current_sentiment_emb, current_language_target).item()
@@ -1414,6 +1431,7 @@ def main(args):
             avg_sentiment_emb = all_score['all_sentiment_emb_sum'] / processed_count
             avg_bert_scores = all_score['all_bert_scores'] / processed_count
             avg_language_mse = all_score['all_language_mse'] / processed_count
+            avg_emotion_cls_diff = all_score['all_emotion_cls_diff'] / processed_count
             if all_score['all_valid_mos_count'] > 0:
                 avg_utmosv2_score = all_score['all_mos_scores'] / all_score['all_valid_mos_count']
             else:
@@ -1427,6 +1445,7 @@ def main(args):
             else:
                 print(f"[Running Avg][{processed_count}] utmosv2_score: {avg_utmosv2_score:.4f}")
             print(f"[Running Avg][{processed_count}] language_mse: {avg_language_mse:.6f}")
+            print(f"[Running Avg][{processed_count}] emotion_cls_diff: {avg_emotion_cls_diff:.4f}")
             
             # ── Stretch generated frames to match speaker's total frame count ──
             # T_len is the speaker's total frames (e.g. 751).
