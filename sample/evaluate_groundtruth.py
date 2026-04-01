@@ -507,6 +507,28 @@ def evaluate_LLM(dialogue: str):
     
     return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 
+
+def evaluate_llm_whole(speaker_text: str, listener_text: str):
+    """
+    Evaluate whole (non-segmented) speaker and listener texts with the LLM scorer.
+
+    Args:
+        speaker_text (str): Full speaker text.
+        listener_text (str): Full listener text.
+
+    Returns:
+        Tuple[int, torch.Tensor]: realism_score and sentiment embedding.
+    """
+    speaker_text = (speaker_text or "").strip()
+    listener_text = (listener_text or "").strip()
+
+    whole_dialogue = (
+        "Evaluate this full dialogue without segmentation.\\n"
+        f"Speaker: {speaker_text}\\n"
+        f"Listener: {listener_text}"
+    )
+    return evaluate_LLM(whole_dialogue)
+
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
@@ -640,7 +662,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # Close conversation with last assistant turn (needed for scoring)
     chat.append({"role": "assistant", "content": listener_seg_texts[-1] if listener_seg_texts else ''})
     print(chat)
-    realism_score,sentiment_emb=evaluate_LLM(chat)
+    # realism_score,sentiment_emb=evaluate_LLM(chat)
+    speaker_whole_text = " ".join([t.strip() for t in seg_texts if t and t.strip()])
+    listener_whole_text = listener_result["text"]
+    realism_score, sentiment_emb = evaluate_llm_whole(speaker_whole_text, listener_whole_text)
     # all_text
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
