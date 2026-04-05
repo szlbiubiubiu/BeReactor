@@ -1318,7 +1318,7 @@ def main(args):
         for batch_index in range(batch_size):
             speaker_audio_path = video_data['speaker_audio_path'][batch_index]
             listener_audio_path = video_data['listener_audio_path'][batch_index]
-            
+            print(speaker_audio_path, listener_audio_path)
             result = whisper_model.transcribe(speaker_audio_path)
             segments = result.get("segments", [])
             segments = segments[:4]
