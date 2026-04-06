@@ -1324,8 +1324,8 @@ def main(args):
 
     #load audio->talking head branch--------------------------------
     # whisper_model = whisper.load_model("base.en")
-    whisper_model = whisper.load_model("medium.en")
-
+    # whisper_model = whisper.load_model("medium.en")
+    whisper_model = whisper.load_model("large-v3.en")
     # result = whisper_model.transcribe(audio_file)
     # print(result["text"])
 
@@ -1434,7 +1434,7 @@ def main(args):
 
             # if 'session4/Camera-2024-10-23-134159-134313' not in _first_sp_path:
             #     continue
-            pdb.set_trace()
+            # pdb.set_trace()
             print('current step is:{}, batch_size is :{}'.format(step,batch_size))
             # speaker_audio_path = video_data['speaker_audio_path'][batch_index]
             # listener_audio_path = video_data['listener_audio_path'][batch_index]
@@ -1444,7 +1444,7 @@ def main(args):
             listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-10-23-134159-134313.wav'#video_data['listener_audio_path'][batch_index]
             speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['speaker_video_path'][batch_index]
             listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['listener_video_path'][batch_index]
-            pdb.set_trace()
+            # pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
                 _vr_tmp = VideoReader(_f, ctx=decord_cpu(0))
@@ -1459,8 +1459,34 @@ def main(args):
 
             # ── Feature 3: LLM selects which segments need a listener response ──
             full_transcript = " ".join([seg.get("text", "") for seg in segments])
-            segments = llm_select_response_segments(pipe, full_transcript, segments)
-                
+            all_segments = list(segments)  # full Whisper segment list before LLM filtering
+            segments = llm_select_response_segments(pipe, full_transcript, all_segments)
+
+            # Update each selected segment's text to span [prev_boundary : cur_boundary]
+            # so the LLM reply covers ALL speaker content since the last response.
+            # E.g. if selected indices are [2, 5, 8]:
+            #   response 0 uses text from all_segments[0:3]   (segments 0–2)
+            #   response 1 uses text from all_segments[3:6]   (segments 3–5)
+            #   response 2 uses text from all_segments[6:9]   (segments 6–8)
+            selected_with_cumulative = []
+            prev_orig_idx = -1
+            for sel_seg in segments:
+                cur_orig_idx = next(
+                    (i for i, s in enumerate(all_segments) if s is sel_seg), None
+                )
+                if cur_orig_idx is None:
+                    selected_with_cumulative.append(sel_seg)
+                    continue
+                span_text = " ".join(
+                    s.get("text", "").strip()
+                    for s in all_segments[prev_orig_idx + 1 : cur_orig_idx + 1]
+                )
+                new_seg = dict(sel_seg)
+                new_seg["text"] = span_text
+                selected_with_cumulative.append(new_seg)
+                prev_orig_idx = cur_orig_idx
+            segments = selected_with_cumulative
+            pdb.set_trace()
             all_face_images = []
             seg_samples_list = []  # collect [64, C, H, W] per segment
                 
