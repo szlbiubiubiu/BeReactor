@@ -944,7 +944,32 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         tts_full = np.array([], dtype=np.float32)
     audio_arr = gen_all.cpu().numpy().squeeze()
     sf.write("parler_tts_out.wav", audio_arr, audio_model.config.sampling_rate)
-    pdb.set_trace()
+    # pdb.set_trace()
+
+    # # batch2_text='People We Meet on Vacation is a 2026 American romantic comedy film directed by Brett Haley from a screenplay by Yulin Kuang, Amos Vernon, and Nunzio Randazzo, based on the 2021 novel by Emily Henry. It stars Emily Bader and Tom Blyth.Polar opposites, Poppy wants to explore the world while Alex would prefer to stay home with a good book, but surprisingly they become best friends after sharing a car to their small Ohio hometown from Boston. They live far apart, but for a decade they have shared one week of summer vacation together, which finally leads to a deeper connection.'
+    # # input_ids_all  = tokenizer(2*[description_base], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
+    # # prompt_ids_all = tokenizer([combined_reply_text]+[batch2_text], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
+    # # gen_all  = audio_model.generate(input_ids=input_ids_all.input_ids, attention_mask=input_ids_all.attention_mask,prompt_input_ids=prompt_ids_all.input_ids,prompt_attention_mask=prompt_ids_all.attention_mask,do_sample=True,return_dict_in_generate=True)
+    # # audio_1 = gen_all.sequences[0, :gen_all.audios_length[0]]
+    # # audio_2 = gen_all.sequences[1, :gen_all.audios_length[1]]
+    # # audio_arr1 = audio_1.cpu().numpy().squeeze()
+    # # sf.write("parler_tts_out3.wav", audio_arr1, audio_model.config.sampling_rate)
+    # # audio_arr2 = audio_2.cpu().numpy().squeeze()
+    # # sf.write("parler_tts_out4.wav", audio_arr2, audio_model.config.sampling_rate)
+    # # pdb.set_trace()
+
+    # set_seed(0)
+    # input_ids_all  = tokenizer(2*[description_base], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
+    # prompt_ids_all = tokenizer(seg_reply_texts, return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
+    # gen_all  = audio_model.generate(input_ids=input_ids_all.input_ids, attention_mask=input_ids_all.attention_mask,prompt_input_ids=prompt_ids_all.input_ids,prompt_attention_mask=prompt_ids_all.attention_mask,do_sample=True,return_dict_in_generate=True)
+    # audio_1 = gen_all.sequences[0, :gen_all.audios_length[0]]
+    # audio_2 = gen_all.sequences[1, :gen_all.audios_length[1]]
+    # audio_arr1 = audio_1.cpu().numpy().squeeze()
+    # sf.write("parler_tts_out7.wav", audio_arr1, audio_model.config.sampling_rate)
+    # audio_arr2 = audio_2.cpu().numpy().squeeze()
+    # sf.write("parler_tts_out8.wav", audio_arr2, audio_model.config.sampling_rate)
+    # pdb.set_trace()
+
     # ── Pass 3: distribute TTS audio to each active window ───────────────────
     # Proportional split by character count (proxy for spoken duration).
     # After slicing, resample the slice to exactly fill the active window so
