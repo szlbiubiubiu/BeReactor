@@ -1436,7 +1436,7 @@ def main(args):
             T_len = len(_vr_tmp)
             del _vr_tmp
 
-            if 'Camera-2024-10-23-134159-134313' not in _first_sp_path:
+            if 'session4/Camera-2024-10-23-134159-134313' not in _first_sp_path:
                 continue
             pdb.set_trace()
             print('current step is:{}, batch_size is :{}'.format(step,batch_size))
