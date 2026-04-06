@@ -1325,7 +1325,7 @@ def main(args):
     #load audio->talking head branch--------------------------------
     # whisper_model = whisper.load_model("base.en")
     # whisper_model = whisper.load_model("medium.en")
-    whisper_model = whisper.load_model("large-v3.en")
+    whisper_model = whisper.load_model("large-v3")
     # result = whisper_model.transcribe(audio_file)
     # print(result["text"])
 
