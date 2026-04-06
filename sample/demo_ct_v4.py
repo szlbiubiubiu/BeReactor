@@ -3,6 +3,7 @@
 '''this version suffer from:
 1.face inconsistency as I used different synthesized facial videos
 2.genereate together, use word ratio to split the audio
+3.speaker video is not consistency with the audio
 '''
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
@@ -225,15 +226,24 @@ def create_side_by_side_video(speaker_video_path, speaker_audio_path,
     with open(speaker_video_path, 'rb') as f:
         vr = VideoReader(f, ctx=decord_cpu(0))
     n_speaker = len(vr)
+    sp_fps = vr.get_avg_fps()          # actual fps of the speaker video
     n_listener = len(listener_frames)
     n_out = max(n_speaker, n_listener)
+
+    # When speaker_fps != output fps, map each output frame index to the
+    # correct source frame by timestamp, so the speaker video plays at its
+    # true speed and stays in sync with the audio track.
+    def _sp_frame_idx(out_i):
+        if sp_fps and sp_fps != fps:
+            return min(int(round(out_i * sp_fps / fps)), n_speaker - 1)
+        return min(out_i, n_speaker - 1)
 
     target_h = 256
 
     combined = []
     for i in range(n_out):
-        # Speaker frame
-        sp_idx = min(i, n_speaker - 1)
+        # Speaker frame — use timestamp-corrected index to avoid fps mismatch
+        sp_idx = _sp_frame_idx(i)
         sp_frame = vr[sp_idx].asnumpy()  # HWC-RGB
         sp_frame = cv2.resize(sp_frame, (target_h, target_h))  # square for simplicity
 
@@ -1075,7 +1085,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     total_frames = len(input_latent)
     num_silent_frames = 0  # all frames processed through talking head
     num_talk_frames = total_frames
-    pdb.set_trace()
+
 
     # Pad or trim whisper_chunks to match total_frames
     # if len(whisper_chunks) < total_frames:
