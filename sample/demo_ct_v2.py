@@ -1426,15 +1426,20 @@ def main(args):
     torch.manual_seed(0)
     T_len = 0
     for step, video_data in enumerate(loader):
-        # ── Derive T_len from speaker video path instead of video_data['img'] ──
-        _first_sp_path = video_data['speaker_video_path'][0]
-        with open(_first_sp_path, 'rb') as _f:
-            _vr_tmp = VideoReader(_f, ctx=decord_cpu(0))
-        T_len = len(_vr_tmp)
-        del _vr_tmp
-        print('current step is:{}, batch_size is :{}'.format(step,batch_size))
+        
         
         for batch_index in range(batch_size):
+            # ── Derive T_len from speaker video path instead of video_data['img'] ──
+            _first_sp_path = video_data['speaker_video_path'][batch_index]
+            with open(_first_sp_path, 'rb') as _f:
+                _vr_tmp = VideoReader(_f, ctx=decord_cpu(0))
+            T_len = len(_vr_tmp)
+            del _vr_tmp
+
+            if 'Camera-2024-10-23-134159-134313' not in _first_sp_path:
+                continue
+            pdb.set_trace()
+            print('current step is:{}, batch_size is :{}'.format(step,batch_size))
             speaker_audio_path = video_data['speaker_audio_path'][batch_index]
             listener_audio_path = video_data['listener_audio_path'][batch_index]
             speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
