@@ -1167,13 +1167,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
     # return res_frame_list
 
-    # croped_image=torch.cat(res_frame_list_tensor,dim=0).to(dtype=torch.uint8).cpu().contiguous()
-    # # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    # video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index)+'.mp4')
-    # # print(video_save_path)
-    # print(croped_image.shape)
-    # imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
-    # print('save path {}'.format(args.save_video_path))
+    croped_image=torch.cat(res_frame_list_tensor,dim=0).to(dtype=torch.uint8).cpu().contiguous()
+    # video_ = ((croped_image * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+    video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index)+'.mp4')
+    # print(video_save_path)
+    print(croped_image.shape)
+    imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
+    print('save path {}'.format(args.save_video_path))
 
     pdb.set_trace()
     if return_image4emotion:
