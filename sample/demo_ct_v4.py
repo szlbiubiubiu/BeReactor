@@ -1345,7 +1345,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
     print('save path {}'.format(args.save_video_path))
 
-    pdb.set_trace()
+    # pdb.set_trace()
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
         if interval_listener==0:
@@ -1600,8 +1600,8 @@ def main(args):
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
             speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-06-26-093649-093642.wav'#video_data['speaker_audio_path'][batch_index]
             listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-06-26-093649-093642.wav'#video_data['listener_audio_path'][batch_index]
-            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['listener_video_path'][batch_index]
+            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['speaker_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['listener_video_path'][batch_index]
             # pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
