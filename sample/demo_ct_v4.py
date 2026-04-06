@@ -776,13 +776,13 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     openai_api_base = "http://0.0.0.0:8000/v1"
     client = OpenAI(api_key=openai_api_key, base_url=openai_api_base)
 
-    random_number = np.random.randint(low=0, high=100)
+    random_number = 8#np.random.randint(low=0, high=100)
     tone_pos = 1
     all_text = ''
     current_text = ''
 
     # TTS speaking rate (words per second) used to cap reply length to fit the listener's reaction window
-    _TTS_WORDS_PER_SEC = 1.5
+    _TTS_WORDS_PER_SEC = 2.5
 
     chat = [
         {"role": "system", "content": (
