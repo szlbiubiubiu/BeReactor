@@ -1434,6 +1434,11 @@ def main(args):
     # device = torch.device("cuda", 0)
     clip_size=64 #64
     USE_REAL_LISTENER = True  # True: use real listener video, skip diffusion; False: run diffusion as before
+    # When USE_REAL_LISTENER=True, also set this to True to read all N_segs*clip_size frames
+    # in ONE contiguous shot starting from the first segment's start_frame, instead of
+    # doing a separate video seek per segment.  Faster and avoids duplicate frames at
+    # segment boundaries.
+    USE_CONTINUOUS_LISTENER = True  # only has effect when USE_REAL_LISTENER=True
     audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Expert_video/3.wav'
     listener_audio_file='/import/nobackup_mmv_ioannisp/zs003/face_react/new_audio_folder/all_together/NoXI/026_2016-04-06_Nottingham/Novice_video/3.wav'
     #
@@ -1644,7 +1649,23 @@ def main(args):
             pdb.set_trace()
             all_face_images = []
             seg_samples_list = []  # collect [64, C, H, W] per segment
-                
+
+            # ── Continuous listener pre-load (one seek for all segments) ─────────
+            # When USE_REAL_LISTENER and USE_CONTINUOUS_LISTENER are both True we
+            # read N_segs * clip_size frames starting at the first segment's
+            # start_frame in a single call, then slice per segment below.
+            _continuous_frames = None  # [N_segs*clip_size, 3, H, W] tensor or None
+            if USE_REAL_LISTENER and USE_CONTINUOUS_LISTENER and len(segments) > 0:
+                _first_end_frame  = int(segments[0]['end'] * 25)
+                _first_start_frame = max(0, _first_end_frame - 16)
+                _total_cont_frames = len(segments) * clip_size
+                _cont_clip, _ = load_frames_from_video_path(
+                    listener_video_path_cur, _first_start_frame, _total_cont_frames)
+                _continuous_frames = _cont_clip.squeeze(0).to(device)  # [N*clip_size, 3, H, W]
+                print(f'[Continuous listener] loaded {_total_cont_frames} frames '
+                      f'from frame {_first_start_frame} of {listener_video_path_cur}')
+            # ─────────────────────────────────────────────────────────────────────
+
             for seg_idx, segment in enumerate(segments):
                 end_time = segment["end"]
                 end_frame = int(end_time * 25)
@@ -1654,10 +1675,24 @@ def main(args):
 
                 if USE_REAL_LISTENER:
                     # ── Feature 1: use real listener video, skip diffusion ──
-                    print(f"[Seg {seg_idx}] Using REAL listener video (diffusion skipped)")
-                    listener_clip, _ = load_frames_from_video_path(
-                        listener_video_path_cur, start_frame, clip_size)
-                    seg_out = listener_clip.squeeze(0).to(device)  # [64, 3, H, W]
+                    if USE_CONTINUOUS_LISTENER and _continuous_frames is not None:
+                        pdb.set_trace()
+                        # Slice the pre-loaded contiguous block — no extra seek
+                        _c_start = seg_idx * clip_size
+                        _c_end   = _c_start + clip_size
+                        seg_out  = _continuous_frames[_c_start:_c_end]  # [clip_size, 3, H, W]
+                        # Pad if the slice is shorter than clip_size (end of video)
+                        if seg_out.shape[0] < clip_size:
+                            _pad = clip_size - seg_out.shape[0]
+                            seg_out = torch.cat([seg_out,
+                                                 seg_out[-1:].repeat(_pad, 1, 1, 1)], dim=0)
+                        print(f"[Seg {seg_idx}] Continuous listener frames [{_c_start}:{_c_end}]")
+                    else:
+                        # Original per-segment seek
+                        print(f"[Seg {seg_idx}] Using REAL listener video (diffusion skipped)")
+                        listener_clip, _ = load_frames_from_video_path(
+                            listener_video_path_cur, start_frame, clip_size)
+                        seg_out = listener_clip.squeeze(0).to(device)  # [64, 3, H, W]
 
                     # Still need emo_label for downstream evaluation
                     emo_label = video_data['listener_emotion'][batch_index:batch_index+1, start_frame:start_frame+clip_size].to(device, non_blocking=True)
