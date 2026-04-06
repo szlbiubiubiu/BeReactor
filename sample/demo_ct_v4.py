@@ -100,12 +100,23 @@ import json as _json
 
 
 # ─── Helper: load frames from a video file path ─────────────────────────────
-def load_frames_from_video_path(video_path, start_frame, num_frames, img_size=256):
-    """Read *num_frames* consecutive frames starting at *start_frame* from an
-    mp4 file.  Returns ``(clip, total_length)`` where *clip* is a float32
-    tensor of shape ``[1, num_frames, 3, img_size, img_size]`` in ``[-1, 1]``
-    (same normalisation as the dataset ``Transform`` class) and *total_length*
-    is the total number of frames in the video.
+def load_frames_from_video_path(video_path, start_frame, num_frames, img_size=256, stride=1):
+    """Read *num_frames* frames starting at *start_frame* from an mp4 file.
+
+    Args:
+        video_path:  path to the mp4 file.
+        start_frame: index of the first frame to read.
+        num_frames:  number of output frames.
+        img_size:    spatial size for resizing (square).
+        stride:      step between consecutive source frames (default 1 = every
+                     frame).  stride=2 reads every other frame, covering
+                     ``num_frames * stride`` source frames in total while still
+                     returning a tensor of length *num_frames*.
+
+    Returns:
+        ``(clip, total_length)`` where *clip* is a float32 tensor of shape
+        ``[1, num_frames, 3, img_size, img_size]`` in ``[-1, 1]`` and
+        *total_length* is the total number of frames in the source video.
     """
     with open(video_path, 'rb') as f:
         vr = VideoReader(f, ctx=decord_cpu(0))
@@ -113,9 +124,9 @@ def load_frames_from_video_path(video_path, start_frame, num_frames, img_size=25
     _tf = T.Compose([T.Resize(img_size), T.ToTensor(),
                      T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])])
     clip = []
-    for i in range(start_frame, start_frame + num_frames):
-        idx = min(i, total_length - 1)
-        frame = vr[idx]
+    for i in range(num_frames):
+        src_idx = min(start_frame + i * stride, total_length - 1)
+        frame = vr[src_idx]
         img = Image.fromarray(frame.asnumpy())
         clip.append(_tf(img).unsqueeze(0))
     clip = torch.cat(clip, dim=0).unsqueeze(0)  # [1, num_frames, 3, H, W]
@@ -1658,9 +1669,9 @@ def main(args):
             if USE_REAL_LISTENER and USE_CONTINUOUS_LISTENER and len(segments) > 0:
                 _first_end_frame  = int(segments[0]['end'] * 25)
                 _first_start_frame = max(0, _first_end_frame - 16)
-                _total_cont_frames = len(segments) * clip_size
+                _total_cont_frames = (len(segments)-1) * clip_size
                 _cont_clip, _ = load_frames_from_video_path(
-                    listener_video_path_cur, _first_start_frame, _total_cont_frames)
+                    listener_video_path_cur, _first_start_frame, _total_cont_frame,stride=2)
                 _continuous_frames = _cont_clip.squeeze(0).to(device)  # [N*clip_size, 3, H, W]
                 print(f'[Continuous listener] loaded {_total_cont_frames} frames '
                       f'from frame {_first_start_frame} of {listener_video_path_cur}')
