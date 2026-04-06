@@ -888,7 +888,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # This aligns audio exactly with the frame stretching done in main().
     # ──────────────────────────────────────────────────────────────────────────
 
-    description_base = ("Jon's voice is monotone yet slightly fast in delivery, with a very close recording that almost has no background noise. "
+    description_base = ("Lea's voice is monotone , with a very close recording that almost has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
     
 
@@ -944,7 +944,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         tts_full = np.array([], dtype=np.float32)
     audio_arr = gen_all.cpu().numpy().squeeze()
     sf.write("parler_tts_out.wav", audio_arr, audio_model.config.sampling_rate)
-    pdb.set_trace
+    pdb.set_trace()
     # ── Pass 3: distribute TTS audio to each active window ───────────────────
     # Proportional split by character count (proxy for spoken duration).
     # After slicing, resample the slice to exactly fill the active window so
