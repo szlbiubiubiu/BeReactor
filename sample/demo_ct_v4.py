@@ -733,6 +733,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     frames_per_seg = 64  # each segment window is always 64 frames
 
     # ---- Derive segment texts from segment_list or fall back to Whisper transcription ----
+    pdb.set_trace()
     if segment_list is not None and len(segment_list) > 0:
         seg_texts = [seg.get("text", "").strip() for seg in segment_list]
         n_segments = len(seg_texts)
