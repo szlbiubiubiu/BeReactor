@@ -1001,6 +1001,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         total_tts_samples = len(tts_all)
 
         # ── Pass 3: split tts_all by character-length proportion of each text ──
+        # interp_mode: 'resample' – stretch/compress slice to fill the gap window (original)
+        #              'nointerp' – place the raw slice as-is (may be shorter/longer than gap)
+        interp_mode = 'nointerp'   # ← change to 'resample' to restore original behaviour
+
         char_lengths  = [len(s['reply_text']) for s in active_segs]
         total_chars   = max(sum(char_lengths), 1)
         cumulative    = 0
@@ -1021,19 +1025,23 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             active_start_s = seg_info['active_start_s']
             active_end_s   = seg_info['active_end_s']
 
-            # # Resample this slice to exactly fill the active gap window
-            # if len(tts_seg) != target_samples and target_samples > 0:
-            #     pdb.set_trace()
-            #     x_old  = np.linspace(0, 1, max(len(tts_seg), 1))
-            #     x_new  = np.linspace(0, 1, target_samples)
-            #     tts_seg = np.interp(x_new, x_old, tts_seg).astype(np.float32)
-            # tts_seg = tts_seg[:target_samples]  # safety clamp
+            if interp_mode == 'resample':
+                # Resample this slice to exactly fill the active gap window
+                if len(tts_seg) != target_samples and target_samples > 0:
+                    x_old  = np.linspace(0, 1, max(len(tts_seg), 1))
+                    x_new  = np.linspace(0, 1, target_samples)
+                    tts_seg = np.interp(x_new, x_old, tts_seg).astype(np.float32)
+                tts_seg = tts_seg[:target_samples]  # safety clamp
+                new_audio[active_start_s:active_end_s] = tts_seg
+            else:
+                # nointerp: place raw slice starting at active_start_s, no speed change
+                place_len = min(len(tts_seg), active_end_s - active_start_s)
+                new_audio[active_start_s:active_start_s + place_len] = tts_seg[:place_len]
 
-            new_audio[active_start_s:active_end_s] = tts_seg
             speed_ratio = orig_seg_len / max(1, target_samples)
             print(f'[Audio seg {seg_info["seg_i"]}] silence={seg_info["seg_dur"]:.2f}s  '
                   f'TTS_gap={seg_info["active_dur"]:.2f}s  speed={speed_ratio:.2f}x  '
-                  f'reply={repr(seg_info["reply_text"][:60])}')
+                  f'mode={interp_mode}  reply={repr(seg_info["reply_text"][:60])}')
 
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
