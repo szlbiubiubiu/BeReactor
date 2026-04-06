@@ -1464,12 +1464,14 @@ def main(args):
 
             # Update each selected segment's text to span [prev_boundary : cur_boundary]
             # so the LLM reply covers ALL speaker content since the last response.
-            # E.g. if selected indices are [2, 5, 8]:
+            # E.g. if selected indices are [2, 5, 8] out of 10 total segments:
             #   response 0 uses text from all_segments[0:3]   (segments 0–2)
             #   response 1 uses text from all_segments[3:6]   (segments 3–5)
             #   response 2 uses text from all_segments[6:9]   (segments 6–8)
+            #   response 3 uses text from all_segments[9:10]  (segments 9–end)
             selected_with_cumulative = []
             prev_orig_idx = -1
+            last_orig_idx = -1
             for sel_seg in segments:
                 cur_orig_idx = next(
                     (i for i, s in enumerate(all_segments) if s is sel_seg), None
@@ -1485,6 +1487,18 @@ def main(args):
                 new_seg["text"] = span_text
                 selected_with_cumulative.append(new_seg)
                 prev_orig_idx = cur_orig_idx
+                last_orig_idx = cur_orig_idx
+
+            # Append a tail response for [last_selected+1 : end] if any segments remain
+            if last_orig_idx + 1 < len(all_segments):
+                tail_text = " ".join(
+                    s.get("text", "").strip()
+                    for s in all_segments[last_orig_idx + 1 :]
+                )
+                tail_seg = dict(all_segments[-1])
+                tail_seg["text"] = tail_text
+                selected_with_cumulative.append(tail_seg)
+
             segments = selected_with_cumulative
             pdb.set_trace()
             all_face_images = []
