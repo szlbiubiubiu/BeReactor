@@ -874,144 +874,62 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if not os.path.exists(result_img_save_path):
         os.mkdir(result_img_save_path)
 
-    sr = audio_model.config.sampling_rate  # (e.g. 44100)
-    video_fps_audio = 25  # reference fps used for timeline conversion
-    # Fraction of passive window to donate to the active window when segments
-    # are back-to-back (no natural gap).  0.5 = 50 % of passive becomes active.
-    _NO_GAP_SPLIT_RATIO = 0.7#0.7 means active is more
+    sr = audio_model.config.sampling_rate
+    video_fps_audio = 25
 
-    # ── Per-segment audio construction ────────────────────────────────────────
-    # For each segment k on the timeline:
-    #   • passive window [seg.start … seg.end]  → SILENCE  (speaker is talking)
-    #   • active  window [seg.end   … next_seg.start] → TTS of listener reply k
-    #
-    # This aligns audio exactly with the frame stretching done in main().
-    # ──────────────────────────────────────────────────────────────────────────
-
-    description_base = ("Lea's voice is monotone , with a very close recording that almost has no background noise. "
+    description_base = ("Lea's voice is monotone, with a very close recording that almost has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
-    
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
+    total_duration_sec = num_frame_sp / video_fps_audio
+    total_samples = int(sr * total_duration_sec)
 
-    # #pass 0: voice cloning:
-    # # Load the init audio
-    # SAMPLING_RATE = audio_model.config.sampling_rate
-    # init_audio, init_sr = torchaudio.load(init_audio_file)
-    # init_audio = torchaudio.functional.resample(init_audio, init_sr, SAMPLING_RATE)
-    # init_audio = init_audio.mean(0)  # Take the mean across the channel dim
-    # # Encode the init audio using the feature extractor
-    # feature_extractor = AutoFeatureExtractor.from_pretrained(model_id)
-    # input_values = feature_extractor(init_audio, sampling_rate=SAMPLING_RATE, return_tensors="pt").input_values.to(device)
+    # ── Build output audio: silence while speaker talks, TTS in the gaps ─────
+    # Layout for each segment i:
+    #   [seg.start … seg.end]         → silence  (speaker is talking)
+    #   [seg.end   … next_seg.start]  → listener TTS reply
+    # Any leading silence [0 … first_seg.start] is already zeros.
+    # ─────────────────────────────────────────────────────────────────────────
+    new_audio = np.zeros(total_samples, dtype=np.float32)
 
-
-
-    # ── Pass 1: pre-compute per-segment timing ───────────────────────────────
-    passive_silences = []
-    active_durations = []
     for seg_i, seg in enumerate(_seg_list):
-        seg_start_sec = seg.get('start', 0.0)
-        seg_end_sec   = seg.get('end',   0.64)
+        seg_end_sec   = seg.get('end', 0.64)
+        reply_text    = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
+
+        # Active window: gap after this segment until the next one starts
         if seg_i + 1 < len(_seg_list):
             next_start_sec = _seg_list[seg_i + 1].get('start', seg_end_sec)
         else:
-            next_start_sec = num_frame_sp / video_fps_audio
+            next_start_sec = total_duration_sec
 
-        passive_dur = max(0.0, seg_end_sec - seg_start_sec)
-        active_dur  = max(0.0, next_start_sec - seg_end_sec)
+        active_start_s = int(sr * seg_end_sec)
+        active_end_s   = min(total_samples, int(sr * next_start_sec))
+        target_samples = active_end_s - active_start_s
 
-        # No gap between segments → donate _NO_GAP_SPLIT_RATIO of passive to active
-        if active_dur < 0.05:
-            donated    = passive_dur * _NO_GAP_SPLIT_RATIO
-            passive_dur -= donated
-            active_dur   = donated
-            print(f'[Audio seg {seg_i}] No gap → split({_NO_GAP_SPLIT_RATIO}): silence={passive_dur:.2f}s  TTS={active_dur:.2f}s')
+        seg_dur = seg_end_sec - seg.get('start', 0.0)
+        active_dur = max(0.0, next_start_sec - seg_end_sec)
 
-        passive_silences.append(np.zeros(int(sr * passive_dur), dtype=np.float32))
-        active_durations.append(active_dur)
+        if not reply_text.strip() or target_samples <= 0:
+            print(f'[Audio seg {seg_i}] silence={seg_dur:.2f}s  gap={active_dur:.2f}s  (no reply text)')
+            continue
 
-    all_reply_texts = [seg_reply_texts[i] if i < len(seg_reply_texts) else '' for i in range(len(_seg_list))]
-    pdb.set_trace()
-    # ── Pass 2: one single TTS call for all listener replies ─────────────────
-    combined_reply_text = ' '.join(t for t in all_reply_texts if t.strip())
-    if combined_reply_text.strip():
-        input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
-        prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
-        gen_all  = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
-        tts_full = gen_all.cpu().numpy().squeeze().astype(np.float32)
-        print(f'[Audio] Single TTS pass: {len(tts_full)} samples for {len(_seg_list)} segments')
-    else:
-        tts_full = np.array([], dtype=np.float32)
-    audio_arr = gen_all.cpu().numpy().squeeze()
-    sf.write("parler_tts_out.wav", audio_arr, audio_model.config.sampling_rate)
-    pdb.set_trace()
+        # Generate TTS for this reply
+        input_ids_seg  = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
+        prompt_ids_seg = tokenizer(reply_text,        return_tensors="pt").input_ids.to(audio_device)
+        gen_seg = audio_model.generate(input_ids=input_ids_seg, prompt_input_ids=prompt_ids_seg)
+        tts_seg = gen_seg.cpu().numpy().squeeze().astype(np.float32)
 
-    # # batch2_text='People We Meet on Vacation is a 2026 American romantic comedy film directed by Brett Haley from a screenplay by Yulin Kuang, Amos Vernon, and Nunzio Randazzo, based on the 2021 novel by Emily Henry. It stars Emily Bader and Tom Blyth.Polar opposites, Poppy wants to explore the world while Alex would prefer to stay home with a good book, but surprisingly they become best friends after sharing a car to their small Ohio hometown from Boston. They live far apart, but for a decade they have shared one week of summer vacation together, which finally leads to a deeper connection.'
-    # # input_ids_all  = tokenizer(2*[description_base], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
-    # # prompt_ids_all = tokenizer([combined_reply_text]+[batch2_text], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
-    # # gen_all  = audio_model.generate(input_ids=input_ids_all.input_ids, attention_mask=input_ids_all.attention_mask,prompt_input_ids=prompt_ids_all.input_ids,prompt_attention_mask=prompt_ids_all.attention_mask,do_sample=True,return_dict_in_generate=True)
-    # # audio_1 = gen_all.sequences[0, :gen_all.audios_length[0]]
-    # # audio_2 = gen_all.sequences[1, :gen_all.audios_length[1]]
-    # # audio_arr1 = audio_1.cpu().numpy().squeeze()
-    # # sf.write("parler_tts_out3.wav", audio_arr1, audio_model.config.sampling_rate)
-    # # audio_arr2 = audio_2.cpu().numpy().squeeze()
-    # # sf.write("parler_tts_out4.wav", audio_arr2, audio_model.config.sampling_rate)
-    # # pdb.set_trace()
+        # Resample TTS to exactly fill the active gap window
+        if len(tts_seg) != target_samples and target_samples > 0:
+            x_old = np.linspace(0, 1, max(len(tts_seg), 1))
+            x_new = np.linspace(0, 1, target_samples)
+            tts_seg = np.interp(x_new, x_old, tts_seg).astype(np.float32)
+        tts_seg = tts_seg[:target_samples]  # safety clamp
 
-    # set_seed(0)
-    # input_ids_all  = tokenizer(2*[description_base], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
-    # prompt_ids_all = tokenizer(seg_reply_texts, return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
-    # gen_all  = audio_model.generate(input_ids=input_ids_all.input_ids, attention_mask=input_ids_all.attention_mask,prompt_input_ids=prompt_ids_all.input_ids,prompt_attention_mask=prompt_ids_all.attention_mask,do_sample=True,return_dict_in_generate=True)
-    # audio_1 = gen_all.sequences[0, :gen_all.audios_length[0]]
-    # audio_2 = gen_all.sequences[1, :gen_all.audios_length[1]]
-    # audio_arr1 = audio_1.cpu().numpy().squeeze()
-    # sf.write("parler_tts_out7.wav", audio_arr1, audio_model.config.sampling_rate)
-    # audio_arr2 = audio_2.cpu().numpy().squeeze()
-    # sf.write("parler_tts_out8.wav", audio_arr2, audio_model.config.sampling_rate)
-    # pdb.set_trace()
-
-    # ── Pass 3: distribute TTS audio to each active window ───────────────────
-    # Proportional split by character count (proxy for spoken duration).
-    # After slicing, resample the slice to exactly fill the active window so
-    # speech is neither cut off nor padded with silence.
-    char_counts = [len(t) for t in all_reply_texts]
-    total_chars = sum(char_counts)
-
-    segment_audio_parts = []
-    tts_offset = 0
-    for seg_i in range(len(_seg_list)):
-        reply_text     = all_reply_texts[seg_i]
-        active_dur     = active_durations[seg_i]
-        target_samples = int(sr * active_dur)
-
-        if reply_text.strip() and total_chars > 0 and len(tts_full) > 0:
-            frac      = char_counts[seg_i] / total_chars
-            slice_len = max(1, round(len(tts_full) * frac))
-            tts_slice = tts_full[tts_offset: tts_offset + slice_len]
-            tts_offset += slice_len
-
-            # Speed-adjust: resample tts_slice to target_samples so speech fills
-            # the active window exactly (neither cut off nor padded).
-            if len(tts_slice) != target_samples and target_samples > 0:
-                x_old = np.linspace(0, 1, len(tts_slice))
-                x_new = np.linspace(0, 1, target_samples)
-                tts_arr = np.interp(x_new, x_old, tts_slice).astype(np.float32)
-            else:
-                tts_arr = tts_slice[:target_samples] if len(tts_slice) >= target_samples \
-                          else np.concatenate([tts_slice,
-                                               np.zeros(target_samples - len(tts_slice), dtype=np.float32)])
-        else:
-            tts_arr = np.zeros(target_samples, dtype=np.float32)
-
-        segment_audio_parts.append(passive_silences[seg_i])
-        segment_audio_parts.append(tts_arr)
-        passive_dur_log = len(passive_silences[seg_i]) / sr
-        speed_ratio = len(tts_full) * (char_counts[seg_i] / total_chars) / max(1, target_samples) \
-                      if total_chars > 0 and target_samples > 0 else 1.0
-        print(f'[Audio seg {seg_i}] silence={passive_dur_log:.2f}s  TTS={active_dur:.2f}s  '
+        new_audio[active_start_s:active_end_s] = tts_seg
+        speed_ratio = len(gen_seg.cpu().numpy().squeeze()) / max(1, target_samples)
+        print(f'[Audio seg {seg_i}] silence={seg_dur:.2f}s  TTS_gap={active_dur:.2f}s  '
               f'speed={speed_ratio:.2f}x  reply={repr(reply_text[:60])}')
-    pdb.set_trace()
-    new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
     # # message in self.stream()
