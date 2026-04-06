@@ -729,19 +729,36 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     ]
 
     seg_reply_texts = []
+    is_last_seg = False
     for seg_i, speaker_text in enumerate(seg_texts):
-        # Compute per-segment word limit from speaker's talk duration
+        is_last_seg = (seg_i == len(seg_texts) - 1)
+        # Compute per-segment word limit from the GAP after the segment
+        # (the active window where the listener actually speaks), not the
+        # segment's own duration.
         if segment_list is not None and seg_i < len(segment_list):
             _seg_info = segment_list[seg_i]
-            _speaker_dur = max(0.5, float(_seg_info.get('end', 0.64)) - float(_seg_info.get('start', 0.0)))
+            _seg_end = float(_seg_info.get('end', 0.64))
+            if seg_i + 1 < len(segment_list):
+                _next_start = float(segment_list[seg_i + 1].get('start', _seg_end))
+                _gap_dur = max(0.5, _next_start - _seg_end)
+            else:
+                # Last segment: no next-segment constraint, use a large gap so
+                # the word count is not artificially capped at 50.
+                _gap_dur = None
         else:
-            _speaker_dur = frames_per_seg / 25.0  # fallback: 64 frames @ 25 fps
-        _max_words = max(5, min(50, round(_speaker_dur * _TTS_WORDS_PER_SEC)))
+            _gap_dur = frames_per_seg / 25.0  # fallback
+
+        if _gap_dur is None or is_last_seg:
+            # Last segment: no upper word-count cap
+            _max_words = None
+        else:
+            _max_words = max(5, round(_gap_dur * _TTS_WORDS_PER_SEC))
 
         # Build user message; from turn 2 onwards, carry forward emotion context
+        _word_limit_hint = f" [Reply in at most {_max_words} words.]" if _max_words is not None else ""
         if seg_i == 0:
             base_text = speaker_text if speaker_text else "Hello."
-            user_msg = f"{base_text} [Reply in at most {_max_words} words.]"
+            user_msg = f"{base_text}{_word_limit_hint}"
         else:
             # Append previous assistant turn to maintain dialogue continuity
             chat.append({"role": "assistant", "content": seg_reply_texts[-1]})
@@ -757,7 +774,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 float(arousal.mean())
             )
             base_text = speaker_text if speaker_text else "Please continue."
-            user_msg = f"{base_text}{emo_hint} [Reply in at most {_max_words} words.]"
+            user_msg = f"{base_text}{emo_hint}{_word_limit_hint}"
 
         chat.append({"role": "user", "content": user_msg})
 
