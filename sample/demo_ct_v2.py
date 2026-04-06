@@ -910,8 +910,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
         seg_dur = seg_end_sec - seg.get('start', 0.0)
         active_dur = max(0.0, next_start_sec - seg_end_sec)
-        pdb.set_trace()
+        
         if not reply_text.strip() or target_samples <= 0:
+            pdb.set_trace()
             print(f'[Audio seg {seg_i}] silence={seg_dur:.2f}s  gap={active_dur:.2f}s  (no reply text)')
             continue
 
@@ -965,15 +966,16 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     num_silent_frames = 0  # all frames processed through talking head
     num_talk_frames = total_frames
     pdb.set_trace()
+
     # Pad or trim whisper_chunks to match total_frames
-    if len(whisper_chunks) < total_frames:
-        pad_len = total_frames - len(whisper_chunks)
-        if len(whisper_chunks) > 0:
-            whisper_chunks = whisper_chunks + [whisper_chunks[-1]] * pad_len
-        else:
-            whisper_chunks = whisper_chunks * total_frames  # fallback: repeat
-    elif len(whisper_chunks) > total_frames:
-        whisper_chunks = whisper_chunks[:total_frames]
+    # if len(whisper_chunks) < total_frames:
+    #     pad_len = total_frames - len(whisper_chunks)
+    #     if len(whisper_chunks) > 0:
+    #         whisper_chunks = whisper_chunks + [whisper_chunks[-1]] * pad_len
+    #     else:
+    #         whisper_chunks = whisper_chunks * total_frames  # fallback: repeat
+    # elif len(whisper_chunks) > total_frames:
+    #     whisper_chunks = whisper_chunks[:total_frames]
 
     # # #image processing
     # # # crop_frame = cv2.imread(img_path)
