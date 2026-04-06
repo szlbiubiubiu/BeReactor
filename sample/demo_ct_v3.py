@@ -2,7 +2,7 @@
 
 '''this version suffer from:
 1.face inconsistency as I used different synthesized facial videos
-2.video inconsistency because the parltts could not generate the same audio tone(speaker).
+2.genereate together, use word ratio to split the audio
 '''
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
