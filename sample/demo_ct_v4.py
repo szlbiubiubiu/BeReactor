@@ -1671,7 +1671,7 @@ def main(args):
                 _first_start_frame = max(0, _first_end_frame - 16)
                 _total_cont_frames = (len(segments)-1) * clip_size
                 _cont_clip, _ = load_frames_from_video_path(
-                    listener_video_path_cur, _first_start_frame, _total_cont_frame,stride=2)
+                    listener_video_path_cur, _first_start_frame, _total_cont_frames,stride=2)
                 _continuous_frames = _cont_clip.squeeze(0).to(device)  # [N*clip_size, 3, H, W]
                 print(f'[Continuous listener] loaded {_total_cont_frames} frames '
                       f'from frame {_first_start_frame} of {listener_video_path_cur}')
