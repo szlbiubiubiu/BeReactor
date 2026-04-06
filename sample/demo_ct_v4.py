@@ -214,14 +214,52 @@ def llm_select_response_segments(pipe, full_transcript, segments):
 # ─── Helper: create side-by-side speaker (left) + listener (right) video ─────
 def create_side_by_side_video(speaker_video_path, speaker_audio_path,
                               listener_frames, listener_audio_path,
-                              output_path, fps=25):
+                              output_path, fps=25,
+                              mode='frames',
+                              listener_video_path=None):
     """Create a video with the speaker on the left and the generated listener
     on the right, with mixed audio from both the speaker and listener tracks.
 
-    *listener_frames*: list of numpy uint8 HWC-RGB arrays (the final pipeline
-    output).
-    *listener_audio_path*: path to the TTS-generated listener wav file.
+    mode='frames'  (default): decode frames in Python, mix audio, write with imageio+ffmpeg.
+    mode='ffmpeg'            : splice speaker_video_path (with speaker_audio_path) and
+                               listener_video_path directly with ffmpeg hstack — no Python
+                               frame decoding.  listener_video_path must be provided and
+                               must already contain the listener audio track.
+
+    *listener_frames*: list of numpy uint8 HWC-RGB arrays (only used in mode='frames').
+    *listener_audio_path*: path to the TTS-generated listener wav file (mode='frames').
+    *listener_video_path*: path to the pre-generated listener mp4 (mode='ffmpeg').
     """
+    # ── New fast path: pure ffmpeg hstack, no Python frame decoding ──────────
+    if mode == 'ffmpeg':
+        if listener_video_path is None:
+            raise ValueError("create_side_by_side_video: mode='ffmpeg' requires listener_video_path")
+        # Scale both sides to 256×256 then hstack; mix both audio tracks.
+        # Speaker audio comes from the separate wav file so the original video
+        # does not need to carry an audio stream.
+        filter_complex = (
+            "[0:v]scale=256:256,fps={fps}[spv];"
+            "[2:v]scale=256:256,fps={fps}[liv];"
+            "[spv][liv]hstack=inputs=2[v];"
+            "[1:a]aformat=sample_rates=44100:channel_layouts=stereo[spa];"
+            "[2:a]aformat=sample_rates=44100:channel_layouts=stereo[lia];"
+            "[spa][lia]amix=inputs=2:duration=longest[a]"
+        ).format(fps=fps)
+        cmd = (
+            f"ffmpeg -y -v warning "
+            f"-i {speaker_video_path} "
+            f"-i {speaker_audio_path} "
+            f"-i {listener_video_path} "
+            f"-filter_complex \"{filter_complex}\" "
+            f"-map '[v]' -map '[a]' "
+            f"-c:v libx264 -crf 18 -c:a aac "
+            f"{output_path}"
+        )
+        print(f"[Side-by-side ffmpeg] {cmd}")
+        os.system(cmd)
+        print(f"[Side-by-side ffmpeg] Saved to {output_path}")
+        return
+    # ── Original frame-based path (mode='frames') follows below ─────────────
     # ── Read speaker frames ──
     with open(speaker_video_path, 'rb') as f:
         vr = VideoReader(f, ctx=decord_cpu(0))
@@ -1376,7 +1414,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     out_images = final_output_frames
     
-    return out_images, evaluation_score, OUTPUT_audio_FILE
+    return out_images[:num_frame_sp], evaluation_score, OUTPUT_audio_FILE
 
 
 def main(args):
@@ -1744,11 +1782,26 @@ def main(args):
 
             # ── Feature 2: side-by-side speaker (left) + listener (right) video ──
             sbs_path = os.path.join(args.save_video_path, 'side_by_side_' + str(batch_size*step+batch_index) + '.mp4')
-            create_side_by_side_video(
-                speaker_video_path_cur, speaker_audio_path,
-                all_face_images, listener_audio_file_path,
-                sbs_path, fps=25
-            )
+            # Reconstruct the listener video path that was written inside openai_deepseek_talkinghead_genall
+            _listener_vid_path = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_size*step+batch_index) + '.mp4')
+            if os.path.exists(_listener_vid_path):
+                # Fast mode: stitch speaker original video/audio + pre-generated listener video via ffmpeg
+                create_side_by_side_video(
+                    speaker_video_path_cur, speaker_audio_path,
+                    all_face_images, listener_audio_file_path,
+                    sbs_path, fps=25,
+                    mode='ffmpeg',
+                    listener_video_path=_listener_vid_path,
+                )
+            else:
+                # Fallback to frame-based mode if listener video not found
+                print(f'[Side-by-side] listener video not found at {_listener_vid_path}, falling back to frames mode')
+                create_side_by_side_video(
+                    speaker_video_path_cur, speaker_audio_path,
+                    all_face_images, listener_audio_file_path,
+                    sbs_path, fps=25,
+                    mode='frames',
+                )
             
         # skip over loop variable legacy accumulation log since logic was completely refactored
             
