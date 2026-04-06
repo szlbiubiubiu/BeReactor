@@ -1,5 +1,9 @@
 # All rights reserved.
 
+'''this version suffer from:
+1.face inconsistency as I used different synthesized facial videos
+2.video inconsistency because the parltts could not generate the same audio tone(speaker).
+'''
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 # deepseek vllm :vllm serve "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B" --max_model 4096 --port 8000 --tensor-parallel-size 2
@@ -1233,7 +1237,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # pdb.set_trace()
     # cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png  -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp2.mp4"
-
+    
     print(cmd_img2video)
     os.system(cmd_img2video)
     
@@ -1246,7 +1250,10 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     os.system(cmd_combine_audio)
     
     # os.remove("./temp.mp4")
-    # shutil.rmtree(result_img_save_path)
+    # Clean up intermediate PNG frames
+    for _png in sorted(os.listdir(result_img_save_path)):
+        if _png.endswith('.png'):
+            os.remove(os.path.join(result_img_save_path, _png))
     print(f"result is save to {output_vid_name}")      
 
     print('the corresponding speaker path is: ', speaker_audio_path)
