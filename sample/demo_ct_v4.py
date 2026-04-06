@@ -1021,12 +1021,12 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             active_start_s = seg_info['active_start_s']
             active_end_s   = seg_info['active_end_s']
 
-            # Resample this slice to exactly fill the active gap window
-            if len(tts_seg) != target_samples and target_samples > 0:
-                x_old  = np.linspace(0, 1, max(len(tts_seg), 1))
-                x_new  = np.linspace(0, 1, target_samples)
-                tts_seg = np.interp(x_new, x_old, tts_seg).astype(np.float32)
-            tts_seg = tts_seg[:target_samples]  # safety clamp
+            # # Resample this slice to exactly fill the active gap window
+            # if len(tts_seg) != target_samples and target_samples > 0:
+            #     x_old  = np.linspace(0, 1, max(len(tts_seg), 1))
+            #     x_new  = np.linspace(0, 1, target_samples)
+            #     tts_seg = np.interp(x_new, x_old, tts_seg).astype(np.float32)
+            # tts_seg = tts_seg[:target_samples]  # safety clamp
 
             new_audio[active_start_s:active_end_s] = tts_seg
             speed_ratio = orig_seg_len / max(1, target_samples)
