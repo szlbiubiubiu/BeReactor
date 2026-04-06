@@ -964,7 +964,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     total_frames = len(input_latent)
     num_silent_frames = 0  # all frames processed through talking head
     num_talk_frames = total_frames
-
+    pdb.set_trace()
     # Pad or trim whisper_chunks to match total_frames
     if len(whisper_chunks) < total_frames:
         pad_len = total_frames - len(whisper_chunks)
@@ -1173,7 +1173,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, croped_image, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
 
-    # pdb.set_trace()
+    pdb.set_trace()
     if return_image4emotion:
         interval_listener=len(res_frame_list)//num_frame_sp
         if interval_listener==0:
