@@ -944,7 +944,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         tts_full = np.array([], dtype=np.float32)
     audio_arr = gen_all.cpu().numpy().squeeze()
     sf.write("parler_tts_out.wav", audio_arr, audio_model.config.sampling_rate)
-    # pdb.set_trace()
+    pdb.set_trace()
 
     # # batch2_text='People We Meet on Vacation is a 2026 American romantic comedy film directed by Brett Haley from a screenplay by Yulin Kuang, Amos Vernon, and Nunzio Randazzo, based on the 2021 novel by Emily Henry. It stars Emily Bader and Tom Blyth.Polar opposites, Poppy wants to explore the world while Alex would prefer to stay home with a good book, but surprisingly they become best friends after sharing a car to their small Ohio hometown from Boston. They live far apart, but for a decade they have shared one week of summer vacation together, which finally leads to a deeper connection.'
     # # input_ids_all  = tokenizer(2*[description_base], return_tensors="pt",padding=True).to(audio_device)#.input_ids.to(audio_device)
@@ -1010,7 +1010,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                       if total_chars > 0 and target_samples > 0 else 1.0
         print(f'[Audio seg {seg_i}] silence={passive_dur_log:.2f}s  TTS={active_dur:.2f}s  '
               f'speed={speed_ratio:.2f}x  reply={repr(reply_text[:60])}')
-
+    pdb.set_trace()
     new_audio = np.concatenate(segment_audio_parts, axis=0)
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
