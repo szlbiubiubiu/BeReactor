@@ -1023,6 +1023,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
             # Resample this slice to exactly fill the active gap window
             if len(tts_seg) != target_samples and target_samples > 0:
+                pdb.set_trace()
                 x_old  = np.linspace(0, 1, max(len(tts_seg), 1))
                 x_new  = np.linspace(0, 1, target_samples)
                 tts_seg = np.interp(x_new, x_old, tts_seg).astype(np.float32)
