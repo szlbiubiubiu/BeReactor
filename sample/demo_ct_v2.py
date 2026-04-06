@@ -1430,20 +1430,26 @@ def main(args):
         
         for batch_index in range(batch_size):
             # ── Derive T_len from speaker video path instead of video_data['img'] ──
-            _first_sp_path = video_data['speaker_video_path'][batch_index]
+            
+
+            # if 'session4/Camera-2024-10-23-134159-134313' not in _first_sp_path:
+            #     continue
+            pdb.set_trace()
+            print('current step is:{}, batch_size is :{}'.format(step,batch_size))
+            # speaker_audio_path = video_data['speaker_audio_path'][batch_index]
+            # listener_audio_path = video_data['listener_audio_path'][batch_index]
+            # speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
+            # listener_video_path_cur = video_data['listener_video_path'][batch_index]
+            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-10-23-134159-134313.wav'#video_data['speaker_audio_path'][batch_index]
+            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-10-23-134159-134313.wav'#video_data['listener_audio_path'][batch_index]
+            speaker_video_path_cur = '/data/szl/dataset/react2025/video/speaker/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['speaker_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/dataset/react2025/video/listener/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['listener_video_path'][batch_index]
+            pdb.set_trace()
+            _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
                 _vr_tmp = VideoReader(_f, ctx=decord_cpu(0))
             T_len = len(_vr_tmp)
             del _vr_tmp
-
-            if 'session4/Camera-2024-10-23-134159-134313' not in _first_sp_path:
-                continue
-            pdb.set_trace()
-            print('current step is:{}, batch_size is :{}'.format(step,batch_size))
-            speaker_audio_path = video_data['speaker_audio_path'][batch_index]
-            listener_audio_path = video_data['listener_audio_path'][batch_index]
-            speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = video_data['listener_video_path'][batch_index]
             print(speaker_video_path_cur,speaker_audio_path)
             result = whisper_model.transcribe(speaker_audio_path)
             segments = result.get("segments", [])
