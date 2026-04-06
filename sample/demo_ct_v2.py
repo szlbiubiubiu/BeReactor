@@ -1442,8 +1442,8 @@ def main(args):
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
             speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-10-23-134159-134313.wav'#video_data['speaker_audio_path'][batch_index]
             listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-10-23-134159-134313.wav'#video_data['listener_audio_path'][batch_index]
-            speaker_video_path_cur = '/data/szl/dataset/react2025/video/speaker/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = '/data/szl/dataset/react2025/video/listener/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['listener_video_path'][batch_index]
+            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['speaker_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-10-23-134159-134313.mp4'#video_data['listener_video_path'][batch_index]
             pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
