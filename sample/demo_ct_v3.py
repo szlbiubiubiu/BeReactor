@@ -935,10 +935,19 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         concat_text = " ".join(s['reply_text'] for s in active_segs)
         print(f'[Audio] Generating TTS for {len(active_segs)} segments in one call. text={repr(concat_text[:120])}')
 
-        input_ids_all  = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
-        prompt_ids_all = tokenizer(concat_text,      return_tensors="pt").input_ids.to(audio_device)
-        gen_all        = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
-        tts_all        = gen_all.cpu().numpy().squeeze().astype(np.float32)
+        # ── Baseline: save the raw concatenated TTS (no splitting) for comparison ──
+        _input_ids_base  = tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
+        _prompt_ids_base = tokenizer(concat_text,      return_tensors="pt").input_ids.to(audio_device)
+        _gen_base        = audio_model.generate(input_ids=_input_ids_base, prompt_input_ids=_prompt_ids_base)
+        _tts_base        = _gen_base.cpu().numpy().squeeze().astype(np.float32)
+        _baseline_path   = result_img_save_path + '/output_audio_baseline_nosplit.wav'
+        sf.write(_baseline_path, _tts_base, sr)
+        print('[Audio] Baseline (no split) saved to:', _baseline_path)
+
+        input_ids_all  = _input_ids_base
+        prompt_ids_all = _prompt_ids_base
+        gen_all        = _gen_base
+        tts_all        = _tts_base
         total_tts_samples = len(tts_all)
 
         # ── Pass 3: split tts_all by character-length proportion of each text ──
