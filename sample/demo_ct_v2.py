@@ -908,7 +908,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
         seg_dur = seg_end_sec - seg.get('start', 0.0)
         active_dur = max(0.0, next_start_sec - seg_end_sec)
-
+        pdb.set_trace()
         if not reply_text.strip() or target_samples <= 0:
             print(f'[Audio seg {seg_i}] silence={seg_dur:.2f}s  gap={active_dur:.2f}s  (no reply text)')
             continue
