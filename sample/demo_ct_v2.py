@@ -659,7 +659,7 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
-        segment_list=None):
+        segment_list=None, speaker_total_frames=None):
     """
     input_latent: Tensor [N_segs*64, C, H, W] - all dialog segments stacked.
     segment_list: list of dicts with keys 'text', 'start', 'end' - one per 64-frame block.
@@ -881,7 +881,11 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                         "The tone is positive level of " + str(tone_pos))
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
-    total_duration_sec = num_frame_sp / video_fps_audio
+    # Use actual speaker video length if available, otherwise fall back to num_frame_sp
+    if speaker_total_frames is not None:
+        total_duration_sec = speaker_total_frames / video_fps_audio
+    else:
+        total_duration_sec = num_frame_sp / video_fps_audio
     total_samples = int(sr * total_duration_sec)
 
     # ── Build output audio: silence while speaker talks, TTS in the gaps ─────
@@ -1590,7 +1594,8 @@ def main(args):
                 emo_label, stacked_out, pipe, vae, unet, pe,
                 batch_index=(batch_size * step + batch_index),
                 num_frame_sp=stacked_out.shape[0],
-                segment_list=valid_segments
+                segment_list=valid_segments,
+                speaker_total_frames=T_len
             )
             all_face_images += batched_faces
             
