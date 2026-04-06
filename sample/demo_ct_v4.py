@@ -1774,12 +1774,12 @@ def main(args):
                     seg_out = samples[0]  # [64, C, H, W] for this segment
 
                 seg_samples_list.append(seg_out)
-
-            # Stack all segment tensors: [N_segs*64, C, H, W]
-            if len(seg_samples_list) == 0:
-                print(f"No valid segments for batch_index={batch_index}, skipping.")
-                continue
-            stacked_out = torch.cat(seg_samples_list, dim=0)  # [N_segs*64, C, H, W]
+            
+            # # Stack all segment tensors: [N_segs*64, C, H, W]
+            # if len(seg_samples_list) == 0:
+            #     print(f"No valid segments for batch_index={batch_index}, skipping.")
+            #     continue
+            stacked_out = _continuous_frames#torch.cat(seg_samples_list, dim=0)  # [N_segs*64, C, H, W]
             n_valid_segs = len(seg_samples_list)
             valid_segments = segments[:n_valid_segs]
 
