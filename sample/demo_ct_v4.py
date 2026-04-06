@@ -1376,7 +1376,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     
     out_images = final_output_frames
     
-    return out_images[:num_frame_sp], evaluation_score, OUTPUT_audio_FILE
+    return out_images, evaluation_score, OUTPUT_audio_FILE
 
 
 def main(args):
@@ -1727,15 +1727,15 @@ def main(args):
             all_score['all_bert_scores'] += scores['bert_scores']
             
             # ── Stretch generated frames to match speaker's total frame count ──
-            print(f"Stretching {len(all_face_images)} generated frames → {T_len} speaker frames")
-            all_face_images = stretch_frames_to_timeline(
-                all_face_images,
-                valid_segments,
-                target_total_frames=T_len,
-                video_fps=25,
-                frames_per_seg=64
-            )
-            print(f"After stretch: {len(all_face_images)} frames")
+            # print(f"Stretching {len(all_face_images)} generated frames → {T_len} speaker frames")
+            # all_face_images = stretch_frames_to_timeline(
+            #     all_face_images,
+            #     valid_segments,
+            #     target_total_frames=T_len,
+            #     video_fps=25,
+            #     frames_per_seg=64
+            # )
+            # print(f"After stretch: {len(all_face_images)} frames")
             
             video_ = np.asarray(np.clip(all_face_images, 0, 255))[:, :, :, ::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_RF_dialog_' + str(batch_size*step+batch_index)+'.mp4')
