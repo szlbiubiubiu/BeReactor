@@ -83,7 +83,9 @@ import re
 import platform
 #it is single forward function
 from parler_tts import ParlerTTSForConditionalGeneration
-from transformers import AutoTokenizer
+# from transformers import AutoTokenizer
+import torchaudio
+from transformers import AutoFeatureExtractor, AutoTokenizer, set_seed
 import soundfile as sf
 from decord import VideoReader
 from decord import cpu as decord_cpu
@@ -418,8 +420,10 @@ import bert_score
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
 
-audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
-tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
+_PARLER_MODEL_ID = "parler-tts/parler-tts-mini-v1"
+audio_model = ParlerTTSForConditionalGeneration.from_pretrained(_PARLER_MODEL_ID).to(audio_device)
+tokenizer = AutoTokenizer.from_pretrained(_PARLER_MODEL_ID)
+feature_extractor = AutoFeatureExtractor.from_pretrained(_PARLER_MODEL_ID)
 
 # ─── Timeline-aware temporal frame stretching ────────────────────────────────
 
@@ -892,6 +896,17 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
 
+    #pass 0: voice cloning — use listener's own audio as the reference voice
+    _vc_sr = audio_model.config.sampling_rate
+    _vc_audio, _vc_init_sr = torchaudio.load(listener_audio_path)
+    _vc_audio = torchaudio.functional.resample(_vc_audio, _vc_init_sr, _vc_sr)
+    _vc_audio = _vc_audio.mean(0)  # mono
+    input_values = feature_extractor(
+        _vc_audio, sampling_rate=_vc_sr, return_tensors="pt"
+    ).input_values.to(audio_device)
+
+
+
     # ── Pass 1: pre-compute per-segment timing ───────────────────────────────
     passive_silences = []
     active_durations = []
@@ -923,12 +938,18 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if combined_reply_text.strip():
         input_ids_all  = tokenizer(description_base,    return_tensors="pt").input_ids.to(audio_device)
         prompt_ids_all = tokenizer(combined_reply_text, return_tensors="pt").input_ids.to(audio_device)
-        gen_all  = audio_model.generate(input_ids=input_ids_all, prompt_input_ids=prompt_ids_all)
+        gen_all  = audio_model.generate(
+            input_ids=input_ids_all,
+            prompt_input_ids=prompt_ids_all,
+            input_values=input_values,
+        )
         tts_full = gen_all.cpu().numpy().squeeze().astype(np.float32)
         print(f'[Audio] Single TTS pass: {len(tts_full)} samples for {len(_seg_list)} segments')
     else:
         tts_full = np.array([], dtype=np.float32)
-
+    audio_arr = gen_all.cpu().numpy().squeeze()
+    sf.write("parler_tts_out.wav", audio_arr, SAMPLING_RATE)
+    pdb.set_trace()
     # ── Pass 3: distribute TTS audio to each active window ───────────────────
     # Proportional split by character count (proxy for spoken duration).
     # After slicing, resample the slice to exactly fill the active window so
