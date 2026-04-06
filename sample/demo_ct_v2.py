@@ -1447,7 +1447,7 @@ def main(args):
             print(speaker_video_path_cur,speaker_audio_path)
             result = whisper_model.transcribe(speaker_audio_path)
             segments = result.get("segments", [])
-            segments = segments[:4]
+            # segments = segments[:4]
             if len(segments) == 0:
                 segments = [{"start": 0.0, "end": 16/25.0, "text": ""}]
 
