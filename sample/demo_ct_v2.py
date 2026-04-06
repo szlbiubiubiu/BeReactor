@@ -420,8 +420,8 @@ import bert_score
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
 
-audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-large-v1").to(audio_device)
-tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-large-v1")
+audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
+tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
 # ─── Timeline-aware temporal frame stretching ────────────────────────────────
 
