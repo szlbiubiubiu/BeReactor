@@ -833,14 +833,14 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 "Neutral={:.2f}, Happy={:.2f}, Sad={:.2f}, valence={:.2f}, arousal={:.2f}. "
                 "Do not include these scores in your reply.)"
             ).format(
-                0.1,
-                0,
-                0.8,
+                float(expression_soft[:, 0].mean()),
+                float(expression_soft[:, 1].mean()),
+                float(expression_soft[:, 2].mean()),
                 float(valence.mean()),
                 float(arousal.mean())
             )
             base_text = speaker_text if speaker_text else "Please continue."
-            user_msg = f"{base_text}{emo_hint}{_word_limit_hint}"
+            user_msg = f"{base_text}{_word_limit_hint}"#{emo_hint}
 
         chat.append({"role": "user", "content": user_msg})
         pdb.set_trace()
