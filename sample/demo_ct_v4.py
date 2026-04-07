@@ -833,9 +833,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 "Neutral={:.2f}, Happy={:.2f}, Sad={:.2f}, valence={:.2f}, arousal={:.2f}. "
                 "Do not include these scores in your reply.)"
             ).format(
-                float(expression_soft[:, 0].mean()),
-                float(expression_soft[:, 1].mean()),
-                float(expression_soft[:, 2].mean()),
+                0.1,
+                0,
+                0.8,
                 float(valence.mean()),
                 float(arousal.mean())
             )
