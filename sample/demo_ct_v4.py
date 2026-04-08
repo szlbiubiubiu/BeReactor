@@ -992,7 +992,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # ── Pass 2: concatenate all reply texts and generate TTS in one call ──────
     if active_segs:
-        concat_text = ".........".join(s['reply_text'] for s in active_segs)
+        concat_text = ".......".join(s['reply_text'] for s in active_segs)
         print(f'[Audio] Generating TTS for {len(active_segs)} segments in one call. text={repr(concat_text[:120])}')
 
         # ── Baseline: save the raw concatenated TTS (no splitting) for comparison ──
