@@ -1071,7 +1071,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         tts_ptr       = 0
 
         for idx, seg_info in enumerate(active_segs):
-            cumulative += char_lengths[idx]+25# add 15 chars for the listener reply
+            cumulative += char_lengths[idx]+28# add 15 chars for the listener reply
             if idx < len(active_segs) - 1:
                 tts_end = int(total_tts_samples * cumulative / total_chars)
             else:
