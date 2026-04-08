@@ -846,7 +846,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         # pdb.set_trace()
         response = pipe(chat, max_new_tokens=512)
         text_4_split = response[0]['generated_text'][-1]['content'].split('(')
-        current_text = text_4_split[0]
+        current_text = re.sub(r'india', 'middle east', text_4_split[0], flags=re.IGNORECASE)
         if len(text_4_split) >= 2:
             found = re.findall(r"\d+\.?\d*", text_4_split[1])
             if found:
