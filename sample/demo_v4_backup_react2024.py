@@ -941,7 +941,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     sr = audio_model.config.sampling_rate
     video_fps_audio = 25
 
-    description_base = ("A man's voice is monotone, with a very close recording that almost has no background noise. "
+    description_base = ("Gary's voice is monotone, with a very close recording that almost has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
