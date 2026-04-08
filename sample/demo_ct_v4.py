@@ -783,7 +783,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     current_text = ''
 
     # TTS speaking rate (words per second) used to cap reply length to fit the listener's reaction window
-    _TTS_WORDS_PER_SEC = 2.5
+    _TTS_WORDS_PER_SEC = 1.5
 
     chat = [
         {"role": "system", "content": (
@@ -992,7 +992,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # ── Pass 2: concatenate all reply texts and generate TTS in one call ──────
     if active_segs:
-        concat_text = "------".join(s['reply_text'] for s in active_segs)
+        concat_text = "----------------".join(s['reply_text'] for s in active_segs)
         print(f'[Audio] Generating TTS for {len(active_segs)} segments in one call. text={repr(concat_text[:120])}')
 
         # ── Baseline: save the raw concatenated TTS (no splitting) for comparison ──
@@ -1185,9 +1185,9 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # --- Use real listener video frames if provided, else fall back to sampled latent ---
     pdb.set_trace()
     if listener_video_path is not None:
-        _n_frames = 256#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
+        _n_frames = 300#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
         print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
-        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 0, _n_frames,stride=2)
+        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 0, _n_frames,stride=1)
         input_latent_talk = _lv_clip.squeeze(0).to(input_latent.device)  # [N, C, H, W] in [-1, 1]
         print(f'[input_latent_talk] loaded {input_latent_talk.shape[0]}/{_lv_total} frames')
     else:
