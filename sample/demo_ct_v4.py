@@ -1608,9 +1608,9 @@ def main(args):
             # listener_audio_path = video_data['listener_audio_path'][batch_index]
             # speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
-            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session9/Camera-2024-07-10-134814-134720.wav'#video_data['speaker_audio_path'][batch_index]
-            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session9/Camera-2024-07-10-134814-134720.wav'#video_data['listener_audio_path'][batch_index]
-            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session9/Camera-2024-07-10-134814-134720.mp4'#video_data['speaker_video_path'][batch_index]
+            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session9/Camera-2024-07-22-093331-093420.wav'#video_data['speaker_audio_path'][batch_index]
+            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session9/Camera-2024-07-22-093331-093420.wav'#video_data['listener_audio_path'][batch_index]
+            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session9/Camera-2024-07-22-093331-093420.mp4'#video_data['speaker_video_path'][batch_index]
             # listener_video_path_cur = '/data/szl/code/latte_reaction_new/test_sample/final_result_8.mov'#video_data['listener_video_path'][batch_index]
             listener_video_path_cur = '/data/szl/code/latte_reaction_new/test_sample/introduce_2.mov'#video_data['listener_video_path'][batch_index]
 
