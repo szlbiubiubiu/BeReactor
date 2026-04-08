@@ -1,9 +1,9 @@
 # All rights reserved.
 
 '''this version suffer from:
-1.face inconsistency as I used different synthesized facial videos
-2.genereate together, use word ratio to split the audio
-3.speaker video is not consistency with the audio
+1.face inconsistency as I used different synthesized facial videos---done
+2.genereate together, use word ratio to split the audio------- use space and mannual control time
+3.speaker video is not consistency with the audio----- done, fps from 25-30
 '''
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
@@ -940,8 +940,8 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     sr = audio_model.config.sampling_rate
     video_fps_audio = 25
-
-    description_base = ("Lea's voice is monotone, with a very close recording that almost has no background noise. "
+    #lea's
+    description_base = ("A female speaker voice is monotone, with a very close recording that almost has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
@@ -992,7 +992,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
     # ── Pass 2: concatenate all reply texts and generate TTS in one call ──────
     if active_segs:
-        concat_text = "    ".join(s['reply_text'] for s in active_segs)
+        concat_text = "      ".join(s['reply_text'] for s in active_segs)
         print(f'[Audio] Generating TTS for {len(active_segs)} segments in one call. text={repr(concat_text[:120])}')
 
         # ── Baseline: save the raw concatenated TTS (no splitting) for comparison ──
@@ -1607,10 +1607,12 @@ def main(args):
             # listener_audio_path = video_data['listener_audio_path'][batch_index]
             # speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
-            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-06-26-093649-093642.wav'#video_data['speaker_audio_path'][batch_index]
-            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-06-26-093649-093642.wav'#video_data['listener_audio_path'][batch_index]
-            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = '/data/szl/code/latte_reaction_new/test_sample/final_result_8.mov'#video_data['listener_video_path'][batch_index]
+            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session12/Camera-2024-06-26-105024-105025.wav'#video_data['speaker_audio_path'][batch_index]
+            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session12/Camera-2024-06-26-105024-105025.wav'#video_data['listener_audio_path'][batch_index]
+            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session12/Camera-2024-06-26-105024-105025.mp4'#video_data['speaker_video_path'][batch_index]
+            # listener_video_path_cur = '/data/szl/code/latte_reaction_new/test_sample/final_result_8.mov'#video_data['listener_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/dataset/react2025/audio/listener/session12/Camera-2024-06-26-105024-105025.mp4'#video_data['listener_video_path'][batch_index]
+
             # pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
