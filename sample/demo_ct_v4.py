@@ -1208,7 +1208,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
 
 
     #reverse and repeat here
-    repeat_times=2
+    repeat_times=3
     coord_list_reverse=coord_list_single[::-1]
     frame_list_reverse=frame_list_single[::-1]
     coord_list=repeat_times*(coord_list_single+coord_list_reverse)
