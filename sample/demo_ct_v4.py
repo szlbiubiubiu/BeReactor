@@ -819,7 +819,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             _max_words = None
         else:
             _max_words = max(5, round(_gap_dur * _TTS_WORDS_PER_SEC))
-            _max_words= min(_max_words, 50)
+            _max_words= min(_max_words, 30)
 
         # Build user message; from turn 2 onwards, carry forward emotion context
         _word_limit_hint = f" [Reply in at most {_max_words} words.]" if _max_words is not None else ""
@@ -942,7 +942,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     sr = audio_model.config.sampling_rate
     video_fps_audio = 25
     #lea's
-    description_base = ("A man's speaker voice is monotone, with a very close recording that almost has no background noise. "
+    description_base = ("A female's speaker voice is monotone, with a very close recording that almost has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
