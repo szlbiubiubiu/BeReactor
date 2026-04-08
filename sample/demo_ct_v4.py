@@ -819,6 +819,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             _max_words = None
         else:
             _max_words = max(5, round(_gap_dur * _TTS_WORDS_PER_SEC))
+            _max_words= min(_max_words, 50)
 
         # Build user message; from turn 2 onwards, carry forward emotion context
         _word_limit_hint = f" [Reply in at most {_max_words} words.]" if _max_words is not None else ""
