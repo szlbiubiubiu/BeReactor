@@ -843,7 +843,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
             user_msg = f"{base_text}{emo_hint}{_word_limit_hint}"
 
         chat.append({"role": "user", "content": user_msg})
-        pdb.set_trace()
+        # pdb.set_trace()
         response = pipe(chat, max_new_tokens=512)
         text_4_split = response[0]['generated_text'][-1]['content'].split('(')
         current_text = text_4_split[0]
@@ -1071,7 +1071,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         tts_ptr       = 0
 
         for idx, seg_info in enumerate(active_segs):
-            cumulative += char_lengths[idx]+15# add 15 chars for the listener reply
+            cumulative += char_lengths[idx]+20# add 15 chars for the listener reply
             if idx < len(active_segs) - 1:
                 tts_end = int(total_tts_samples * cumulative / total_chars)
             else:
@@ -1697,7 +1697,7 @@ def main(args):
                 if USE_REAL_LISTENER:
                     # ── Feature 1: use real listener video, skip diffusion ──
                     if USE_CONTINUOUS_LISTENER and _continuous_frames is not None:
-                        pdb.set_trace()
+                        # pdb.set_trace()
                         # Slice the pre-loaded contiguous block — no extra seek
                         _c_start = seg_idx * clip_size
                         _c_end   = _c_start + clip_size
