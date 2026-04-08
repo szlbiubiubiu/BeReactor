@@ -1608,9 +1608,9 @@ def main(args):
             # speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
             speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-06-26-093649-093642.wav'#video_data['speaker_audio_path'][batch_index]
-            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-10-22-115558-115626.wav'#video_data['listener_audio_path'][batch_index]
+            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session21/Camera-2024-07-10-142319-142203.wav'#video_data['listener_audio_path'][batch_index]
             speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-10-22-115558-115626.mp4'#video_data['listener_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session21/Camera-2024-07-10-142319-142203.mp4'#video_data['listener_video_path'][batch_index]
             # pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
