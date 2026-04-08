@@ -1187,7 +1187,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if listener_video_path is not None:
         _n_frames = 224#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
         print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
-        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 600, _n_frames,stride=2)
+        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 100, _n_frames,stride=2)
         input_latent_talk = _lv_clip.squeeze(0).to(input_latent.device)  # [N, C, H, W] in [-1, 1]
         print(f'[input_latent_talk] loaded {input_latent_talk.shape[0]}/{_lv_total} frames')
     else:
@@ -1608,9 +1608,9 @@ def main(args):
             # speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
             speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-06-26-093649-093642.wav'#video_data['speaker_audio_path'][batch_index]
-            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-06-26-093649-093642.wav'#video_data['listener_audio_path'][batch_index]
+            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session4/Camera-2024-06-28-103912-104008.wav'#video_data['listener_audio_path'][batch_index]
             speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['listener_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session4/Camera-2024-06-28-103912-104008.mp4'#video_data['listener_video_path'][batch_index]
             # pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
