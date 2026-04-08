@@ -1071,7 +1071,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         tts_ptr       = 0
 
         for idx, seg_info in enumerate(active_segs):
-            cumulative += char_lengths[idx]+15# add 15 chars for the listener reply
+            cumulative += char_lengths[idx]+12# add 15 chars for the listener reply
             if idx < len(active_segs) - 1:
                 tts_end = int(total_tts_samples * cumulative / total_chars)
             else:
@@ -1183,7 +1183,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
     # --- Use real listener video frames if provided, else fall back to sampled latent ---
-    pdb.set_trace()
+    # pdb.set_trace()
     if listener_video_path is not None:
         _n_frames = 224#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
         print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
