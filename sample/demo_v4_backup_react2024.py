@@ -1187,7 +1187,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     if listener_video_path is not None:
         _n_frames = 224#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
         print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
-        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 0, _n_frames,stride=1)
+        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 0, _n_frames,stride=2)
         input_latent_talk = _lv_clip.squeeze(0).to(input_latent.device)  # [N, C, H, W] in [-1, 1]
         print(f'[input_latent_talk] loaded {input_latent_talk.shape[0]}/{_lv_total} frames')
     else:
