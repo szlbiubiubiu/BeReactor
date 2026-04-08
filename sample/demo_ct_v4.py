@@ -1053,7 +1053,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
         #   _whisper_words     – per-word timestamps {word, start, end}
         #   active_segs        – list of gap window dicts for each reply segment
         #   sr                 – audio sample rate
-        pdb.set_trace()
+        # pdb.set_trace()
 
         input_ids_all  = _input_ids_base
         prompt_ids_all = _prompt_ids_base
@@ -1186,7 +1186,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # --- Use real listener video frames if provided, else fall back to sampled latent ---
     pdb.set_trace()
     if listener_video_path is not None:
-        _n_frames = 224#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
+        _n_frames = 400#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
         print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
         _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 50, _n_frames,stride=1)
         input_latent_talk = _lv_clip.squeeze(0).to(input_latent.device)  # [N, C, H, W] in [-1, 1]
