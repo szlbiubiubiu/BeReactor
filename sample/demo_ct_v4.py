@@ -783,7 +783,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     current_text = ''
 
     # TTS speaking rate (words per second) used to cap reply length to fit the listener's reaction window
-    _TTS_WORDS_PER_SEC = 1.5
+    _TTS_WORDS_PER_SEC = 2
 
     chat = [
         {"role": "system", "content": (
