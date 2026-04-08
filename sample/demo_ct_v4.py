@@ -722,7 +722,7 @@ def evaluate_LLM(dialogue: str):
 def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
     speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=10,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32,
-        segment_list=None):
+        segment_list=None, listener_video_path=None, listener_num_frames=None):
     """
     input_latent: Tensor [N_segs*64, C, H, W] - all dialog segments stacked.
     segment_list: list of dicts with keys 'text', 'start', 'end' - one per 64-frame block.
@@ -840,7 +840,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
                 float(arousal.mean())
             )
             base_text = speaker_text if speaker_text else "Please continue."
-            user_msg = f"{base_text}{_word_limit_hint}"#{emo_hint}
+            user_msg = f"{base_text}{emo_hint}{_word_limit_hint}"
 
         chat.append({"role": "user", "content": user_msg})
         pdb.set_trace()
@@ -1182,7 +1182,16 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
     # pdb.set_trace()
-    input_latent_talk = input_latent  # all frames go through talking head
+    # --- Use real listener video frames if provided, else fall back to sampled latent ---
+    pdb.set_trace()
+    if listener_video_path is not None:
+        _n_frames = 256#listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
+        print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
+        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 0, _n_frames,stride=2)
+        input_latent_talk = _lv_clip.squeeze(0).to(input_latent.device)  # [N, C, H, W] in [-1, 1]
+        print(f'[input_latent_talk] loaded {input_latent_talk.shape[0]}/{_lv_total} frames')
+    else:
+        input_latent_talk = input_latent  # all frames go through talking head
     input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent_talk+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent_talk.shape[0],axis=0)#[img_path, ]
 
     # #reverse here
@@ -1801,7 +1810,7 @@ def main(args):
                 speaker_audio_path, listener_audio_path,
                 emo_label, stacked_out, pipe, vae, unet, pe,
                 batch_index=(batch_size * step + batch_index),
-                num_frame_sp=stacked_out.shape[0],
+                num_frame_sp=stacked_out.shape[0],listener_video_path=listener_video_path_cur,
                 segment_list=valid_segments
             )
             all_face_images += batched_faces
