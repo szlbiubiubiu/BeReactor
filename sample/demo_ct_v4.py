@@ -941,7 +941,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     sr = audio_model.config.sampling_rate
     video_fps_audio = 25
     #lea's
-    description_base = ("A female speaker voice is monotone, with a very close recording that almost has no background noise. "
+    description_base = ("A male speaker voice is monotone, with a very close recording that almost has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
@@ -1590,7 +1590,7 @@ def main(args):
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     # double_count=0
-    torch.manual_seed(0)
+    # torch.manual_seed(0)
     T_len = 0
     for step, video_data in enumerate(loader):
         
