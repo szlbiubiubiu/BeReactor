@@ -214,7 +214,7 @@ def llm_select_response_segments(pipe, full_transcript, segments):
         indices = [idx for gap, idx in gap_info if gap >= gap_threshold]
         print(f"[LLM Timing] Gaps: {[(f'{g:.2f}s', i) for g, i in gap_info]}  "
               f"→ kept indices with gap ≥ {gap_threshold:.2f}s: {indices}")
-
+    pdb.set_trace()
     selected = [segments[i] for i in indices if 0 <= i < len(segments)]
     if not selected:
         selected = segments
