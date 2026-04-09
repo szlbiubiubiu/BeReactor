@@ -941,7 +941,7 @@ def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_mo
     sr = audio_model.config.sampling_rate
     video_fps_audio = 25
 
-    description_base = ("Mike's voice is monotone, with a very close recording that almost has no background noise. "
+    description_base = ("A gentalman's voice is monotone and clear, with a very close recording that has no background noise. "
                         "The tone is positive level of " + str(tone_pos))
 
     _seg_list: list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
@@ -1607,10 +1607,10 @@ def main(args):
             # listener_audio_path = video_data['listener_audio_path'][batch_index]
             # speaker_video_path_cur = video_data['speaker_video_path'][batch_index]
             # listener_video_path_cur = video_data['listener_video_path'][batch_index]
-            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session4/Camera-2024-06-26-093649-093642.wav'#video_data['speaker_audio_path'][batch_index]
-            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session21/Camera-2024-07-31-114456-114534.wav'#video_data['listener_audio_path'][batch_index]
-            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session4/Camera-2024-06-26-093649-093642.mp4'#video_data['speaker_video_path'][batch_index]
-            listener_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/listener/session21/Camera-2024-07-31-114456-114534.mp4'#video_data['listener_video_path'][batch_index]
+            speaker_audio_path = '/data/szl/dataset/react2025/audio/speaker/session21/Camera-2024-07-29-163415-163339.wav'#video_data['speaker_audio_path'][batch_index]
+            listener_audio_path = '/data/szl/dataset/react2025/audio/listener/session21/Camera-2024-07-29-163415-163339.wav'#video_data['listener_audio_path'][batch_index]
+            speaker_video_path_cur = '/data/szl/dataset/react2025/video-face-crop/speaker/session21/Camera-2024-07-29-163415-163339.mp4'#video_data['speaker_video_path'][batch_index]
+            listener_video_path_cur = '/data/szl/code/latte_reaction_new/test_sample/final_result_8.mov'#video_data['listener_video_path'][batch_index]
             # pdb.set_trace()
             _first_sp_path = speaker_video_path_cur#video_data['speaker_video_path'][batch_index]
             with open(_first_sp_path, 'rb') as _f:
