@@ -2,8 +2,8 @@
 
 
 ##SBATCH -A pilot_sae_gpu
-##SBATCH -p sae  ##Andrena 80g
-
+#SBATCH -p sae  ##Andrena 80g
+#SBATCH --constraint=ampere #ampere. hopper
 ###SBATCH -A pilot_gpu
 ###SBATCH -p gpu  #Apocrita
 ###SBATCH -p gpushort
@@ -12,7 +12,7 @@
 ##SBATCH -p andrena  #Andrena 40g
 
 
-#SBATCH -l node_type=xdg
+
 #SBATCH -t 120:0:0 # 10 hour runtime
 #SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
 ##SBATCH -n 12 # 8 cores (8 cores per GPU)
