@@ -1,8 +1,10 @@
 #!/bin/bash
 
 
-##SBATCH -A pilot_sae_gpu
-#SBATCH -p sae  ##Andrena 80g
+#SBATCH -A pilot_bciwiph
+#SBATCH -p bciwiph  ##Andrena 80g
+
+
 ##SBATCH --constraint=ampere #ampere. hopper
 ###SBATCH -A pilot_gpu
 ###SBATCH -p gpu  #Apocrita
