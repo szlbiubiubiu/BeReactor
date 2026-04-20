@@ -31,6 +31,8 @@ conda activate latte_new
 # CUDA_VISIBLE_DEVICES=0 python sample/evaluation_dodemo.py --save_video_path /gpfs/scratch/acw569/results/react/react_2025 #./test
 CUDA_VISIBLE_DEVICES=0 python sample/evaluation_v2v_singlecase.py --save_video_path /gpfs/scratch/acw569/results/react/react_2025 #./test
 
+
+CUDA_VISIBLE_DEVICES=2,3 python sample/evaluation_do_online.py --save_video_path /data/szl/code/latte_reaction_new/results_test 
 # CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --nproc_per_node=1 --master-port=25541 train.py
 # CUDA_VISIBLE_DEVICES=4,5 python sample/evaluation_dodemo.py --save_video_path /data/szl/code/latte_reaction_new/results
 # For assistance, please email its-research-support@qmul.ac.uk
