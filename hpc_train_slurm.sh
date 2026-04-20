@@ -6,12 +6,13 @@
 ##SBATCH --constraint="ampere"
 
 ##SBATCH --constraint=ampere #ampere. hopper
-###SBATCH -A pilot_gpu
-###SBATCH -p gpu  #Apocrita
+#SBATCH -A pilot_gpu
+#SBATCH -p gpu  #Apocrita
+#SBATCH --constraint="ampere"
 ###SBATCH -p gpushort
 
-#SBATCH -A pilot_andrena
-#SBATCH -p andrena  #Andrena 40g
+##SBATCH -A pilot_andrena
+##SBATCH -p andrena  #Andrena 40g
 
 
 
