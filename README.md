@@ -117,3 +117,4 @@ Latte has been greatly inspired by the following amazing works and teams: [DiT](
 
 ## License
 The code and model weights are licensed under [LICENSE](LICENSE).
+# BeReactor
