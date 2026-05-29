@@ -350,7 +350,7 @@ pretrain_root = ''
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
                     ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', 
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
-                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:1' if torch.cuda.device_count() > 1 else 'cuda:0'))
+                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:0'))
 
 # Initialize UTMOS model for audio quality evaluation
 try:
@@ -878,11 +878,11 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             res_frame_list_latent.append(res_latent)
 
     # Save intermediate cropped talking-head video
-    croped_image_tensor = torch.cat(res_frame_list_tensor, dim=0).to(dtype=torch.uint8).cpu().contiguous()
-    video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index) + '.mp4')
-    print(croped_image_tensor.shape)
-    imageio.mimwrite(video_save_path, croped_image_tensor, fps=8, quality=9)
-    print('save path {}'.format(args.save_video_path))
+    # croped_image_tensor = torch.cat(res_frame_list_tensor, dim=0).to(dtype=torch.uint8).cpu().contiguous()
+    # video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index) + '.mp4')
+    # print(croped_image_tensor.shape)
+    # imageio.mimwrite(video_save_path, croped_image_tensor, fps=8, quality=9)
+    # print('save path {}'.format(args.save_video_path))
 
     if return_image4emotion:
         interval_listener = len(res_frame_list) // num_frame_sp
