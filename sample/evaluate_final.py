@@ -68,17 +68,22 @@ from talkinghead.muse.musetalk.utils.preprocessing import get_landmark_and_bbox,
 from talkinghead.muse.musetalk.utils.blending import get_image
 from talkinghead.muse.musetalk.utils.utils import load_all_model
 
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer
 import whisper
 import pdb
 
 import edge_tts
+import soundfile as sf
+from parler_tts import ParlerTTSForConditionalGeneration
 import cv2
 from tqdm import tqdm
 import copy
 import torch.nn.functional as F
 import re
 import json as _json
+from decord import VideoReader, cpu as decord_cpu
+from PIL import Image
+from torchvision import transforms as T
 
 import platform
 #it is single forward function
@@ -360,7 +365,11 @@ except Exception as e:
     print(f"UTMOS model initialization failed: {e}")
     utmos_available = False
 
-
+# Initialize ParlerTTS model for timeline-aware audio generation
+os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+audio_device = "cuda:1" if torch.cuda.device_count() > 1 else ("cuda:0" if torch.cuda.is_available() else "cpu")
+audio_model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(audio_device)
+tts_tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
 from openai import OpenAI
 import openai
@@ -562,516 +571,358 @@ def evaluate_LLM(dialogue: str):
     
     return realism_score,sentiment_emb#sentiment_score,valence_score,arousal_score
 
-def openai_deepseek_talkinghead_genall(audio_file,listener_audio_file,whisper_model,audio_processor,
-    speaker_audio_path,listener_audio_path, emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
-        result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural",return_image4emotion=False,num_frame_sp=32):
-    # pdb.set_trace()
-    # print('batch_index is ',batch_index)
-    # for step,clip_generated in enumerate(input_latent):
+def load_frames_from_video_path(video_path, start_frame, num_frames, img_size=256, stride=1):
+    """Read *num_frames* frames starting at *start_frame* from a video file.
 
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
-    # pdb.set_trace()
-    expression=emo_fea['expression'].to(torch.device('cuda:0'))
-    expression_soft_sing=F.softmax(expression,dim=1)
-    valence_sing=emo_fea['valence'].to(torch.device('cuda:0'))
-    arousal_sing=emo_fea['arousal'].to(torch.device('cuda:0'))
-    # if step==0:
-    expression_soft=expression_soft_sing
-    valence=valence_sing
-    arousal=arousal_sing
-        # else:
-        #     expression_soft=torch.cat((expression_soft,expression_soft_sing),dim=0)
-        #     valence=torch.cat((valence,valence_sing),dim=0)
-        #     arousal=torch.cat((arousal,arousal_sing),dim=0)
-
-    # pdb.set_trace()
-    result = whisper_model.transcribe(speaker_audio_path)
-    print(result["text"])
-    
-    sentences=result["text"].split('.')
-
-    listener_result = whisper_model.transcribe(listener_audio_path)#audio_file,listener_audio_path
-    # print(result["text"])
-        
-    listener_reference_sentences=listener_result["text"].split('.')
-
-    # pdb.set_trace()
-    # bleu_scores = calculate_bleu_batch([listener_result["text"]], [result["text"]])
-    # rouge_scores = calculate_rouge_batch([listener_result["text"]], [result["text"]])
-    # bert_scores = calculate_bertscore_batch([listener_result["text"]], [result["text"]])
+    Returns ``(clip, total_length)`` where *clip* is a float32 tensor of shape
+    ``[1, num_frames, 3, img_size, img_size]`` in ``[-1, 1]`` and
+    *total_length* is the total number of frames in the source video.
+    """
+    with open(video_path, 'rb') as f:
+        vr = VideoReader(f, ctx=decord_cpu(0))
+    total_length = len(vr)
+    _tf = T.Compose([T.Resize(img_size), T.ToTensor(),
+                     T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])])
+    clip = []
+    for i in range(num_frames):
+        src_idx = min(start_frame + i * stride, total_length - 1)
+        frame = vr[src_idx]
+        img = Image.fromarray(frame.asnumpy())
+        clip.append(_tf(img).unsqueeze(0))
+    clip = torch.cat(clip, dim=0).unsqueeze(0)  # [1, num_frames, 3, H, W]
+    return clip, total_length
 
 
+def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_model, audio_processor,
+    speaker_audio_path, listener_audio_path, emo_label, input_latent, pipe, vae, unet, pe,
+    batch_index=0, batch_size=8, fps=10,
+    result_img_save_path='./temp', VOICE="en-GB-SoniaNeural",
+    return_image4emotion=False, num_frame_sp=32,
+    segment_list=None, listener_video_path=None, listener_num_frames=None):
+    # frames_per_seg: derived from data; 64 is the standard clip length
+    n_segs_hint = len(segment_list) if (segment_list and len(segment_list) > 0) else 1
+    frames_per_seg = max(input_latent.shape[0] // n_segs_hint, 1)  # default 64 when clip_size=64
 
-    rand_num=torch.randint(0,100,(1,))
-    all_text=''
-    conversation_history = f"system: You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words(at least 6 words)\n"
-    # for i in range(1):
-    #     if i==0:
-    #         chat = [
-    #         {"role": "system", "content": "You are a person with a specific personality, subjected to the random seed:."+str(5)+". reply within 30 words"},
-    #         {"role": "user", "content": sentences[0]}
-    #             ]
-    #         a=1
-    #     else:
-    #         chat=response[0]['generated_text']
-    #         chat.append(
-    #             # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-    #             {"role": "user", "content": sentences[i]+". please reply within 10 words"}
-    #         )
-    #     response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-    #     current_text=response[0]['generated_text'][-1]['content']
-    #     all_text=all_text+current_text
-    #     print(response[0]['generated_text'][-1]['content'])
-    # pdb.set_trace()
-    openai_api_key = "None"
-    openai_api_base = "http://0.0.0.0:8000/v1"
+    # ---- Derive segment texts from segment_list or fall back to Whisper ----
+    if segment_list is not None and len(segment_list) > 0:
+        seg_texts = [seg.get("text", "").strip() for seg in segment_list]
+        n_segments = len(seg_texts)
+        print(f"[Timeline] Processing {n_segments} speaker segments on timeline")
+    else:
+        result = whisper_model.transcribe(speaker_audio_path)
+        print(result["text"])
+        seg_texts = [result["text"].strip()]
+        n_segments = 1
 
-    client = OpenAI(
-        api_key=openai_api_key,
-        base_url=openai_api_base,
-    )
-    dialogue=[]
-    random_number=np.random.randint(low=0, high=100)
-    
-    for i in range(len(sentences)):
-        if i>=5:
-            break
-        if i==0:
-            if len(sentences)!=1:
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-                {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'}
-                ]
-            else:
-                chat = [
-                {"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(random_number)\
-                +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 50 words(more than 15 words)"},
-                {"role": "user", "content": sentences[0]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'}
-                ]
-            # {"role": "system", "content": 
-            # "Please reply with a tone of emotion level:\
-            # Neutral:{single_express[0]}, Happy:{single_express[1]}, 'Sad':{single_express[2]}, 'Surprise':{single_express[3]},\
-            #                     'Fear':{single_express[4]}, 'Disgust':{single_express[5]}, 'Anger':{single_express[6]}, 'Contempt':{single_express[7]}, \
-            #             'valence':{single_val}, 'arousal':{single_arousal}. For example Happy=0 means not happy at all, Happy=1 means extremely happy"},            
-            
-            
-            
-            
-            # dialogue=[{"role": "system", "content": "We are having an interview, pretend you are a person with a specific personality, subject to the random seed:"+str(5)\
-            # +".Please stay tune for more information if the user input is not clear. Please generate an appropriate response within 10 words in each reply"},
-            
-            # {"role": "user", "content": sentences[0]}]
-            a=1
+    # ---- Reshape input_latent into [n_segments, frames_per_seg, C, H, W] ----
+    if input_latent.dim() == 4:
+        total_frames_il = input_latent.shape[0]
+        if total_frames_il == frames_per_seg * n_segments:
+            seg_latents = input_latent.reshape(n_segments, frames_per_seg, *input_latent.shape[1:])
+        elif total_frames_il == frames_per_seg:
+            seg_latents = input_latent.unsqueeze(0)
         else:
-            # chat=response[0]['generated_text']
-            chat.append(
-            {"role": "Assistant", "content": current_text})
-            chat.append(
-                # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-                {"role": "user", "content": sentences[i]+". (Please reply with a tone of the following emotion degree:\
-            Neutral:{}, Happy:{}, 'Sad':{}, 'Surprise':{}, 'Fear':{}, 'Disgust':{}, 'Anger':{}, 'Contempt':{}, 'valence':{}, 'arousal':{}. For example Happy=0 means not happy at all, Happy=1 means extremely happy".format(
-                            expression_soft[:,0].mean(),expression_soft[:,1].mean(),expression_soft[:,2].mean(),expression_soft[:,3].mean(),expression_soft[:,4].mean(),
-                            expression_soft[:,5].mean(),expression_soft[:,6].mean(),expression_soft[:,7].mean(),valence.mean(),arousal.mean())
-                        +'. Remove the emotion number in your reply.)'},#+". please reply within 10 words"}
-            # <| Assistant |><think>\n\n</think>\n\n
-            # chat.append(
-            # {"role": "Assistant", "content": '<think>\n\n</think>\n\n'}
+            seg_latents = input_latent[:frames_per_seg].unsqueeze(0)
+            n_segments = 1
+            seg_texts = seg_texts[:1]
+    else:
+        seg_latents = input_latent[:1]
+        n_segments = 1
+        seg_texts = seg_texts[:1]
+
+    # ---- Emotion features from first-segment latent ----
+    id_feats, emo_fea, au_disfa, au_bp4d = encoder_emo.forward_listener(seg_latents[0].to(torch.device('cuda:0')))
+    expression = emo_fea['expression'].to(torch.device('cuda:0'))
+    expression_soft = F.softmax(expression, dim=1)
+    valence = emo_fea['valence'].to(torch.device('cuda:0'))
+    arousal = emo_fea['arousal'].to(torch.device('cuda:0'))
+    # ---- Listener reference transcription (once, for scoring) ----
+    listener_result = whisper_model.transcribe(listener_audio_path)
+
+    # ---- Rolling LLM dialogue: one turn per timeline segment ----
+    random_number = 8
+    tone_pos = 1
+    all_text = ''
+    current_text = ''
+    _TTS_WORDS_PER_SEC = 1.5
+
+    chat = [
+        {"role": "system", "content": (
+            "We are having a real-time conversation. Pretend you are a person with a specific personality "
+            "(a sales representative), subject to the random seed: " + str(random_number) +
+            ". For each speaker turn, generate a natural response that fits the live dialogue flow. "
+            "Each reply must not exceed the word-count limit stated in the user message."
+        )}
+    ]
+
+    seg_reply_texts = []
+    for seg_i, speaker_text in enumerate(seg_texts):
+        is_last_seg = (seg_i == len(seg_texts) - 1)
+        if segment_list is not None and seg_i < len(segment_list):
+            _seg_info = segment_list[seg_i]
+            _seg_end = float(_seg_info.get('end', 0.64))
+            if seg_i + 1 < len(segment_list):
+                _next_start = float(segment_list[seg_i + 1].get('start', _seg_end))
+                _gap_dur = max(0.5, _next_start - _seg_end)
+            else:
+                _gap_dur = None
+        else:
+            _gap_dur = frames_per_seg / 25.0
+
+        if _gap_dur is None or is_last_seg:
+            _max_words = None
+        else:
+            _max_words = max(5, round(_gap_dur * _TTS_WORDS_PER_SEC))
+            _max_words = min(_max_words, 30)
+
+        _word_limit_hint = f" [Reply in at most {_max_words} words.]" if _max_words is not None else ""
+        if seg_i == 0:
+            base_text = speaker_text if speaker_text else "Hello."
+            user_msg = f"{base_text}{_word_limit_hint}"
+        else:
+            chat.append({"role": "assistant", "content": seg_reply_texts[-1]})
+            emo_hint = (
+                " (Please match the emotional tone — "
+                "Neutral={:.2f}, Happy={:.2f}, Sad={:.2f}, valence={:.2f}, arousal={:.2f}. "
+                "Do not include these scores in your reply.)"
+            ).format(
+                float(expression_soft[:, 0].mean()), float(expression_soft[:, 1].mean()),
+                float(expression_soft[:, 2].mean()), float(valence.mean()), float(arousal.mean())
             )
-            # dialogue.append(
-            # {"role": "Assistant", "content": current_text})
-            # dialogue.append({"role": "user", "content": sentences[i]})
-        
-        
-        
-        response = pipe(chat, max_new_tokens=512)#,pad_token_id=pipe.tokenizer.eos_token_id
-        #below is llama3
-        # pdb.set_trace()
-        current_text=response[0]['generated_text'][-1]['content']
-        # pdb.set_trace()
+            base_text = speaker_text if speaker_text else "Please continue."
+            user_msg = f"{base_text}{emo_hint}{_word_limit_hint}"
 
-        # #deepseek with thinking tag
-        # response = client.chat.completions.create(
-        #     model="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-        #     messages=chat,
-        #     temperature=0.2,
-        # )
-        # current_text=response.choices[0].message.content.split('\n</think>\n\n')#[1]
-        # if len(current_text)==1:
-        #     current_tex=current_text#[0]
-        # else:   
-        #     current_text=current_text[1]
-        
+        chat.append({"role": "user", "content": user_msg})
+        response = pipe(chat, max_new_tokens=512)
+        text_4_split = response[0]['generated_text'][-1]['content'].split('(')
+        current_text = text_4_split[0]
+        if len(text_4_split) >= 2:
+            found = re.findall(r"\d+\.?\d*", text_4_split[1])
+            if found:
+                tone_pos = found[-1]
+        print(f"[Seg {seg_i}] Speaker: {speaker_text!r}")
+        print(f"[Seg {seg_i}] Listener: {current_text!r}")
+        seg_reply_texts.append(current_text)
+        all_text += current_text + " "
 
-        all_text=all_text+current_text
-        print(current_text)
-    #add final text
-    chat.append(
-            {"role": "Assistant", "content": current_text})
-    realism_score,sentiment_emb=evaluate_LLM(chat)
-    # all_text
-    # pdb.set_trace()
+    chat.append({"role": "assistant", "content": seg_reply_texts[-1] if seg_reply_texts else ''})
+    realism_score, sentiment_emb = evaluate_LLM(chat)
+
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
-    evaluation_score=dict()
-    evaluation_score['realism_score']=realism_score
-    evaluation_score['sentiment_emb']=sentiment_emb
-    # evaluation_score['valence_score']=valence_score
-    # evaluation_score['arousal_score']=arousal_score
-    evaluation_score['bleu_scores']=bleu_scores[0]
-    # evaluation_score['rouge_scores']=rouge_scores
-    evaluation_score['bert_scores']=bert_scores[0]
-    # pdb.set_trace()
-    # # #text to audio
-    # # pdb.set_trace()
-    # for i in range(len(sentences)):
-    #     if i==0:
-    #         chat = [
-    #         {"role": "system", "content": "We are having an interview. You are a person with a specific personality, subjected to the random seed:."+str(5)+". Please reply within 10 words"},
-    #         {"role": "user", "content": sentences[0]}
-    #             ]
-    #         a=1
-    #         conversation_history += f"User: {sentences[0]}\nAssistant:"
-    #     else:
-    #         # chat=response[0]['generated_text']
-    #         # chat.append(
-    #         #     # {"role": "system", "content": "You are a person with a specific personality, subjected to the random number:."+str(6)+". reply with 10 words"},
-    #         #     {"role": "user", "content": sentences[i]+". please reply within 10 words"}
-    #         # )
-    #         conversation_history += f"{response}\n"
-    #         conversation_history += f"User: {sentences[i]}\nAssistant:"
-    #     # conversation_history += f"User: {user_input}\n"
-    #     pdb.set_trace()
-    #     # Generate a response using the pipeline
-    #     response = pipe(conversation_history, max_length=1000)[0]["generated_text"]
-        
-    #     # Extract the new response part (after the user input)
-    #     response = response[len(conversation_history):]
-    #     # all_text=all_text+response
-    #     print(f"Assistant: {response.strip()}")
+    evaluation_score = dict()
+    evaluation_score['realism_score'] = realism_score
+    evaluation_score['sentiment_emb'] = sentiment_emb
+    evaluation_score['bleu_scores'] = bleu_scores[0]
+    evaluation_score['bert_scores'] = bert_scores[0]
 
-    #     # # Append LLaMA's response to the conversation history
-    #     # conversation_history += f"LLaMA: {response}\n"
-    
-    # from transformers import AutoModelForCausalLM, AutoTokenizer
+    # ---- ParlerTTS: timeline-aware audio (silence during speaker, TTS in gaps) ----
+    OUTPUT_audio_FILE = result_img_save_path + '/output_audio' + str(batch_index) + '.wav'
+    if not os.path.exists(result_img_save_path):
+        os.makedirs(result_img_save_path)
 
-    # # Load the Llama 3 model and tokenizer (assuming it's hosted on Hugging Face)
-    # model_name = 'meta-llama/Llama-3'
-    # tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # model = AutoModelForCausalLM.from_pretrained(model_name)
-    # from transformers import LlamaForCausalLM, LlamaTokenizer
-    # tokenizer = LlamaTokenizer.from_pretrained("/path/to/local/llama-3")
-    # model = LlamaForCausalLM.from_pretrained("/path/to/local/llama-3")
-    
+    sr = audio_model.config.sampling_rate
+    description_base = (
+        "A female's speaker voice is monotone, with a very close recording that almost has no background noise. "
+        "The tone is positive level of " + str(tone_pos)
+    )
+    _seg_list = segment_list if segment_list else [{'start': 0.0, 'end': 0.64, 'text': ''}]
+    _sp_audio_info = sf.info(speaker_audio_path)
+    total_duration_sec = _sp_audio_info.duration
+    total_samples = int(sr * total_duration_sec)
+    new_audio = np.zeros(total_samples, dtype=np.float32)
 
-    # conversation_history = ""
+    # Pass 1: collect active segments that have a reply
+    active_segs = []
+    for seg_i, seg in enumerate(_seg_list):
+        seg_end_sec = seg.get('end', 0.64)
+        reply_text = seg_reply_texts[seg_i] if seg_i < len(seg_reply_texts) else ''
+        next_start_sec = _seg_list[seg_i + 1].get('start', seg_end_sec) if seg_i + 1 < len(_seg_list) else total_duration_sec
+        active_start_s = int(sr * seg_end_sec)
+        active_end_s = min(total_samples, int(sr * next_start_sec))
+        target_samples = active_end_s - active_start_s
+        seg_dur = seg_end_sec - seg.get('start', 0.0)
+        active_dur = max(0.0, next_start_sec - seg_end_sec)
+        if not reply_text.strip() or target_samples <= 0:
+            print(f'[Audio seg {seg_i}] silence={seg_dur:.2f}s  gap={active_dur:.2f}s  (no reply text)')
+            continue
+        active_segs.append({
+            'seg_i': seg_i, 'reply_text': reply_text,
+            'active_start_s': active_start_s, 'active_end_s': active_end_s,
+            'target_samples': target_samples, 'seg_dur': seg_dur, 'active_dur': active_dur,
+        })
 
-    # while True:
-    #     # Get user input
-    #     user_input = input("You: ")
-        
-    #     # Append user input to conversation history
-    #     conversation_history += f"User: {user_input}\n"
-        
-    #     # Get LLaMA's response
-    #     response = chat_with_llama(model, tokenizer, conversation_history)
-    #     print(f"LLaMA: {response}")
-        
-    #     # Append the model's response to conversation history
-    #     conversation_history += f"LLaMA: {response}\n"
-    # # wavs = chat.infer(current_text)
+    # Pass 2: generate all reply TTS in one call, then split by char proportion
+    if active_segs:
+        concat_text = "      ".join(s['reply_text'] for s in active_segs)
+        print(f'[Audio] Generating TTS for {len(active_segs)} segments. text={repr(concat_text[:120])}')
+        _input_ids = tts_tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
+        _prompt_ids = tts_tokenizer(concat_text, return_tensors="pt").input_ids.to(audio_device)
+        tts_all = audio_model.generate(input_ids=_input_ids, prompt_input_ids=_prompt_ids).cpu().numpy().squeeze().astype(np.float32)
+        total_tts_samples = len(tts_all)
 
+        char_lengths = [len(s['reply_text']) for s in active_segs]
+        total_chars = max(sum(char_lengths), 1)
+        cumulative = 0
+        tts_ptr = 0
+        for idx, seg_info in enumerate(active_segs):
+            cumulative += char_lengths[idx] + 28
+            tts_end = int(total_tts_samples * cumulative / total_chars) if idx < len(active_segs) - 1 else total_tts_samples
+            tts_seg = tts_all[tts_ptr:tts_end].copy()
+            tts_ptr = tts_end
+            place_len = min(len(tts_seg), seg_info['active_end_s'] - seg_info['active_start_s'])
+            new_audio[seg_info['active_start_s']:seg_info['active_start_s'] + place_len] = tts_seg[:place_len]
+            print(f'[Audio seg {seg_info["seg_i"]}] silence={seg_info["seg_dur"]:.2f}s  '
+                  f'gap={seg_info["active_dur"]:.2f}s  reply={repr(seg_info["reply_text"][:60])}')
 
-    # pdb.set_trace()
-    OUTPUT_audio_FILE=result_img_save_path+'/output_audio'+str(batch_index)+'.wav'
-    communicate = edge_tts.Communicate(all_text, VOICE)
-    # pdb.set_trace()
-    communicate.save_sync(OUTPUT_audio_FILE)
-    # pdb.set_trace()
-    # Compute UTMOS MOS score for generated audio
+    sf.write(OUTPUT_audio_FILE, new_audio, sr)
+    print('audio_generated, path is: ', OUTPUT_audio_FILE)
+
+    # ---- UTMOS MOS evaluation (kept from evaluate_final.py) ----
     if utmos_available:
         try:
-            audio_data, sr = librosa.load(OUTPUT_audio_FILE, sr=16000)
-            mos_score = utmos_model.predict(data=audio_data, sr=16000)
+            audio_data_utmos, _ = librosa.load(OUTPUT_audio_FILE, sr=16000)
+            mos_score = utmos_model.predict(data=audio_data_utmos, sr=16000)
             print(f"UTMOS MOS Score: {mos_score}")
             evaluation_score['mos_score'] = float(mos_score) if hasattr(mos_score, 'item') else float(mos_score)
         except Exception as e:
             print(f"UTMOS evaluation failed: {e}")
-            evaluation_score['mos_score'] =None
+            evaluation_score['mos_score'] = None
     else:
-        evaluation_score['mos_score'] =None
-    
-    # # message in self.stream()
-    wavs=[]
-    # with open(OUTPUT_audio_FILE, "wb") as file:
-    #     for chunk in communicate.stream_sync():
-    #         if chunk["type"] == "audio":
-    #             # file.write(chunk["data"])
-    #             audio = np.frombuffer(chunk["data"], np.int16).astype(np.float32)*(1/32768.0)
-    #             # wavs.append(chunk["data"])
-    #             wavs.append(audio)
-                
-    #             file.write(chunk["data"])
-    #         elif chunk["type"] == "WordBoundary":
-    #             print(f"WordBoundary: {chunk}")
-    # communicate.save_sync(OUTPUT_FILE)
-    # communicate.save_sync(OUTPUT_audio_FILE)
-    # communicate.save_sync(OUTPUT_FILE)# change to talking head format
-
-    # #audio to talking head, whisper,tiny
-
-    #talking head
-    # wavs=np.frombuffer(wavs[0], dtype=np.float16)
-    # audio = np.frombuffer(data, np.int16).astype(np.float32)*(1/32768.0)
-    # pdb.set_trace()
-    # whisper_feature = audio_processor.audio2feat(np.concatenate(wavs))
+        evaluation_score['mos_score'] = None
+    # ---- Whisper feature extraction for talking head ----
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
-    whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature,fps=fps)
+    whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature, fps=fps)
 
-    # # #image processing
-    # # # crop_frame = cv2.imread(img_path)
-    # # #detect landmark
-    # img_path='/homes/zs003/test_images/siyang.png'
-    # input_img_list = [img_path, ]
-    # bbox_shift=0
-    # coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
-    # # with open(crop_coord_save_path, 'wb') as f:
-    # #     pickle.dump(coord_list, f)
-    # input_latent_list = []
-    # for bbox, frame in zip(coord_list, frame_list):
-    #     if bbox == coord_placeholder:
-    #         continue
-    #     x1, y1, x2, y2 = bbox
-    #     # if not args.without_landmark:
-    #     crop_frame = frame[y1:y2, x1:x2]
-    #     # else:
-    #     #     crop_frame = frame
-    #     crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    #     latents = vae.get_latents_for_unet(crop_frame)
-    #     input_latent_list.append(latents)
-    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    # latents = vae.get_latents_for_unet(crop_frame)
-    # input_latent_list=[]
-    # input_latent_list.append(latents)
+    # ---- Load listener frames: real video or fall back to generated latent ----
+    if listener_video_path is not None:
+        _n_frames = listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
+        print(f'[input_latent_talk] loading {_n_frames} frames from real listener video: {listener_video_path}')
+        _lv_clip, _lv_total = load_frames_from_video_path(listener_video_path, 50, _n_frames, stride=1)
+        input_latent_talk = _lv_clip.squeeze(0).to(input_latent.device)
+        print(f'[input_latent_talk] loaded {input_latent_talk.shape[0]}/{_lv_total} frames')
+    else:
+        input_latent_talk = input_latent
 
-    # pdb.set_trace()
-    # input_img_list = torch.chunk(input_latent.cpu(),input_latent.shape[0],dim=0)#[img_path, ]
-    input_img_list = np.split(np.uint8(np.transpose(127.5*(input_latent+1).cpu().numpy(),(0,2,3,1)))[:,:,:,::-1],input_latent.shape[0],axis=0)#[img_path, ]
-    # input_img_list[sample]
-    bbox_shift=0
-    # landmark detection问题
-    # pdb.set_trace()
-    coord_list, frame_list = get_landmark_and_bbox(input_img_list, bbox_shift)
-    # with open(crop_coord_save_path, 'wb') as f:
-    #     pickle.dump(coord_list, f)
+    input_img_list = np.split(
+        np.uint8(np.transpose(127.5 * (input_latent_talk + 1).cpu().numpy(), (0, 2, 3, 1)))[:, :, :, ::-1],
+        input_latent_talk.shape[0], axis=0
+    )
+    bbox_shift = 0
+    coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
+
+    # ---- Reverse-and-repeat x3 for temporal diversity (demo_ct_v4.py) ----
+    repeat_times = 3
+    coord_list = repeat_times * (coord_list_single + coord_list_single[::-1])
+    frame_list  = repeat_times * (frame_list_single  + frame_list_single[::-1])
+    print('len(frame_list)', len(frame_list))
+
     input_latent_list = []
-    # pdb.set_trace()
+    croped_image = []
     for bbox, frame in zip(coord_list, frame_list):
-        frame=np.squeeze(frame)
-        if bbox == coord_placeholder:
-            continue
-        x1, y1, x2, y2 = bbox
-        # if not args.without_landmark:
+        bbox = np.array(bbox)
+        bbox[bbox < 0] = 0
+        frame = np.squeeze(frame)
+        if (bbox == coord_placeholder).all():
+            x1, y1, x2, y2 = [0, 0, 256, 256]
+        else:
+            x1, y1, x2, y2 = bbox
         crop_frame = frame[y1:y2, x1:x2]
-        # else:
-        #     crop_frame = frame
-        crop_frame = cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
+        crop_frame = cv2.resize(crop_frame, (256, 256), interpolation=cv2.INTER_LANCZOS4)
         latents = vae.get_latents_for_unet(crop_frame)
+        croped_image.append(torch.unsqueeze(torch.tensor(crop_frame), dim=0))
         input_latent_list.append(latents)
-    # pdb.set_trace()
-    # pdb.set_trace()
-    # crop_frame=cv2.resize(crop_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    # latents = vae.get_latents_for_unet(crop_frame)
-    # input_latent_list=[]
-    # input_latent_list.append(latents)
 
-    # #no crop
-    # pdb.set_trace()
-    # input_latent_list=[]
-    # for single_frame in input_latent:
-    #     # crop_frame=cv2.resize(single_frame,(256,256),interpolation = cv2.INTER_LANCZOS4)
-    #     latents = vae.get_latents_for_unet_nonorm(single_frame)
-    #     input_latent_list.append(latents)
+    input_latent_list_cycle = input_latent_list
 
-    #input latent start, directly use latent
-    # input_latent_list=input_latent
-    # input_latent_list_cycle=torch.cat((input_latent_list,torch.flip(input_latent_list,[0])),dim=0)
+    new_frame_list = []
+    for single_ori_img in frame_list:
+        new_frame_list.append(
+            torch.permute(torch.tensor(single_ori_img[:, :, :, ::-1] / 127.5 - 1), (0, 3, 1, 2))
+        )
+    original_image_cycle = new_frame_list
 
-    #----
-    #use image----
-    input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    # pdb.set_trace()
-    original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-    
-    laten_repeat=max(1,len(whisper_chunks)//len(input_latent_list_cycle))
-    # pdb.set_trace()
-    vae_encode_latents_new=[]
+    laten_repeat = max(len(whisper_chunks) // len(input_latent_list_cycle), 1)
+    vae_encode_latents_new = []
     for single_latent in original_image_cycle:
-        repeated_latent=laten_repeat * [single_latent]
-        vae_encode_latents_new+=repeated_latent
-    original_image_cycle=vae_encode_latents_new
-    
-    # frame_list_cycle = frame_list + frame_list[::-1]
-    coord_list_cycle = coord_list + coord_list[::-1]
-    # input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    # # pdb.set_trace()
-    # original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
-    
-    # laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
-    # # pdb.set_trace()
-    # vae_encode_latents_new=[]
-    # for single_latent in original_image_cycle:
-    #     repeated_latent=laten_repeat * [single_latent]
-    #     vae_encode_latents_new+=repeated_latent
-    # original_image_cycle=vae_encode_latents_new
-    
-    # # frame_list_cycle = frame_list + frame_list[::-1]
-    # coord_list_cycle = coord_list + coord_list[::-1]
+        vae_encode_latents_new += laten_repeat * [single_latent]
+    original_image_cycle = vae_encode_latents_new
 
-    coord_list_cycle_new=[]
+    coord_list_cycle = coord_list
+    coord_list_cycle_new = []
     for single_coord in coord_list_cycle:
-        repeated_coord=laten_repeat * [single_coord]
-        coord_list_cycle_new+=repeated_coord
-    coord_list_cycle=coord_list_cycle_new
+        coord_list_cycle_new += laten_repeat * [single_coord]
+    coord_list_cycle = coord_list_cycle_new
 
-
+    # ---- Talking head forward pass ----
     video_num = len(whisper_chunks)
-    # input_latent_list_cycle = [val for val in input_latent_list for i in range(len(whisper_chunks))]
-    # input_latent_list_cycle= len(whisper_chunks)*input_latent_list 
-    # pdb.set_trace()
     timesteps = torch.tensor([0], device=unet.device)
-    # gen = datagen(whisper_chunks,input_latent_list_cycle,batch_size)
-    # if len(input_latent_list_cycle)==0:
-    #     pdb.set_trace()
-    #     a=1
-    gen = datagen_reaction(whisper_chunks,input_latent_list_cycle,batch_size)
-    
-    res_frame_list=[]
-    res_frame_list_latent=[]
-    # pdb.set_trace()
-    for i, (whisper_batch,latent_batch) in enumerate(tqdm(gen,total=int(np.ceil(float(video_num)/batch_size)))):
-    # for whisper_batch in whisper_chunks:
-        # whisper_batch=whisper_chunks
-        # pdb.set_trace()
+    gen = datagen_reaction(whisper_chunks, input_latent_list_cycle, batch_size)
+
+    res_frame_list = []
+    res_frame_list_latent = []
+    res_frame_list_tensor = []
+    for i, (whisper_batch, latent_batch) in enumerate(tqdm(gen, total=int(np.ceil(float(video_num) / batch_size)))):
         audio_feature_batch = torch.from_numpy(whisper_batch)
-        audio_feature_batch = audio_feature_batch.to(device=unet.device,
-                                                        dtype=unet.model.dtype) # torch, B, 5*N,384
+        audio_feature_batch = audio_feature_batch.to(device=unet.device, dtype=unet.model.dtype)
         audio_feature_batch = pe(audio_feature_batch)
-        # latent_batch=latents
         latent_batch = latent_batch.to(dtype=unet.model.dtype)
-        # pdb.set_trace()
         pred_latents = unet.model(latent_batch, timesteps, encoder_hidden_states=audio_feature_batch).sample
-        #mask talent
-
-
-        #do not reconstruct images if use reaction framework
         recon = vae.decode_latents(pred_latents)
-        
-        # pdb.set_trace()
         for res_frame in recon:
             res_frame_list.append(res_frame)
+            res_frame_list_tensor.append(torch.unsqueeze(torch.tensor(res_frame.copy()), dim=0))
         for res_latent in pred_latents:
-            #mask latent
-            # res_latent_detrans=res_latent*0.5+0.5
-            # res_latent_detrans = res_latent_detrans * (self._mask_tensor>0.5)
             res_frame_list_latent.append(res_latent)
-            # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
-    # return res_frame_list
 
+    # Save intermediate cropped talking-head video
+    croped_image_tensor = torch.cat(res_frame_list_tensor, dim=0).to(dtype=torch.uint8).cpu().contiguous()
+    video_save_path = os.path.join(args.save_video_path, 'sample_test_afterRF_crop' + str(batch_index) + '.mp4')
+    print(croped_image_tensor.shape)
+    imageio.mimwrite(video_save_path, croped_image_tensor, fps=8, quality=9)
+    print('save path {}'.format(args.save_video_path))
 
-    # pdb.set_trace()
     if return_image4emotion:
-        interval_listener=len(res_frame_list)//num_frame_sp
-        if interval_listener==0:
-            out_images=res_frame_list
-        else:
-            out_images=res_frame_list[::interval_listener]
-        return out_images[:num_frame_sp],evaluation_score
+        interval_listener = len(res_frame_list) // num_frame_sp
+        out_images = res_frame_list if interval_listener == 0 else res_frame_list[::interval_listener]
+        return out_images[:num_frame_sp], evaluation_score, OUTPUT_audio_FILE
+
+    # ---- Blend talking-head crop back into original frames ----
     print("pad talking image to original video")
-    # pdb.set_trace()
+    final_output_frames = []
     for i, res_frame in enumerate(tqdm(res_frame_list)):
-        # if len(original_image_cycle)==0:
-        #     pdb.set_trace()
-        #     a=1
-        # ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
-        # # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
-        # # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
-        # t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
-        # bbox=[0,0,t_shape[0],t_shape[1]]
-        # x1, y1, x2, y2 = bbox
-        # # try:
-        # res_frame = cv2.resize(res_frame.astype(np.uint8),(int(x2-x1),int(y2-y1)))
-        ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
-        # ori_frame = copy.deepcopy(res_frame_list[i%(len(res_frame_list))])
-        # t_shape = ori_frame.shape#coord_list_cycle[i%(len(coord_list_cycle))]
-        t_shape = coord_list_cycle[i%(len(coord_list_cycle))]
-        # bbox=[0,0,t_shape[0],t_shape[1]]
-        
-        bbox=t_shape
-
-        bbox=np.array(bbox)
-        bbox[bbox<0]=0
-        # frame=np.squeeze(frame)
-        # if bbox == coord_placeholder:
-        #     continue
-        # x1, y1, x2, y2 = bbox
-
+        ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i % len(original_image_cycle)]))
+        bbox = np.array(coord_list_cycle[i % len(coord_list_cycle)])
+        bbox[bbox < 0] = 0
         if (bbox == coord_placeholder).all():
-            # continue
-            bbox=[0,0,256,256]
-        # x1, y1, x2, y2 = [0,0,256,256]
-    # else:
-        x1, y1, x2, y2 = bbox#arr[arr < 0] = 0
-        # if not args.without_landmark:
-        # crop_frame = frame[y1:y2, x1:x2]
+            bbox = [0, 0, 256, 256]
+        x1, y1, x2, y2 = bbox
+        res_frame = cv2.resize(res_frame.astype(np.uint8), (x2 - x1, y2 - y1))
+        combine_frame = get_image(
+            np.uint8(127.5 * (ori_frame.permute(1, 2, 0).cpu() + 1))[:, :, ::-1], res_frame, bbox
+        )
+        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png", combine_frame)
+        final_output_frames.append(combine_frame[:, :, ::-1])
 
-
-
-
-        # x1, y1, x2, y2 = bbox
-        
-        # try:
-        res_frame = cv2.resize(res_frame.astype(np.uint8),(x2-x1,y2-y1))
-        # pdb.set_trace()
-        # combine_frame = get_image(ori_frame,res_frame,bbox)
-        # combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
-        combine_frame = get_image(np.uint8(127.5*(ori_frame.permute(1,2,0).cpu()+1))[:,:,::-1],res_frame,bbox)
-
-        cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",combine_frame)
-        # pdb.set_trace()
-        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
-        # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
-    # pdb.set_trace()
-    cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png -vcodec libx264 -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp.mp4"
+    cmd_img2video = (f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png"
+                     f"  -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp2.mp4")
     print(cmd_img2video)
     os.system(cmd_img2video)
-    
-    output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index)+'.mp4')
-    # output_vid_name = os.path.join('./result_talking/siyang',"siyang.mp4")
-    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp.mp4 {output_vid_name}"
+
+    output_vid_name = os.path.join(args.save_video_path, 'sample_test_final' + str(batch_index) + '.mp4')
+    cmd_combine_audio = f"ffmpeg -y -v warning -i {OUTPUT_audio_FILE} -i temp2.mp4 {output_vid_name}"
     print(cmd_combine_audio)
     os.system(cmd_combine_audio)
-    
-    os.remove("temp.mp4")
-    # Remove PNG image files
-    os.system(f"rm {result_img_save_path}/*.png")
-    # # shutil.rmtree(result_img_save_path)
-    print(f"result is save to {output_vid_name}")      
-    # pdb.set_trace()
-    # if return_image4emotion:
-    #return emotion image
-    interval_listener=len(res_frame_list)//num_frame_sp
-    out_images=res_frame_list[::interval_listener]
-    return out_images[:num_frame_sp],evaluation_score 
+
+    for _png in sorted(os.listdir(result_img_save_path)):
+        if _png.endswith('.png'):
+            os.remove(os.path.join(result_img_save_path, _png))
+    print(f"result is save to {output_vid_name}")
+    print('the corresponding speaker path is: ', speaker_audio_path)
+
+    out_images = final_output_frames
+    return out_images[:num_frame_sp], evaluation_score, OUTPUT_audio_FILE
 
 def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_label,input_latent, pipe,vae, unet, pe,batch_index=0,batch_size=8,fps=25,
         result_img_save_path='./temp',VOICE = "en-GB-SoniaNeural"):
@@ -1839,7 +1690,7 @@ def main(args):
         all_face_images = []
         dim_out = out_samples.shape
         for batch_index in range(len(out_samples)):
-            batched_faces, scores = openai_deepseek_talkinghead_genall(
+            batched_faces, scores, _listener_audio_path = openai_deepseek_talkinghead_genall(
                 audio_file, listener_audio_file,
                 whisper_model, audio_processor,
                 video_data['speaker_audio_path'][batch_index],
