@@ -1,120 +1,196 @@
-## Latte: Latent Diffusion Transformer for Video Generation<br><sub>Official PyTorch Implementation</sub>
+# BeReactor
 
-### [Paper](https://arxiv.org/abs/2401.03048v1) | [Project Page](https://maxin-cn.github.io/latte_project/)
+This repository contains the **evaluation code** for the paper:
 
+> [**BeReactor: Audio-visual Appropriate Human-like Expressive Behavioural Response Generation**](https://github.com/szlbiubiubiu/latte_reaction/)
+> [Zhonglin Sun](https://szlbiubiubiu.github.io/), [Xun Gong](https://scholar.google.com/citations?user=7PqgUw4AAAAJ&hl=en), [Feng Chen](https://scholar.google.com/citations?user=4VZhTYgAAAAJ&hl=zh-CN), [Siyang Song*](https://scholar.google.com/citations?user=ZKSL1IcAAAAJ&hl=en) (*Corresponding Author)
 
+BeReactor is an audio-visual reaction generation system built on a Latent Diffusion Transformer (Latte). Given a speaker video, it generates appropriate and expressive listener facial reactions, optionally guided by LLM-predicted emotion tokens and talking head synthesis.
 
-This repo contains PyTorch model definitions, pre-trained weights, and training/sampling code for our paper exploring 
-latent diffusion models with transformers (Latte). You can find more visualizations on our [project page](https://maxin-cn.github.io/latte_project/).
+---
 
-> [**Latte: Latent Diffusion Transformer for Video Generation**](https://maxin-cn.github.io/latte_project/)<br>
-> [Xin Ma](https://maxin-cn.github.io/), [Yaohui Wang*](https://wyhsirius.github.io/), [Xinyuan Chen](https://scholar.google.com/citations?user=3fWSC8YAAAAJ), [Gengyun Jia](https://scholar.google.com/citations?user=_04pkGgAAAAJ&hl=zh-CN), [Ziwei Liu](https://liuziwei7.github.io/), [Yuan-Fang Li](https://users.monash.edu/~yli/), [Cunjian Chen](https://cunjian.github.io/), [Yu Qiao](https://scholar.google.com.hk/citations?user=gFtI-8QAAAAJ&hl=zh-CN) (*Corresponding Author & Project Lead)
-<!-- > <br>Monash University, Shanghai Artificial Intelligence Laboratory,<br> NJUPT, S-Lab, Nanyang Technological University 
+## Repository Structure
 
-We propose a novel Latent Diffusion Transformer, namely Latte, for video generation. Latte first extracts spatio-temporal tokens from input videos and then adopts a series of Transformer blocks to model video distribution in the latent space. In order to model a substantial number of tokens extracted from videos, four efficient variants are introduced from the perspective of decomposing the spatial and temporal dimensions of input videos. To improve the quality of generated videos, we determine the best practices of Latte through rigorous experimental analysis, including video clip patch embedding, model variants, timestep-class information injection, temporal positional embedding, and learning strategies. Our comprehensive evaluation demonstrates that Latte achieves state-of-the-art performance across four standard video generation datasets, i.e., FaceForensics, SkyTimelapse, UCF101, and Taichi-HD. In addition, we extend Latte to text-to-video generation (T2V) task, where Latte achieves comparable results compared to recent T2V models. We strongly believe that Latte provides valuable insights for future research on incorporating Transformers into diffusion models for video generation.
+```
+.
+├── configs/
+│   ├── reaction/               # Evaluation config for React 2024
+│   └── reaction2025/           # Evaluation config for React 2025
+├── datasets/
+│   └── reaction_dataset.py     # Dataloader for the reaction dataset
+├── diffusion/                  # Diffusion utilities (gaussian diffusion, respace, etc.)
+├── metric/                     # Evaluation metrics (FRC, FRD, FRDvs, FRVar, TLCC, SMSE)
+├── models/                     # Model definitions (Latte backbone, EmoNet, IDNet, etc.)
+├── sample/                     # Evaluation scripts
+│   ├── evaluation_v2vreaction.py           # Main evaluation: video-to-video reaction
+│   ├── evaluation_v2vreaction_language.py  # Evaluation with LLM emotion guidance
+│   ├── evaluation_v2v_singlecase.py        # Single-case evaluation / debugging
+│   ├── evaluation_do_online.py             # Online evaluation pipeline
+│   ├── reaction_eva_all_withtalkinghead.py # Full eval with talking head synthesis
+│   ├── evaluate_groundtruth.py             # Compute metrics on ground truth
+│   ├── evaluate_reaction.py                # Compute reaction-level metrics
+│   ├── evaluate_utmos_folder.py            # Audio quality metric (UTMOSv2)
+│   └── evaluate_vbench_folder.py           # Video quality metric (VBench)
+├── talkinghead/                # Talking head modules (MuseTalk, EchoMimic)
+├── tools/                      # Utility tools (face detection, video/audio merge)
+├── eva_from_local.py           # Evaluate from pre-saved emotion tensors
+├── hpc_evaluation.sh           # SGE cluster evaluation script
+├── hpc_evaluation_slurm.sh     # Slurm cluster evaluation script
+└── utils.py / util.py          # Shared utilities
+```
 
- ![The architecture of Latte](visuals/architecture.svg){width=20}
- -->
- 
-<img src="visuals/architecture.svg" width="600">
+---
 
+## Installation
 
-This repository contains:
-
-* 🪐 A simple PyTorch [implementation](models/latte.py) of Latte
-* ⚡️ **Pre-trained Latte models** trained on FaceForensics, SkyTimelapse, Taichi-HD and UCF101 (256x256). In addition, we provide a T2V checkpoint (512x512). All checkpoints can be found [here](https://huggingface.co/maxin-cn/Latte/tree/main). 
-
-* 🛸 A Latte [training script](train.py) using PyTorch DDP.
-
-## News
-- (🔥 New) Mar. 20, 2024. 💥 An updated LatteT2V model is coming soon, stay tuned!
-<img src="latte.gif" width="800">
-
-- (🔥 New) Feb. 24, 2024. 💥 We are very grateful that researchers and developers like our work. We will continue to update our LatteT2V model, hoping that our efforts can help the community develop. Our Latte discord channel <a href="https://discord.gg/RguYqhVU92" style="text-decoration:none;">
-<img src="https://user-images.githubusercontent.com/25839884/218347213-c080267f-cbb6-443e-8532-8e1ed9a58ea9.png" width="3%" alt="" /></a> is created for discussions. Coders are welcome to contribute.
-
-- (🔥 New) Jan. 9, 2024. 💥 An updated LatteT2V model initialized with the [PixArt-α](https://github.com/PixArt-alpha/PixArt-alpha) is released, the checkpoint can be found [here](https://huggingface.co/maxin-cn/Latte/resolve/main/t2v.pt?download=true).
-
-- (🔥 New) Oct. 31, 2023. 💥 The training and inference code is released. All checkpoints (including FaceForensics, SkyTimelapse, UCF101, and Taichi-HD) can be found [here](https://huggingface.co/maxin-cn/Latte/tree/main). In addition, the LatteT2V inference code is provided.
-
-
-## Setup
-
-First, download and set up the repo:
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/maxin-cn/Latte.git
-cd Latte
+git clone https://github.com/szlbiubiubiu/latte_reaction.git
+cd latte_reaction
 ```
 
-We provide an [`environment.yml`](environment.yml) file that can be used to create a Conda environment. If you only want 
-to run pre-trained models locally on CPU, you can remove the `cudatoolkit` and `pytorch-cuda` requirements from the file.
+### 2. Create a Conda environment
 
 ```bash
-conda env create -f environment.yml
-conda activate latte
+conda create -n latte_new python=3.10
+conda activate latte_new
 ```
 
+### 3. Install dependencies
 
-## Sampling 
-
-You can sample from our **pre-trained Latte models** with [`sample.py`](sample/sample.py). Weights for our pre-trained Latte model can be found [here](https://huggingface.co/maxin-cn/Latte).  The script has various arguments to adjust sampling steps, change the classifier-free guidance scale, etc. For example, to sample from our model on FaceForensics, you can use:
+Install PyTorch with CUDA 11.8 first:
 
 ```bash
-bash sample/ffs.sh
+pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
 ```
 
-or if you want to sample hundreds of videos, you can use the following script with Pytorch DDP:
+Then install the remaining packages from `requirement_nollama.txt`:
 
 ```bash
-bash sample/ffs_ddp.sh
+pip install timm
+pip install diffusers[torch]==0.24.0
+pip install accelerate==0.22.0
+pip install tensorboard einops
+pip install transformers==4.46.1
+pip install av scikit-image decord pandas imageio-ffmpeg omegaconf soundfile
+pip install numpy==1.26.4
+pip install opencv-python==4.10.0.84
+pip install tslearn openai-whisper piper-tts face_alignment
+pip install hydra-core
+pip install "huggingface_hub<0.23.0"
 ```
 
-If you want to try generating videos from text, please download [`t2v_required_models`](https://huggingface.co/maxin-cn/Latte/tree/main/t2v_required_models) and run `bash sample/t2v.sh`.
+### 4. Set up MuseTalk (Talking Head Synthesis)
 
-## Training
+MuseTalk is required for the full evaluation pipeline with talking head synthesis. Download the pre-packaged MuseTalk folder from the Google Drive link below and copy it to `talkinghead/muse/`:
 
-We provide a training script for Latte in [`train.py`](train.py). This script can be used to train class-conditional and unconditional
-Latte models. To launch Latte (256x256) training with `N` GPUs on the FaceForensics dataset 
-:
+**Download link:** https://drive.google.com/file/d/13_Of4eWEgwkm3vMJAuzKIZsdMe7IMehM/view?usp=sharing
 
 ```bash
-torchrun --nnodes=1 --nproc_per_node=N train.py --config ./configs/ffs/ffs_train.yaml
+# Install gdown if not already installed
+pip install gdown
+
+# Download and extract into talkinghead/muse/
+gdown https://drive.google.com/uc?id=13_Of4eWEgwkm3vMJAuzKIZsdMe7IMehM -O talkinghead/muse.zip
+unzip talkinghead/muse.zip -d talkinghead/
+rm talkinghead/muse.zip
 ```
 
-or If you have a cluster that uses slurm, you can also train Latte's model using the following scripts:
+After extraction, the directory should look like:
 
- ```bash
-sbatch slurm_scripts/ffs.slurm
+```
+talkinghead/muse/
+├── models/          # pretrained weights (MuseTalk, VAE, Whisper, DWPose, etc.)
+├── musetalk/
+├── configs/
+└── ...
 ```
 
-We also provide the video-image joint training scripts [`train_with_img.py`](train_with_img.py). Similar to [`train.py`](train.py) scripts, these scripts can be also used to train class-conditional and unconditional
-Latte models. For example, if you want to train the Latte model on the FaceForensics dataset, you can use:
+### 5. Download BeReactor pretrained checkpoint
+
+Download the BeReactor model checkpoint and pass its path via `--ckpt` when running evaluation.
+
+---
+
+## Evaluation
+
+### Main Evaluation (Video-to-Video Reaction Generation)
+
+Generates listener reaction videos and computes reaction quality metrics (TLCC, FRC, FRD, FRDvs, FRVar, SMSE):
 
 ```bash
-torchrun --nnodes=1 --nproc_per_node=N train_with_img.py --config ./configs/ffs/ffs_img_train.yaml
+CUDA_VISIBLE_DEVICES=0,1 python sample/evaluation_v2vreaction.py \
+    --config ./configs/reaction/reaction_test.yaml \
+    --ckpt /path/to/checkpoint.pt \
+    --save_video_path ./output/
 ```
 
-## Contact Us
-**Yaohui Wang**: [wangyaohui@pjlab.org.cn](mailto:wangyaohui@pjlab.org.cn)
-**Xin Ma**: [xin.ma1@monash.edu](mailto:xin.ma1@monash.edu)
+### Evaluation with LLM Emotion Guidance
+
+Uses an LLM to predict emotion tokens for listener generation:
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1 python sample/evaluation_v2vreaction_language.py \
+    --config ./configs/reaction/reaction_test.yaml \
+    --ckpt /path/to/checkpoint.pt \
+    --save_video_path ./output/
+```
+
+### Full Pipeline with Talking Head Synthesis
+
+Generates listener reaction videos with full talking head synthesis (MuseTalk):
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1 python sample/reaction_eva_all_withtalkinghead.py \
+    --save_video_path ./output/
+```
+
+Or with `torchrun`:
+
+```bash
+OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --nproc_per_node=1 \
+    sample/reaction_eva_all_withtalkinghead.py --save_video_path ./output/
+```
+
+### Single-Case Evaluation / Debugging
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python sample/evaluation_v2v_singlecase.py \
+    --config ./configs/reaction/reaction_test.yaml \
+    --ckpt /path/to/checkpoint.pt \
+    --save_video_path ./output/
+```
+
+
+## Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **TLCC** | Temporal Linear Cross-Correlation — synchrony between speaker and listener emotions |
+| **FRC** | Facial Reaction Correlation — overall emotion correlation |
+| **FRD** | Facial Reaction Diversity — diversity across generated reactions |
+| **FRDvs** | FRD vs. ground truth |
+| **FRVar** | Facial Reaction Variance — expressiveness of generated reactions |
+| **SMSE** | Semantic Mean Squared Error — semantic alignment |
+| **UTMOSv2** | Audio naturalness (MOS score) |
+
+---
 
 ## Citation
-If you find this work useful for your research, please consider citing it.
+
+<!-- If you find this work useful for your research, please consider citing:
+
 ```bibtex
-@article{ma2024latte,
-  title={Latte: Latent Diffusion Transformer for Video Generation},
-  author={Ma, Xin and Wang, Yaohui and Jia, Gengyun and Chen, Xinyuan and Liu, Ziwei and Li, Yuan-Fang and Chen, Cunjian and Qiao, Yu},
-  journal={arXiv preprint arXiv:2401.03048},
+@article{sun2024bereactor,
+  title={BeReactor: Audio-visual Appropriate Human-like Expressive Behavioural Response Generation},
+  author={Sun, Zhonglin and Gong, Xun and Chen, Feng and Song, Siyang},
   year={2024}
 }
-```
+``` -->
 
-
-## Acknowledgments
-Latte has been greatly inspired by the following amazing works and teams: [DiT](https://github.com/facebookresearch/DiT) and [PixArt-α](https://github.com/PixArt-alpha/PixArt-alpha), we thank all the contributors for open-sourcing.
-
+---
 
 ## License
-The code and model weights are licensed under [LICENSE](LICENSE).
-# BeReactor
+
+The code is licensed under [LICENSE](LICENSE).

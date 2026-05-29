@@ -7,6 +7,12 @@ Usage:
     python evaluate_utmos_folder.py --audio_dir /path/to/audio_folder --device cuda:1
     python evaluate_utmos_folder.py --audio_dir /path/to/audio_folder --output_csv results.csv
 """
+# # 基本用法：扫描目录下所有音频文件并计算平均MOS分
+# python evaluate_utmos_folder.py --audio_dir /path/to/audio_folder
+# # 指定模型权重路径和设备
+# python evaluate_utmos_folder.py --audio_dir /path/to/audio_folder --model_path ./fold0_s42_best_model.pth --device cuda:1
+# # 导出CSV结果
+# python evaluate_utmos_folder.py --audio_dir /path/to/audio_folder --output_csv results.csv
 
 import os
 import argparse
