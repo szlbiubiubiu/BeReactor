@@ -350,7 +350,7 @@ pretrain_root = ''
 encoder_emo=DiffusionVideoAutoencoder(pretrain_root+"./pretrained_models/model_ir_se50.pth", pretrain_root+"./pretrained_models/mobilenet_224_model_best_gdconv_external.pth.tar", pretrain_root+"./pretrained_models/79999_iter.pth"
                     ,emotion_file_path=pretrain_root+'./pretrained_models/emonet_8.pth', 
                     au_file_path_disfa=pretrain_root+'./pretrained_models/MEFARG_swin_base_DISFA_fold1.pth',
-                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:0'))#.cuda()
+                    au_file_path_bp4d=pretrain_root+'./pretrained_models/MEFARG_swin_base_BP4D_fold1.pth').to(torch.device('cuda:1' if torch.cuda.device_count() > 1 else 'cuda:0'))
 
 # Initialize UTMOS model for audio quality evaluation
 try:
@@ -631,11 +631,12 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
         seg_texts = seg_texts[:1]
 
     # ---- Emotion features from first-segment latent ----
-    id_feats, emo_fea, au_disfa, au_bp4d = encoder_emo.forward_listener(seg_latents[0].to(torch.device('cuda:0')))
-    expression = emo_fea['expression'].to(torch.device('cuda:0'))
+    _emo_device = next(encoder_emo.parameters()).device
+    id_feats, emo_fea, au_disfa, au_bp4d = encoder_emo.forward_listener(seg_latents[0].to(_emo_device))
+    expression = emo_fea['expression'].to(_emo_device)
     expression_soft = F.softmax(expression, dim=1)
-    valence = emo_fea['valence'].to(torch.device('cuda:0'))
-    arousal = emo_fea['arousal'].to(torch.device('cuda:0'))
+    valence = emo_fea['valence'].to(_emo_device)
+    arousal = emo_fea['arousal'].to(_emo_device)
     # ---- Listener reference transcription (once, for scoring) ----
     listener_result = whisper_model.transcribe(listener_audio_path)
 
@@ -930,7 +931,8 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
     # pdb.set_trace()
     #get emotion from images
-    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(torch.device('cuda:0'))).to(torch.device('cuda:0'))
+    _emo_device = next(encoder_emo.parameters()).device
+    id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(input_latent.to(_emo_device))
     expression=emo_fea['expression']
     expression_soft=F.softmax(expression,dim=1)
     valence=emo_fea['valence']
@@ -1399,6 +1401,7 @@ def main(args):
     # sentences=result["text"].split('.')
     ##LLM processing
     llm_device = 1 if torch.cuda.device_count() > 1 else 0
+    pdb.set_trace()
     if 'server' in platform.node():
         pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=llm_device)
     else:
@@ -1711,7 +1714,8 @@ def main(args):
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
         pdb.set_trace()
-        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
+        _emo_device = next(encoder_emo.parameters()).device
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
         # print(result["text"])
@@ -1745,7 +1749,7 @@ def main(args):
 
         # pdb.set_trace()
         #get emo feature
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(_emo_device))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
         # id=id.reshape(b*v,c,w,h)
@@ -1778,7 +1782,7 @@ def main(args):
         #     speaker_emotion_gt_list.append(speaker_emo)
         #     continue
         listener_ref_4emo=listener_ref_all.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(torch.device('cuda:0')))#.to(torch.device('cuda:0'))
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(_emo_device))
         
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
         au=torch.reshape(au,[b,-1,15])
