@@ -89,7 +89,7 @@ import platform
 #it is single forward function
 import shutil
 
-
+import pdb
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     # pdb.set_trace()
@@ -597,7 +597,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     speaker_audio_path, listener_audio_path, emo_label, input_latent, pipe, vae, unet, pe,
     batch_index=0, batch_size=8, fps=10,
     result_img_save_path='./temp', VOICE="en-GB-SoniaNeural",
-    return_image4emotion=False, num_frame_sp=32,
+    return_image4emotion=True, num_frame_sp=32,
     segment_list=None, listener_video_path=None, listener_num_frames=None):
     # frames_per_seg: derived from data; 64 is the standard clip length
     n_segs_hint = len(segment_list) if (segment_list and len(segment_list) > 0) else 1
@@ -1710,6 +1710,7 @@ def main(args):
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        pdb.set_trace()
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=out_samples.device).float()
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
