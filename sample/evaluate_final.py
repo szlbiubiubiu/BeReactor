@@ -87,7 +87,7 @@ import platform
 import time
 #it is single forward function
 import shutil
-
+import pdb
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     # pdb.set_trace()
@@ -723,7 +723,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     total_duration_sec = _sp_audio_info.duration
     total_samples = int(sr * total_duration_sec)
     new_audio = np.zeros(total_samples, dtype=np.float32)
-
+    pdb.set_trace()
     # Pass 1: collect active segments that have a reply
     active_segs = []
     for seg_i, seg in enumerate(_seg_list):
@@ -743,7 +743,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             'active_start_s': active_start_s, 'active_end_s': active_end_s,
             'target_samples': target_samples, 'seg_dur': seg_dur, 'active_dur': active_dur,
         })
-
+    pdb.set_trace()
     # Pass 2: generate all reply TTS in one call, then split by char proportion
     if active_segs:
         concat_text = "      ".join(s['reply_text'] for s in active_segs)
@@ -766,7 +766,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             new_audio[seg_info['active_start_s']:seg_info['active_start_s'] + place_len] = tts_seg[:place_len]
             print(f'[Audio seg {seg_info["seg_i"]}] silence={seg_info["seg_dur"]:.2f}s  '
                   f'gap={seg_info["active_dur"]:.2f}s  reply={repr(seg_info["reply_text"][:60])}')
-
+    pdb.set_trace()
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
 
