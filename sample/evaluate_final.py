@@ -55,7 +55,6 @@ from models.emo_net import EmoNet
 from models.emo_fr_net.au_model import MEFL
 import torch.nn.functional as Func
 from metric import *   #import evaluation metric
-import pdb
 import numpy as np
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -70,7 +69,6 @@ from talkinghead.muse.musetalk.utils.utils import load_all_model
 
 from transformers import pipeline, AutoTokenizer
 import whisper
-import pdb
 
 import edge_tts
 import soundfile as sf
@@ -86,10 +84,10 @@ from PIL import Image
 from torchvision import transforms as T
 
 import platform
+import time
 #it is single forward function
 import shutil
 
-import pdb
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     # pdb.set_trace()
@@ -436,19 +434,11 @@ def evaluate_LLM(dialogue: str):
         '  "arousal_score": X\n'
         "}\n"
     )
-    # sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2
     client = OpenAI(
-    # defaults to os.environ.get("OPENAI_API_KEY")
-    api_key="sk-6L14dOtlYeIpy6Bxa7MOxYyQ1JmOSfpMyTJrg5lHkL5WEgO2",#30 yuan
-    base_url="https://api.chatanywhere.tech/v1"
-    # base_url="https://api.chatanywhere.org/v1"
+        api_key=os.environ.get("OPENAI_API_KEY", ""),
+        base_url=os.environ.get("OPENAI_BASE_URL", "https://api.chatanywhere.tech/v1"),
     )
-    # client = OpenAI(
-    # # defaults to os.environ.get("OPENAI_API_KEY")
-    # api_key="sk-RNBcv6ApKlg8UoCcdP9RtfXQLPEVfdebSB7gnvUi3NlWChUa", #free
-    # base_url="https://api.chatanywhere.tech/v1"
-    # # base_url="https://api.chatanywhere.org/v1"
-    # )
+    
     response = client.chat.completions.create(
             # model="gpt-3.5-turbo",  # or your preferred model
             model="gpt-4o-mini-ca",
@@ -1166,7 +1156,6 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     #----
     #use image----
     input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
-    pdb.set_trace()
     original_image_cycle= np.split(input_latent,input_latent.shape[0],axis=0)+ np.split(input_latent,input_latent.shape[0],axis=0)[::-1]
     
     laten_repeat=len(whisper_chunks)//len(input_latent_list_cycle)
@@ -1231,7 +1220,6 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
 
 
     print("pad talking image to original video")
-    pdb.set_trace()
     for i, res_frame in enumerate(tqdm(res_frame_list)):
         
         ori_frame = torch.squeeze(copy.deepcopy(original_image_cycle[i%(len(original_image_cycle))]))#.permute(2,1,0)
@@ -1251,7 +1239,6 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
         # pdb.set_trace()
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",ori_frame)
         # cv2.imwrite(f"{result_img_save_path}/{str(i).zfill(8)}.png",res_frame)
-    pdb.set_trace()
     cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {result_img_save_path}/%08d.png  -vf format=rgb24,scale=out_color_matrix=bt709,format=yuv420p -crf 18 temp2.mp4"
 
     print(cmd_img2video)
@@ -1392,6 +1379,7 @@ def main(args):
         assert args.image_size in [256, 512]
         assert args.num_classes == 1000
 
+    _t_load_start = time.time()
     #load audio->talking head branch--------------------------------
     whisper_model = whisper.load_model("base.en")
 
@@ -1401,7 +1389,6 @@ def main(args):
     # sentences=result["text"].split('.')
     ##LLM processing
     llm_device = 1 if torch.cuda.device_count() > 1 else 0
-    pdb.set_trace()
     if 'server' in platform.node():
         pipe = pipeline("text-generation", model="/data/szl/tools/llama3", torch_dtype=torch.float16, device=llm_device)
     else:
@@ -1421,10 +1408,12 @@ def main(args):
     timesteps = torch.tensor([0], device=device)
 
 
+    print(f"[Time] Whisper + LLM pipeline loading: {time.time()-_t_load_start:.2f}s")
     #end audio->talking head----------------------------------------
     using_cfg = args.cfg_scale > 1.0
 
     # Load model:
+    _t_model_start = time.time()
     latent_size = args.image_size // 8
     args.latent_size = latent_size
     model = get_models(args).to(device)
@@ -1451,6 +1440,7 @@ def main(args):
         vae.to(dtype=torch.float16)
         model.to(dtype=torch.float16)
         # text_encoder.to(dtype=torch.float16)
+    print(f"[Time] Latte model + VAE loading: {time.time()-_t_model_start:.2f}s")
     dataset = get_dataset(args,train_mode='test')
 
 
@@ -1494,6 +1484,7 @@ def main(args):
     # double_count=0
     for step, video_data in enumerate(loader):
         
+        _t_step_start = time.time()
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
         # if step <=370:
         #     continue
@@ -1544,13 +1535,17 @@ def main(args):
         # Transcribe speaker audio to get timed segments, then use the LLM to
         # select which segments need a listener verbal response.
         _sp_audio_path_0 = video_data['speaker_audio_path'][0]
+        _t_whisper = time.time()
         _whisper_result = whisper_model.transcribe(_sp_audio_path_0)
         _all_segments = _whisper_result.get("segments", [])
+        print(f"[Time] Step {step} | Whisper transcription: {time.time()-_t_whisper:.2f}s")
         if len(_all_segments) == 0:
             _all_segments = [{"start": 0.0, "end": clip_size / 25.0, "text": ""}]
 
         _full_transcript = " ".join([s.get("text", "") for s in _all_segments])
+        _t_llm_seg = time.time()
         _selected_segs = llm_select_response_segments(pipe, _full_transcript, _all_segments)
+        print(f"[Time] Step {step} | LLM segment selection: {time.time()-_t_llm_seg:.2f}s")
 
         # Build cumulative text per selected segment so each LLM reply covers
         # ALL speaker content since the previous response (mirrors demo_ct_v4.py).
@@ -1584,6 +1579,7 @@ def main(args):
         # ── Per-segment diffusion generation ────────────────────────────────
         # For each selected segment we run the diffusion model on the
         # corresponding video slice, then concatenate all clips.
+        _t_diffusion = time.time()
         seg_samples_list = []
         emo_label_list = []
         listener_ref_list = []
@@ -1665,6 +1661,7 @@ def main(args):
             print(f"No valid segments at step {step}, skipping.")
             continue
 
+        print(f"[Time] Step {step} | Diffusion sampling ({len(seg_samples_list)} segs): {time.time()-_t_diffusion:.2f}s")
         # Concatenate all segment clips along the time dimension
         out_samples = torch.cat(seg_samples_list, dim=1)  # [b, N_segs*clip_size, C, H, W]
         emo_label = emo_label_list[-1]
@@ -1690,6 +1687,7 @@ def main(args):
         #   3. Fuse the talking-head video over the full stacked clip
         all_face_images = []
         dim_out = out_samples.shape
+        _t_talkinghead = time.time()
         for batch_index in range(len(out_samples)):
             batched_faces, scores, _listener_audio_path = openai_deepseek_talkinghead_genall(
                 audio_file, listener_audio_file,
@@ -1713,7 +1711,7 @@ def main(args):
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        pdb.set_trace()
+        print(f"[Time] Step {step} | Talking head generation ({len(out_samples)} batch): {time.time()-_t_talkinghead:.2f}s")
         _emo_device = next(encoder_emo.parameters()).device
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
         # #generate talking head
@@ -1749,6 +1747,7 @@ def main(args):
 
         # pdb.set_trace()
         #get emo feature
+        _t_emo_pred = time.time()
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(_emo_device))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
@@ -1781,7 +1780,9 @@ def main(args):
         #     listener_emotion_gt_list.append(emo_label.cpu())
         #     speaker_emotion_gt_list.append(speaker_emo)
         #     continue
+        print(f"[Time] Step {step} | Emotion extraction (generated): {time.time()-_t_emo_pred:.2f}s")
         listener_ref_4emo=listener_ref_all.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
+        _t_emo_gt = time.time()
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(_emo_device))
         
         au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
@@ -1799,13 +1800,14 @@ def main(args):
 
         #
         # pdb.set_trace()
+        print(f"[Time] Step {step} | Emotion extraction (GT listener): {time.time()-_t_emo_gt:.2f}s")
         listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
         # listener_emotion_gt_list.append(emo_label.cpu())
         speaker_emotion_gt_list.append(speaker_emo)
+        print(f"[Time] Step {step} | Total step time: {time.time()-_t_step_start:.2f}s")
         
 
-    pdb.set_trace()
     listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
     listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
@@ -1817,6 +1819,7 @@ def main(args):
     #     os.makedirs(args.save_video_path)
 
     print("-----------------Evaluating Metric-----------------")
+    _t_metric = time.time()
 
     # p = args.threads
     # for key,value in all_score.items():
@@ -1832,7 +1835,7 @@ def main(args):
     print('bleu_scores',bleu_scores)
     print('bert_scores',bert_scores)
     # Compute average MOS score if collected
-    pdb.set_trace()
+    # pdb.set_trace()
     if all_score['all_mos_scores'] > 0:
         mos_score = all_score['all_mos_scores']/len(listener_emotion_gt)
         print('mos_score',mos_score)
@@ -1864,6 +1867,7 @@ def main(args):
     smse  = compute_s_mse(all_listener_emotion_pred.cpu())
     # print('TLCC',TLCC)
     print("TLCC: %.4f; FRC: %.4f;FRD: %.4f;\n FRDvs: %.4f;FRVar: %.4f;smse: %.4f;" % (TLCC, FRC, FRD, FRDvs, FRVar, smse))
+    print(f"[Time] Metric computation: {time.time()-_t_metric:.2f}s")
 
     
 
@@ -1883,7 +1887,15 @@ if __name__ == "__main__":
     
     #wrong label:/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt
     parser.add_argument("--save_video_path", type=str, default="./sample_videos/")
+    parser.add_argument("--api_key", type=str, default="",
+                        help="OpenAI-compatible API key (e.g. your ChatAnywhere key)")
+    parser.add_argument("--api_base_url", type=str, default="https://api.chatanywhere.tech/v1",
+                        help="Base URL for the OpenAI-compatible API endpoint")
     args = parser.parse_args()
+    # Expose key/URL as env vars so evaluate_LLM can read them without threading args through every call
+    if args.api_key:
+        os.environ["OPENAI_API_KEY"] = args.api_key
+    os.environ["OPENAI_BASE_URL"] = args.api_base_url
     omega_conf = OmegaConf.load(args.config)
     omega_conf.ckpt = args.ckpt
     omega_conf.save_video_path = args.save_video_path
