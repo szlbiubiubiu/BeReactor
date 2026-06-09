@@ -851,6 +851,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     timesteps = torch.tensor([0], device=unet.device)
     gen = datagen_reaction(whisper_chunks, input_latent_list_cycle, batch_size)
 
+    pdb.set_trace()
     res_frame_list = []
     res_frame_list_latent = []
     res_frame_list_tensor = []
@@ -873,7 +874,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     # print(croped_image_tensor.shape)
     # imageio.mimwrite(video_save_path, croped_image_tensor, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
-
+    pdb.set_trace()
     if return_image4emotion:
         interval_listener = len(res_frame_list) // num_frame_sp
         out_images = res_frame_list if interval_listener == 0 else res_frame_list[::interval_listener]
