@@ -785,7 +785,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     # ---- Whisper feature extraction for talking head ----
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature, fps=fps)
-
+    pdb.set_trace()
     # ---- Load listener frames: real video or fall back to generated latent ----
     if listener_video_path is not None:
         _n_frames = listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
@@ -802,7 +802,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     )
     bbox_shift = 0
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
-
+    pdb.set_trace()
     # ---- Reverse-and-repeat x3 for temporal diversity (demo_ct_v4.py) ----
     repeat_times = 3
     coord_list = repeat_times * (coord_list_single + coord_list_single[::-1])
@@ -824,7 +824,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
         latents = vae.get_latents_for_unet(crop_frame)
         croped_image.append(torch.unsqueeze(torch.tensor(crop_frame), dim=0))
         input_latent_list.append(latents)
-
+    pdb.set_trace()
     input_latent_list_cycle = input_latent_list
 
     new_frame_list = []
