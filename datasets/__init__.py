@@ -53,6 +53,12 @@ def react_parse_arg():
     parser.add_argument('--kl-p', default=0.00001, type=float, help="hyperparameter for kl-loss")
     parser.add_argument('--div-p', default=10, type=float, help="hyperparameter for div-loss")
 
+
+    parser.add_argument("--api_key", type=str, default="",
+                        help="OpenAI-compatible API key (e.g. your ChatAnywhere key)")
+    parser.add_argument("--api_base_url", type=str, default="https://api.chatanywhere.tech/v1",
+                        help="Base URL for the OpenAI-compatible API endpoint")
+    
     parser.add_argument('--save_video_path', default='./test', type=str, help="save_video path")
 
     args = parser.parse_args()
