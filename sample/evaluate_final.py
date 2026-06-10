@@ -588,7 +588,8 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     batch_index=0, batch_size=8, fps=10,
     result_img_save_path='./temp', VOICE="en-GB-SoniaNeural",
     return_image4emotion=True, num_frame_sp=32,
-    segment_list=None, listener_video_path=None, listener_num_frames=None):
+    segment_list=None, listener_video_path=None, listener_num_frames=None,
+    tts_method='edge'):
     # frames_per_seg: derived from data; 64 is the standard clip length
     n_segs_hint = len(segment_list) if (segment_list and len(segment_list) > 0) else 1
     frames_per_seg = max(input_latent.shape[0] // n_segs_hint, 1)  # default 64 when clip_size=64
@@ -708,12 +709,16 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     evaluation_score['bleu_scores'] = bleu_scores[0]
     evaluation_score['bert_scores'] = bert_scores[0]
 
-    # ---- ParlerTTS: timeline-aware audio (silence during speaker, TTS in gaps) ----
+    # ---- TTS: timeline-aware audio (silence during speaker, TTS in gaps) ----
     OUTPUT_audio_FILE = result_img_save_path + '/output_audio' + str(batch_index) + '.wav'
     if not os.path.exists(result_img_save_path):
         os.makedirs(result_img_save_path)
 
-    sr = audio_model.config.sampling_rate
+    # Sample rate depends on TTS backend: ParlerTTS uses its model rate; EdgeTTS outputs 24 kHz
+    if tts_method == 'edge':
+        sr = 24000
+    else:
+        sr = audio_model.config.sampling_rate
     description_base = (
         "A female's speaker voice is monotone, with a very close recording that almost has no background noise. "
         "The tone is positive level of " + str(tone_pos)
@@ -723,7 +728,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     total_duration_sec = _sp_audio_info.duration
     total_samples = int(sr * total_duration_sec)
     new_audio = np.zeros(total_samples, dtype=np.float32)
-    pdb.set_trace()
+
     # Pass 1: collect active segments that have a reply
     active_segs = []
     for seg_i, seg in enumerate(_seg_list):
@@ -744,28 +749,50 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             'target_samples': target_samples, 'seg_dur': seg_dur, 'active_dur': active_dur,
         })
     pdb.set_trace()
-    # Pass 2: generate all reply TTS in one call, then split by char proportion
+    # Pass 2: generate TTS and place into new_audio
     if active_segs:
-        concat_text = "      ".join(s['reply_text'] for s in active_segs)
-        print(f'[Audio] Generating TTS for {len(active_segs)} segments. text={repr(concat_text[:120])}')
-        _input_ids = tts_tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
-        _prompt_ids = tts_tokenizer(concat_text, return_tensors="pt").input_ids.to(audio_device)
-        tts_all = audio_model.generate(input_ids=_input_ids, prompt_input_ids=_prompt_ids).cpu().numpy().squeeze().astype(np.float32)
-        total_tts_samples = len(tts_all)
+        if tts_method == 'edge':
+            # EdgeTTS: generate each segment independently (faster, no GPU needed)
+            print(f'[Audio] EdgeTTS generating {len(active_segs)} segments.')
+            for seg_info in active_segs:
+                _tmp_mp3 = os.path.join(result_img_save_path, f'_edge_{seg_info["seg_i"]}.mp3')
+                _tmp_wav = os.path.join(result_img_save_path, f'_edge_{seg_info["seg_i"]}.wav')
+                communicate = edge_tts.Communicate(seg_info['reply_text'], VOICE)
+                communicate.save_sync(_tmp_mp3)
+                import subprocess as _sp
+                _sp.run(['ffmpeg', '-y', '-v', 'warning', '-i', _tmp_mp3,
+                         '-ar', str(sr), '-ac', '1', _tmp_wav], check=True)
+                os.remove(_tmp_mp3)
+                _seg_audio, _ = sf.read(_tmp_wav, dtype='float32')
+                if _seg_audio.ndim > 1:
+                    _seg_audio = _seg_audio[:, 0]
+                os.remove(_tmp_wav)
+                place_len = min(len(_seg_audio), seg_info['active_end_s'] - seg_info['active_start_s'])
+                new_audio[seg_info['active_start_s']:seg_info['active_start_s'] + place_len] = _seg_audio[:place_len]
+                print(f'[Audio seg {seg_info["seg_i"]}] EdgeTTS silence={seg_info["seg_dur"]:.2f}s  '
+                      f'gap={seg_info["active_dur"]:.2f}s  reply={repr(seg_info["reply_text"][:60])}')
+        else:
+            # ParlerTTS: generate all segments in one call then split by char proportion
+            concat_text = "      ".join(s['reply_text'] for s in active_segs)
+            print(f'[Audio] Generating TTS for {len(active_segs)} segments. text={repr(concat_text[:120])}')
+            _input_ids = tts_tokenizer(description_base, return_tensors="pt").input_ids.to(audio_device)
+            _prompt_ids = tts_tokenizer(concat_text, return_tensors="pt").input_ids.to(audio_device)
+            tts_all = audio_model.generate(input_ids=_input_ids, prompt_input_ids=_prompt_ids).cpu().numpy().squeeze().astype(np.float32)
+            total_tts_samples = len(tts_all)
 
-        char_lengths = [len(s['reply_text']) for s in active_segs]
-        total_chars = max(sum(char_lengths), 1)
-        cumulative = 0
-        tts_ptr = 0
-        for idx, seg_info in enumerate(active_segs):
-            cumulative += char_lengths[idx] + 28
-            tts_end = int(total_tts_samples * cumulative / total_chars) if idx < len(active_segs) - 1 else total_tts_samples
-            tts_seg = tts_all[tts_ptr:tts_end].copy()
-            tts_ptr = tts_end
-            place_len = min(len(tts_seg), seg_info['active_end_s'] - seg_info['active_start_s'])
-            new_audio[seg_info['active_start_s']:seg_info['active_start_s'] + place_len] = tts_seg[:place_len]
-            print(f'[Audio seg {seg_info["seg_i"]}] silence={seg_info["seg_dur"]:.2f}s  '
-                  f'gap={seg_info["active_dur"]:.2f}s  reply={repr(seg_info["reply_text"][:60])}')
+            char_lengths = [len(s['reply_text']) for s in active_segs]
+            total_chars = max(sum(char_lengths), 1)
+            cumulative = 0
+            tts_ptr = 0
+            for idx, seg_info in enumerate(active_segs):
+                cumulative += char_lengths[idx] + 28
+                tts_end = int(total_tts_samples * cumulative / total_chars) if idx < len(active_segs) - 1 else total_tts_samples
+                tts_seg = tts_all[tts_ptr:tts_end].copy()
+                tts_ptr = tts_end
+                place_len = min(len(tts_seg), seg_info['active_end_s'] - seg_info['active_start_s'])
+                new_audio[seg_info['active_start_s']:seg_info['active_start_s'] + place_len] = tts_seg[:place_len]
+                print(f'[Audio seg {seg_info["seg_i"]}] silence={seg_info["seg_dur"]:.2f}s  '
+                      f'gap={seg_info["active_dur"]:.2f}s  reply={repr(seg_info["reply_text"][:60])}')
     pdb.set_trace()
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
