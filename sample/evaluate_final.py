@@ -1711,6 +1711,7 @@ def main(args):
         valid_segments = segments[:len(seg_samples_list)]
         # Concatenate listener_ref across all segments so emo evaluation covers
         # the same total frame count as the generated all_face_images.
+        pdb.set_trace()
         listener_ref_all = torch.cat(listener_ref_list, dim=1)  # [b, N_segs*clip_size, C, H, W]
 
         # Save preview of last generated clip
