@@ -1751,7 +1751,7 @@ def main(args):
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-        pdb.set_trace()
+        # pdb.set_trace()
         print(f"[Time] Step {step} | Talking head generation ({len(out_samples)} batch): {time.time()-_t_talkinghead:.2f}s")
         _emo_device = next(encoder_emo.parameters()).device
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
@@ -1840,7 +1840,7 @@ def main(args):
         # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
         #
-        pdb.set_trace()
+        # pdb.set_trace()
         print(f"[Time] Step {step} | Emotion extraction (GT listener): {time.time()-_t_emo_gt:.2f}s")
         listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
