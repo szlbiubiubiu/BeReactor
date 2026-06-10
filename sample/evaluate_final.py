@@ -748,7 +748,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             'active_start_s': active_start_s, 'active_end_s': active_end_s,
             'target_samples': target_samples, 'seg_dur': seg_dur, 'active_dur': active_dur,
         })
-    pdb.set_trace()
+    # pdb.set_trace()
     # Pass 2: generate TTS and place into new_audio
     if active_segs:
         if tts_method == 'edge':
