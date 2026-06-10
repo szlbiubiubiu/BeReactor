@@ -1294,7 +1294,7 @@ def calculate_talkinghead_genall(audio_file,whisper_model,audio_processor,emo_la
     # return out_images[:num_frame_sp],evaluation_score 
     
     return out_images[:num_frame_sp],evaluation_score 
-def llm_select_response_segments(pipe, full_transcript, segments):
+def llm_select_response_segments(pipe, full_transcript, segments, max_segments=1):#remember to change back to 3
     """Use LLM to decide which speaker segments warrant a listener verbal response.
     Returns a filtered (subset) list of segment dicts from *segments*.
     """
@@ -1354,6 +1354,18 @@ def llm_select_response_segments(pipe, full_transcript, segments):
         gap_threshold = max_gap * 0.8
         indices = [idx for gap, idx in gap_info if gap >= gap_threshold]
         print(f"[LLM Timing] Gap filter → kept indices: {indices}")
+
+    # Cap to max_segments: keep the ones with the largest following gaps
+    if max_segments is not None and len(indices) > max_segments:
+        gap_info = []
+        for idx in indices:
+            seg_end = segments[idx].get('end', 0.0)
+            next_start = segments[idx + 1].get('start', seg_end) if idx + 1 < len(segments) else seg_end + 999.0
+            gap_info.append((max(0.0, next_start - seg_end), idx))
+        gap_info.sort(key=lambda x: -x[0])
+        kept = sorted(idx for _, idx in gap_info[:max_segments])
+        print(f"[LLM Timing] Max-segment cap ({max_segments}) → kept indices: {kept}")
+        indices = kept
 
     selected = [segments[i] for i in indices if 0 <= i < len(segments)]
     if not selected:
