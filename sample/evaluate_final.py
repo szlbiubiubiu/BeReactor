@@ -851,7 +851,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
         latents = vae.get_latents_for_unet(crop_frame)
         croped_image.append(torch.unsqueeze(torch.tensor(crop_frame), dim=0))
         input_latent_list.append(latents)
-    pdb.set_trace()
+    # pdb.set_trace()
     input_latent_list_cycle = input_latent_list
 
     new_frame_list = []
@@ -878,7 +878,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     timesteps = torch.tensor([0], device=unet.device)
     gen = datagen_reaction(whisper_chunks, input_latent_list_cycle, batch_size)
 
-    pdb.set_trace()
+    # pdb.set_trace()
     res_frame_list = []
     res_frame_list_latent = []
     res_frame_list_tensor = []
@@ -901,7 +901,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     # print(croped_image_tensor.shape)
     # imageio.mimwrite(video_save_path, croped_image_tensor, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
-    pdb.set_trace()
+    # pdb.set_trace()
     if return_image4emotion:
         interval_listener = len(res_frame_list) // num_frame_sp
         out_images = res_frame_list if interval_listener == 0 else res_frame_list[::interval_listener]
@@ -1751,6 +1751,7 @@ def main(args):
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
             print(video_save_path)
             imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        pdb.set_trace()
         print(f"[Time] Step {step} | Talking head generation ({len(out_samples)} batch): {time.time()-_t_talkinghead:.2f}s")
         _emo_device = next(encoder_emo.parameters()).device
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
@@ -1839,7 +1840,7 @@ def main(args):
         # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
         #
-        # pdb.set_trace()
+        pdb.set_trace()
         print(f"[Time] Step {step} | Emotion extraction (GT listener): {time.time()-_t_emo_gt:.2f}s")
         listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
@@ -1847,7 +1848,7 @@ def main(args):
         speaker_emotion_gt_list.append(speaker_emo)
         print(f"[Time] Step {step} | Total step time: {time.time()-_t_step_start:.2f}s")
         
-
+    pdb.set_trace()
     listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
     listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
