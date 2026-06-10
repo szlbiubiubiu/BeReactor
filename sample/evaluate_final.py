@@ -793,7 +793,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
                 new_audio[seg_info['active_start_s']:seg_info['active_start_s'] + place_len] = tts_seg[:place_len]
                 print(f'[Audio seg {seg_info["seg_i"]}] silence={seg_info["seg_dur"]:.2f}s  '
                       f'gap={seg_info["active_dur"]:.2f}s  reply={repr(seg_info["reply_text"][:60])}')
-    pdb.set_trace()
+    # pdb.set_trace()
     sf.write(OUTPUT_audio_FILE, new_audio, sr)
     print('audio_generated, path is: ', OUTPUT_audio_FILE)
 
@@ -812,7 +812,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     # ---- Whisper feature extraction for talking head ----
     whisper_feature = audio_processor.audio2feat(OUTPUT_audio_FILE)
     whisper_chunks = audio_processor.feature2chunks(feature_array=whisper_feature, fps=fps)
-    pdb.set_trace()
+    # pdb.set_trace()
     # ---- Load listener frames: real video or fall back to generated latent ----
     if listener_video_path is not None:
         _n_frames = listener_num_frames if listener_num_frames is not None else input_latent.shape[0]
