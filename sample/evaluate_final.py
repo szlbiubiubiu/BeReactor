@@ -1756,6 +1756,16 @@ def main(args):
         print(f"[Time] Step {step} | Talking head generation ({len(out_samples)} batch): {time.time()-_t_talkinghead:.2f}s")
         _emo_device = next(encoder_emo.parameters()).device
         all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
+        # listener_ref_all: [b, N_segs*clip_size, C, H, W]
+        # all_face_images:  [b*T_pred, C, H, W]
+        # Pad all_face_images to b*N_segs*clip_size so the reshape at listener_ref_4emo succeeds.
+        _target_n = listener_ref_all.shape[0] * listener_ref_all.shape[1]
+        if all_face_images.shape[0] < _target_n:
+            _pad = _target_n - all_face_images.shape[0]
+            all_face_images = torch.cat(
+                [all_face_images, all_face_images[-1:].repeat(_pad, 1, 1, 1)], dim=0
+            )
+            print(f"[Pad] all_face_images {all_face_images.shape[0]-_pad} → {_target_n} frames")
         # #generate talking head
         # result = whisper_model.transcribe(audio_file)
         # print(result["text"])
