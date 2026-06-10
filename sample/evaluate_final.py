@@ -830,8 +830,8 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     bbox_shift = 0
     coord_list_single, frame_list_single = get_landmark_and_bbox(input_img_list, bbox_shift)
     pdb.set_trace()
-    # ---- Reverse-and-repeat x3 for temporal diversity (demo_ct_v4.py) ----
-    repeat_times = 3
+    # ---- Reverse-and-repeat x3 for temporal diversity ----
+    repeat_times = 1 #remember to set back to 3 for final evaluation
     coord_list = repeat_times * (coord_list_single + coord_list_single[::-1])
     frame_list  = repeat_times * (frame_list_single  + frame_list_single[::-1])
     print('len(frame_list)', len(frame_list))
