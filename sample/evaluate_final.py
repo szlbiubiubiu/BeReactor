@@ -82,12 +82,13 @@ import json as _json
 from decord import VideoReader, cpu as decord_cpu
 from PIL import Image
 from torchvision import transforms as T
-
+import pdb
+import glob
 import platform
 import time
 #it is single forward function
 import shutil
-import pdb
+
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
     # pdb.set_trace()
@@ -1858,12 +1859,29 @@ def main(args):
         # listener_emotion_gt_list.append(emo_label.cpu())
         speaker_emotion_gt_list.append(speaker_emo)
         print(f"[Time] Step {step} | Total step time: {time.time()-_t_step_start:.2f}s")
-        
-    pdb.set_trace()
-    listener_emotion_pred = torch.cat(listener_emotion_pred_list, dim = 0)
-    listener_emotion_gt = torch.cat(listener_emotion_gt_list, dim = 0)
 
-    speaker_emotion_gt=torch.cat(speaker_emotion_gt_list, dim = 0)
+        # ── Save per-step checkpoint so a later crash doesn't lose this step ──
+        _step_ckpt = os.path.join(args.save_video_path, f'ckpt_step_{step:06d}.pt')
+        torch.save({
+            'step': step,
+            'listener_emotion_pred': current_emo.cpu(),
+            'listener_emotion_gt':   listener_gt_frommodel_emo.cpu(),
+            'speaker_emotion_gt':    speaker_emo.cpu(),
+        }, _step_ckpt)
+        print(f"[Checkpoint] Step {step} saved → {_step_ckpt}")
+    pdb.set_trace()
+    # ── After loop: load all per-step checkpoints sorted by step, then cat ──
+    _ckpt_files = sorted(glob.glob(os.path.join(args.save_video_path, 'ckpt_step_*.pt')))
+    print(f"[Checkpoint] Loading {len(_ckpt_files)} step files for final merge...")
+    _pred_parts, _gt_parts, _sp_parts = [], [], []
+    for _cf in _ckpt_files:
+        _c = torch.load(_cf, map_location='cpu')
+        _pred_parts.append(_c['listener_emotion_pred'])
+        _gt_parts.append(_c['listener_emotion_gt'])
+        _sp_parts.append(_c['speaker_emotion_gt'])
+    listener_emotion_pred = torch.cat(_pred_parts, dim=0)
+    listener_emotion_gt   = torch.cat(_gt_parts,   dim=0)
+    speaker_emotion_gt    = torch.cat(_sp_parts,   dim=0)
 
     all_listener_emotion_pred_list.append(listener_emotion_pred.unsqueeze(1))
     all_listener_emotion_pred = torch.cat(all_listener_emotion_pred_list, dim=1)
