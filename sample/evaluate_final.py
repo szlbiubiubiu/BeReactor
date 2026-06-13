@@ -756,8 +756,8 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             # EdgeTTS: generate each segment independently (faster, no GPU needed)
             print(f'[Audio] EdgeTTS generating {len(active_segs)} segments.')
             for seg_info in active_segs:
-                _tmp_mp3 = os.path.join(result_img_save_path, f'_edge_{seg_info["seg_i"]}.mp3')
-                _tmp_wav = os.path.join(result_img_save_path, f'_edge_{seg_info["seg_i"]}.wav')
+                _tmp_mp3 = os.path.join(result_img_save_path, f'{batch_index}_edge_{seg_info["seg_i"]}.mp3')
+                _tmp_wav = os.path.join(result_img_save_path, f'{batch_index}_edge_{seg_info["seg_i"]}.wav')
                 communicate = edge_tts.Communicate(seg_info['reply_text'], VOICE)
                 communicate.save_sync(_tmp_mp3)
                 import subprocess as _sp
