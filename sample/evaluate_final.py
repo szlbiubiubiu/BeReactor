@@ -1524,9 +1524,9 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     # double_count=0
     for step, video_data in enumerate(loader):
-        # if step<200:
-        #     print('step jump', step)
-        #     continue
+        if step<200:
+            print('step jump', step)
+            continue
         _t_step_start = time.time()
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
 
