@@ -1882,6 +1882,7 @@ def main(args):
         _pred_parts.append(_c['listener_emotion_pred'])
         _gt_parts.append(_c['listener_emotion_gt'])
         _sp_parts.append(_c['speaker_emotion_gt'])
+    pdb.set_trace()
     listener_emotion_pred = torch.cat(_pred_parts, dim=0)
     listener_emotion_gt   = torch.cat(_gt_parts,   dim=0)
     speaker_emotion_gt    = torch.cat(_sp_parts,   dim=0)
