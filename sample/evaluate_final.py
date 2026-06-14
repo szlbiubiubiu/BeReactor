@@ -1885,7 +1885,7 @@ def main(args):
     listener_emotion_pred = torch.cat(_pred_parts, dim=0)
     listener_emotion_gt   = torch.cat(_gt_parts,   dim=0)
     speaker_emotion_gt    = torch.cat(_sp_parts,   dim=0)
-
+    pdb.set_trace()
     all_listener_emotion_pred_list.append(listener_emotion_pred.unsqueeze(1))
     all_listener_emotion_pred = torch.cat(all_listener_emotion_pred_list, dim=1)
     # if not os.path.exists(args.save_video_path):
