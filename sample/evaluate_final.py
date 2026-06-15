@@ -1,10 +1,7 @@
-# All rights reserved.
 
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-# deepseek vllm :vllm serve "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B" --max_model 4096 --port 8000 --tensor-parallel-size 2
+
 """
-Sample new images from a pre-trained Latte.
+In this file, please ignore the pdb
 """
 import os
 import sys
@@ -87,6 +84,8 @@ import platform
 import time
 #it is single forward function
 import shutil
+import pdb
+
 
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
@@ -1897,7 +1896,7 @@ def main(args):
     _pred_parts = _pad_to_len(_pred_parts)
     _gt_parts   = _pad_to_len(_gt_parts)
     _sp_parts   = _pad_to_len(_sp_parts)
-
+    pdb.set_trace()
     listener_emotion_pred = torch.cat(_pred_parts, dim=0)
     listener_emotion_gt   = torch.cat(_gt_parts,   dim=0)
     speaker_emotion_gt    = torch.cat(_sp_parts,   dim=0)
