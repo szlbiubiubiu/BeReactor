@@ -1732,6 +1732,7 @@ def main(args):
         all_face_images = []
         dim_out = out_samples.shape
         _t_talkinghead = time.time()
+        _step_scores = {'realism': [], 'bleu': [], 'bert': [], 'mos': [], 'sentiment_emb': []}
         for batch_index in range(len(out_samples)):
             batched_faces, scores, _listener_audio_path = openai_deepseek_talkinghead_genall(
                 audio_file, listener_audio_file,
@@ -1751,6 +1752,11 @@ def main(args):
             mos_value = scores.get('mos_score')
             if mos_value is not None:
                 all_score['all_mos_scores'] += mos_value
+            _step_scores['realism'].append(scores['realism_score'])
+            _step_scores['bleu'].append(scores['bleu_scores'])
+            _step_scores['bert'].append(scores['bert_scores'])
+            _step_scores['mos'].append(mos_value)
+            _step_scores['sentiment_emb'].append(scores['sentiment_emb'])
             video_ = np.asarray(batched_faces)[:, :, :, ::-1]
             video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
             print(video_save_path)
@@ -1868,17 +1874,38 @@ def main(args):
             'listener_emotion_pred': current_emo.cpu(),
             'listener_emotion_gt':   listener_gt_frommodel_emo.cpu(),
             'speaker_emotion_gt':    speaker_emo.cpu(),
+            'scores': _step_scores,
         }, _step_ckpt)
         print(f"[Checkpoint] Step {step} saved → {_step_ckpt}")
     # ── After loop: load all per-step checkpoints sorted by step, then cat ──
     _ckpt_files = sorted(glob.glob(os.path.join(args.save_video_path, 'ckpt_step_*.pt')))
     print(f"[Checkpoint] Loading {len(_ckpt_files)} step files for final merge...")
     _pred_parts, _gt_parts, _sp_parts = [], [], []
+    # Reset all_score so we rebuild it entirely from checkpoint files
+    all_score['all_realism_score'] = 0
+    all_score['all_bleu_scores']   = 0
+    all_score['all_bert_scores']   = 0
+    all_score['all_mos_scores']    = 0
+    all_score['all_sentiment_emb'] = torch.zeros([len(dataset), 10])
     for _cf in _ckpt_files:
         _c = torch.load(_cf, map_location='cpu')
         _pred_parts.append(_c['listener_emotion_pred'])
         _gt_parts.append(_c['listener_emotion_gt'])
         _sp_parts.append(_c['speaker_emotion_gt'])
+        # Aggregate per-step scores
+        _s = _c.get('scores', {})
+        all_score['all_realism_score'] += sum(v for v in _s.get('realism', []) if v is not None)
+        all_score['all_bleu_scores']   += sum(v for v in _s.get('bleu',    []) if v is not None)
+        all_score['all_bert_scores']   += sum(v for v in _s.get('bert',    []) if v is not None)
+        for _mv in _s.get('mos', []):
+            if _mv is not None:
+                all_score['all_mos_scores'] += _mv
+        _step_num = _c['step']
+        for _bi, _emb in enumerate(_s.get('sentiment_emb', [])):
+            if _emb is not None:
+                _idx = batch_size * _step_num + _bi
+                if _idx < len(all_score['all_sentiment_emb']):
+                    all_score['all_sentiment_emb'][_idx] = _emb.squeeze(0) if _emb.dim() > 1 else _emb
 
     # Pad along dim=1 (time axis) so all steps have the same length before cat
     def _pad_to_len(parts, dim=1):
