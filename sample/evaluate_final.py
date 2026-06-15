@@ -87,7 +87,6 @@ import platform
 import time
 #it is single forward function
 import shutil
-import pdb
 
 def calculate_talkinghead_genclip(audio_file,whisper_model,audio_processor, vae, unet, pe,batch_index=0,batch_size=8,fps=25,VOICE = "en-GB-SoniaNeural"):
     # model = whisper.load_model("base.en")
@@ -1873,7 +1872,6 @@ def main(args):
         }, _step_ckpt)
         print(f"[Checkpoint] Step {step} saved → {_step_ckpt}")
     # ── After loop: load all per-step checkpoints sorted by step, then cat ──
-    pdb.set_trace()
     _ckpt_files = sorted(glob.glob(os.path.join(args.save_video_path, 'ckpt_step_*.pt')))
     print(f"[Checkpoint] Loading {len(_ckpt_files)} step files for final merge...")
     _pred_parts, _gt_parts, _sp_parts = [], [], []
@@ -1882,11 +1880,28 @@ def main(args):
         _pred_parts.append(_c['listener_emotion_pred'])
         _gt_parts.append(_c['listener_emotion_gt'])
         _sp_parts.append(_c['speaker_emotion_gt'])
-    pdb.set_trace()
+
+    # Pad along dim=1 (time axis) so all steps have the same length before cat
+    def _pad_to_len(parts, dim=1):
+        max_len = max(t.shape[dim] for t in parts)
+        padded = []
+        for t in parts:
+            cur = t.shape[dim]
+            if cur < max_len:
+                reps = [1] * t.dim()
+                reps[dim] = -(-max_len // cur)   # ceil division
+                t = t.repeat(reps).narrow(dim, 0, max_len)
+            padded.append(t)
+        return padded
+
+    _pred_parts = _pad_to_len(_pred_parts)
+    _gt_parts   = _pad_to_len(_gt_parts)
+    _sp_parts   = _pad_to_len(_sp_parts)
+
     listener_emotion_pred = torch.cat(_pred_parts, dim=0)
     listener_emotion_gt   = torch.cat(_gt_parts,   dim=0)
     speaker_emotion_gt    = torch.cat(_sp_parts,   dim=0)
-    pdb.set_trace()
+
     all_listener_emotion_pred_list.append(listener_emotion_pred.unsqueeze(1))
     all_listener_emotion_pred = torch.cat(all_listener_emotion_pred_list, dim=1)
     # if not os.path.exists(args.save_video_path):
