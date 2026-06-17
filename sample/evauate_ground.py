@@ -1636,6 +1636,59 @@ def main(args):
         segments = _selected_with_cumulative
         print(f"[Step {step}] Processing {len(segments)} listener-response segments")
 
+        # ── eval_llm_only: skip diffusion + talkinghead, only run LLM eval ──
+        eval_llm_only=True
+        if getattr(args, 'eval_llm_only', False):
+            _step_scores = {'realism': [], 'bleu': [], 'bert': [], 'mos': [], 'sentiment_emb': []}
+            _seg_texts = [seg.get('text', '').strip() for seg in segments]
+            for batch_index in range(batch_size):
+                _ls_audio = video_data['listener_audio_path'][batch_index]
+                _listener_result = whisper_model.transcribe(_ls_audio)
+                _chat = [{"role": "system", "content": (
+                    "We are having a real-time conversation. Pretend you are a person with a specific "
+                    "personality (a sales representative), subject to the random seed: 8. "
+                    "For each speaker turn, generate a natural response that fits the live dialogue flow."
+                )}]
+                _seg_reply_texts = []
+                for _seg_i, _speaker_text in enumerate(_seg_texts):
+                    if _seg_i > 0:
+                        _chat.append({"role": "assistant", "content": _seg_reply_texts[-1]})
+                    _chat.append({"role": "user", "content": _speaker_text or "Hello."})
+                    if getattr(args, 'use_listener_text', False):
+                        _listener_segs = _listener_result.get("segments", [])
+                        _gap_start = float(segments[_seg_i].get('end', 0.0))
+                        _gap_end = float(segments[_seg_i + 1].get('start', _gap_start + 30.0)) if _seg_i + 1 < len(segments) else float('inf')
+                        _parts = [ls.get('text', '').strip() for ls in _listener_segs
+                                  if ls.get('start', 0.0) >= _gap_start - 0.5 and ls.get('start', 0.0) < _gap_end]
+                        _current_text = ' '.join(_parts).strip() or _listener_result["text"].strip()
+                    else:
+                        _resp = pipe(_chat, max_new_tokens=512)
+                        _current_text = _resp[0]['generated_text'][-1]['content'].split('(')[0]
+                    _seg_reply_texts.append(_current_text)
+                _chat.append({"role": "assistant", "content": _seg_reply_texts[-1] if _seg_reply_texts else ''})
+                _realism_score, _sentiment_emb = evaluate_LLM(_chat)
+                _all_text = ' '.join(_seg_reply_texts)
+                _bleu = calculate_bleu_batch([_listener_result["text"]], [_all_text])[0]
+                _bert = calculate_bertscore_batch([_listener_result["text"]], [_all_text])[0]
+                all_score['all_realism_score'] += _realism_score
+                all_score['all_sentiment_emb'][batch_size * step + batch_index] = _sentiment_emb.squeeze(0)
+                all_score['all_bleu_scores'] += _bleu
+                all_score['all_bert_scores'] += _bert
+                _step_scores['realism'].append(_realism_score)
+                _step_scores['bleu'].append(_bleu)
+                _step_scores['bert'].append(_bert)
+                _step_scores['mos'].append(None)
+                _step_scores['sentiment_emb'].append(_sentiment_emb)
+            torch.save({
+                'step': step,
+                'listener_emotion_pred': torch.zeros(1),
+                'listener_emotion_gt': torch.zeros(1),
+                'speaker_emotion_gt': torch.zeros(1),
+                'scores': _step_scores,
+            }, _step_ckpt)
+            print(f"[Checkpoint] Step {step} (eval_llm_only) saved → {_step_ckpt}")
+            continue
+
         # ── Per-segment diffusion generation ────────────────────────────────
         # For each selected segment we run the diffusion model on the
         # corresponding video slice, then concatenate all clips.
@@ -1925,6 +1978,15 @@ def main(args):
                 if _idx < len(all_score['all_sentiment_emb']):
                     all_score['all_sentiment_emb'][_idx] = _emb.squeeze(0) if _emb.dim() > 1 else _emb
 
+    # eval_llm_only: skip emotion metrics, print language scores and return
+    if getattr(args, 'eval_llm_only', False):
+        _n_total = max(batch_size * len(_ckpt_files), 1)
+        print("-----------------eval_llm_only Results-----------------")
+        print(f"  realism_score: {all_score['all_realism_score'] / _n_total:.4f}")
+        print(f"  bleu_scores:   {all_score['all_bleu_scores']   / _n_total:.4f}")
+        print(f"  bert_scores:   {all_score['all_bert_scores']   / _n_total:.4f}")
+        return
+
     # Pad along dim=1 (time axis) so all steps have the same length before cat
     def _pad_to_len(parts, dim=1):
         max_len = max(t.shape[dim] for t in parts)
@@ -2039,8 +2101,10 @@ if __name__ == "__main__":
                         help="OpenAI-compatible API key (e.g. your ChatAnywhere key)")
     parser.add_argument("--api_base_url", type=str, default="https://api.chatanywhere.tech/v1",
                         help="Base URL for the OpenAI-compatible API endpoint")
-    # parser.add_argument("--use_listener_text", action="store_true", default=False,
-    #                     help="Use the real listener's transcribed audio as chat assistant reply instead of LLM generation")
+    parser.add_argument("--use_listener_text", action="store_true", default=False,
+                        help="Use the real listener's transcribed audio as chat assistant reply instead of LLM generation")
+    # parser.add_argument("--eval_llm_only", action="store_true", default=False,
+    #                     help="Only run evaluate_LLM (realism/BLEU/BERTScore), skip diffusion sampling and talking head generation")
     args = parser.parse_args()
     # Expose key/URL as env vars so evaluate_LLM can read them without threading args through every call
     if args.api_key:
@@ -2049,5 +2113,6 @@ if __name__ == "__main__":
     omega_conf = OmegaConf.load(args.config)
     omega_conf.ckpt = args.ckpt
     omega_conf.save_video_path = args.save_video_path
-    # omega_conf.use_listener_text = args.use_listener_text
+    omega_conf.use_listener_text = args.use_listener_text
+    # omega_conf.eval_llm_only = args.eval_llm_only
     main(omega_conf)
