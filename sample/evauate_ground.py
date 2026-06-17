@@ -3,6 +3,18 @@ import argparse
 import platform
 import re
 
+try:
+    import utils
+
+    from diffusion import create_diffusion
+    from download import find_model
+except:
+    sys.path.append(os.path.split(sys.path[0])[0])
+
+    import utils
+
+    from diffusion import create_diffusion
+    from download import find_model
 import torch
 import torch.nn.functional as F
 import whisper
