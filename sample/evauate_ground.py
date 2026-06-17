@@ -1638,7 +1638,7 @@ def main(args):
 
         # ── eval_llm_only: skip diffusion + talkinghead, only run LLM eval ──
         eval_llm_only=True
-        if getattr(args, 'eval_llm_only', False):
+        if eval_llm_only==False:
             _step_scores = {'realism': [], 'bleu': [], 'bert': [], 'mos': [], 'sentiment_emb': []}
             _seg_texts = [seg.get('text', '').strip() for seg in segments]
             for batch_index in range(batch_size):
@@ -1654,7 +1654,8 @@ def main(args):
                     if _seg_i > 0:
                         _chat.append({"role": "assistant", "content": _seg_reply_texts[-1]})
                     _chat.append({"role": "user", "content": _speaker_text or "Hello."})
-                    if getattr(args, 'use_listener_text', False):
+                    # if getattr(args, 'use_listener_text', False):
+                    if use_listener_text==False:
                         _listener_segs = _listener_result.get("segments", [])
                         _gap_start = float(segments[_seg_i].get('end', 0.0))
                         _gap_end = float(segments[_seg_i + 1].get('start', _gap_start + 30.0)) if _seg_i + 1 < len(segments) else float('inf')
@@ -1979,7 +1980,8 @@ def main(args):
                     all_score['all_sentiment_emb'][_idx] = _emb.squeeze(0) if _emb.dim() > 1 else _emb
 
     # eval_llm_only: skip emotion metrics, print language scores and return
-    if getattr(args, 'eval_llm_only', False):
+    # if getattr(args, 'eval_llm_only', False):
+    if eval_llm_only==True:
         _n_total = max(batch_size * len(_ckpt_files), 1)
         print("-----------------eval_llm_only Results-----------------")
         print(f"  realism_score: {all_score['all_realism_score'] / _n_total:.4f}")
