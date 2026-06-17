@@ -1655,6 +1655,7 @@ def main(args):
                         _chat.append({"role": "assistant", "content": _seg_reply_texts[-1]})
                     _chat.append({"role": "user", "content": _speaker_text or "Hello."})
                     # if getattr(args, 'use_listener_text', False):
+                    use_listener_text=True
                     if use_listener_text==False:
                         _listener_segs = _listener_result.get("segments", [])
                         _gap_start = float(segments[_seg_i].get('end', 0.0))
