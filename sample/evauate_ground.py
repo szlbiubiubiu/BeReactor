@@ -593,7 +593,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     result_img_save_path='./temp', VOICE="en-GB-SoniaNeural",
     return_image4emotion=True, num_frame_sp=32,
     segment_list=None, listener_video_path=None, listener_num_frames=None,
-    tts_method='edge'):
+    tts_method='edge', use_listener_text=False):
     # frames_per_seg: derived from data; 64 is the standard clip length
     n_segs_hint = len(segment_list) if (segment_list and len(segment_list) > 0) else 1
     frames_per_seg = max(input_latent.shape[0] // n_segs_hint, 1)  # default 64 when clip_size=64
@@ -689,13 +689,24 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
             user_msg = f"{base_text}{emo_hint}{_word_limit_hint}"
 
         chat.append({"role": "user", "content": user_msg})
-        response = pipe(chat, max_new_tokens=512)
-        text_4_split = response[0]['generated_text'][-1]['content'].split('(')
-        current_text = text_4_split[0]
-        if len(text_4_split) >= 2:
-            found = re.findall(r"\d+\.?\d*", text_4_split[1])
-            if found:
-                tone_pos = found[-1]
+        if use_listener_text:
+            _listener_segs = listener_result.get("segments", [])
+            _gap_start = float(segment_list[seg_i].get('end', 0.0)) if (segment_list and seg_i < len(segment_list)) else 0.0
+            _gap_end = float(segment_list[seg_i + 1].get('start', _gap_start + 30.0)) if (segment_list and seg_i + 1 < len(segment_list)) else float('inf')
+            _parts = [
+                ls.get('text', '').strip()
+                for ls in _listener_segs
+                if ls.get('start', 0.0) >= _gap_start - 0.5 and ls.get('start', 0.0) < _gap_end
+            ]
+            current_text = ' '.join(_parts).strip() or listener_result["text"].strip()
+        else:
+            response = pipe(chat, max_new_tokens=512)
+            text_4_split = response[0]['generated_text'][-1]['content'].split('(')
+            current_text = text_4_split[0]
+            if len(text_4_split) >= 2:
+                found = re.findall(r"\d+\.?\d*", text_4_split[1])
+                if found:
+                    tone_pos = found[-1]
         print(f"[Seg {seg_i}] Speaker: {speaker_text!r}")
         print(f"[Seg {seg_i}] Listener: {current_text!r}")
         seg_reply_texts.append(current_text)
@@ -703,7 +714,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
 
     chat.append({"role": "assistant", "content": seg_reply_texts[-1] if seg_reply_texts else ''})
     realism_score, sentiment_emb = evaluate_LLM(chat)
-
+    
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
@@ -1748,7 +1759,8 @@ def main(args):
                 emo_label, out_samples[batch_index], pipe, vae, unet, pe,
                 batch_index=len(out_samples) * step + batch_index,
                 num_frame_sp=dim_out[1],
-                segment_list=valid_segments
+                segment_list=valid_segments,
+                use_listener_text=getattr(args, 'use_listener_text', False)
             )
             all_face_images += batched_faces
             all_score['all_realism_score'] += scores['realism_score']
@@ -2027,6 +2039,8 @@ if __name__ == "__main__":
                         help="OpenAI-compatible API key (e.g. your ChatAnywhere key)")
     parser.add_argument("--api_base_url", type=str, default="https://api.chatanywhere.tech/v1",
                         help="Base URL for the OpenAI-compatible API endpoint")
+    parser.add_argument("--use_listener_text", action="store_true", default=False,
+                        help="Use the real listener's transcribed audio as chat assistant reply instead of LLM generation")
     args = parser.parse_args()
     # Expose key/URL as env vars so evaluate_LLM can read them without threading args through every call
     if args.api_key:
@@ -2035,4 +2049,5 @@ if __name__ == "__main__":
     omega_conf = OmegaConf.load(args.config)
     omega_conf.ckpt = args.ckpt
     omega_conf.save_video_path = args.save_video_path
+    omega_conf.use_listener_text = args.use_listener_text
     main(omega_conf)

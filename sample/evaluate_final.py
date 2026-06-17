@@ -703,7 +703,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
 
     chat.append({"role": "assistant", "content": seg_reply_texts[-1] if seg_reply_texts else ''})
     realism_score, sentiment_emb = evaluate_LLM(chat)
-    pdb.set_trace()
+    
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
@@ -1536,13 +1536,13 @@ def main(args):
 
         # ── Resume: if this step's checkpoint exists, reload state and skip ──
         _step_ckpt = os.path.join(args.save_video_path, f'ckpt_step_{step:06d}.pt')
-        # if os.path.exists(_step_ckpt):
-        #     _c = torch.load(_step_ckpt, map_location='cpu')
-        #     listener_emotion_pred_list.append(_c['listener_emotion_pred'])
-        #     listener_emotion_gt_list.append(_c['listener_emotion_gt'])
-        #     speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
-        #     print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
-        #     continue
+        if os.path.exists(_step_ckpt):
+            _c = torch.load(_step_ckpt, map_location='cpu')
+            listener_emotion_pred_list.append(_c['listener_emotion_pred'])
+            listener_emotion_gt_list.append(_c['listener_emotion_gt'])
+            speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
+            print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
+            continue
         torch.manual_seed(0)
         out_samples=None
         # pdb.set_trace()
