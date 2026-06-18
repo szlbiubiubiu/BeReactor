@@ -703,7 +703,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
 
     chat.append({"role": "assistant", "content": seg_reply_texts[-1] if seg_reply_texts else ''})
     realism_score, sentiment_emb = evaluate_LLM(chat)
-    
+
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
     bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
@@ -1866,7 +1866,7 @@ def main(args):
         # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
         #
-        # pdb.set_trace()
+        pdb.set_trace()
         print(f"[Time] Step {step} | Emotion extraction (GT listener): {time.time()-_t_emo_gt:.2f}s")
         listener_emotion_pred_list.append(current_emo.cpu())
         listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
