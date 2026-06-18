@@ -127,7 +127,7 @@ def main(args):
         
         for batch_index in range(batch_size):
             sample_id = step * batch_size + batch_index
-            if sample_id==273:
+            if sample_id==273 and sample_id==274:
                 continue
             ckpt_path = os.path.join(ckpt_dir, f'lang_eval_{sample_id:06d}.pt')
             if os.path.exists(ckpt_path):
