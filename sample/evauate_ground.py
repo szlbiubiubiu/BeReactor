@@ -105,6 +105,9 @@ def main(args):
     else:
         args.dataset_path = './val_test_matrix'
 
+    ckpt_dir = getattr(args, 'save_video_path', './lang_eval_ckpts')
+    os.makedirs(ckpt_dir, exist_ok=True)
+
     whisper_model = whisper.load_model("base.en")
 
     dataset = get_dataset(args, train_mode='test')
@@ -119,13 +122,15 @@ def main(args):
         drop_last=True,
     )
 
-    all_realism_scores = []
-    all_sentiment_embs = []
-    total_samples = 0
-
     for step, video_data in enumerate(loader):
         print(f'Step {step}, batch_size {batch_size}')
         for batch_index in range(batch_size):
+            sample_id = step * batch_size + batch_index
+            ckpt_path = os.path.join(ckpt_dir, f'lang_eval_{sample_id:06d}.pt')
+            if os.path.exists(ckpt_path):
+                print(f'[Resume] Sample {sample_id} already done, skipping.')
+                continue
+
             speaker_audio_path = video_data['speaker_audio_path'][batch_index]
             listener_audio_path = video_data['listener_audio_path'][batch_index]
 
@@ -136,16 +141,33 @@ def main(args):
             listener_text = listener_result["text"].strip()
 
             dialogue = f"Speaker: {speaker_text}\nListener: {listener_text}"
-            print(f'[Step {step}][{batch_index}] Speaker: {speaker_text!r}')
-            print(f'[Step {step}][{batch_index}] Listener: {listener_text!r}')
+            print(f'[{sample_id}] Speaker: {speaker_text!r}')
+            print(f'[{sample_id}] Listener: {listener_text!r}')
 
             realism_score, sentiment_emb = evaluate_LLM(dialogue)
-            print(f'[Step {step}][{batch_index}] realism_score={realism_score}  sentiment_emb={sentiment_emb}')
+            print(f'[{sample_id}] realism_score={realism_score}  sentiment_emb={sentiment_emb}')
 
-            all_realism_scores.append(realism_score)
-            all_sentiment_embs.append(sentiment_emb)
-            total_samples += 1
+            torch.save({
+                'sample_id': sample_id,
+                'realism_score': realism_score,
+                'sentiment_emb': sentiment_emb,
+                'speaker_text': speaker_text,
+                'listener_text': listener_text,
+            }, ckpt_path)
 
+    # ---- Load all saved results and compute averages ----
+    import glob
+    ckpt_files = sorted(glob.glob(os.path.join(ckpt_dir, 'lang_eval_*.pt')))
+    print(f'\n[Aggregate] Loading {len(ckpt_files)} saved results from {ckpt_dir}')
+
+    all_realism_scores = []
+    all_sentiment_embs = []
+    for cf in ckpt_files:
+        c = torch.load(cf, map_location='cpu')
+        all_realism_scores.append(c['realism_score'])
+        all_sentiment_embs.append(c['sentiment_emb'])
+
+    total_samples = len(all_realism_scores)
     if total_samples == 0:
         print("No samples evaluated.")
         return
