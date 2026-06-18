@@ -143,6 +143,10 @@ def main(args):
             speaker_text = speaker_result["text"].strip()
             listener_text = listener_result["text"].strip()
 
+            if not speaker_text or not listener_text:
+                print(f'[{sample_id}] Both texts empty, skipping.')
+                continue
+
             dialogue = f"Speaker: {speaker_text}\nListener: {listener_text}"
             print(f'[{sample_id}] Speaker: {speaker_text!r}')
             print(f'[{sample_id}] Listener: {listener_text!r}')
