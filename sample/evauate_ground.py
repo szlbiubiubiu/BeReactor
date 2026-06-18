@@ -124,8 +124,11 @@ def main(args):
 
     for step, video_data in enumerate(loader):
         print(f'Step {step}, batch_size {batch_size}')
+        
         for batch_index in range(batch_size):
             sample_id = step * batch_size + batch_index
+            if sample_id==273:
+                continue
             ckpt_path = os.path.join(ckpt_dir, f'lang_eval_{sample_id:06d}.pt')
             if os.path.exists(ckpt_path):
                 print(f'[Resume] Sample {sample_id} already done, skipping.')
