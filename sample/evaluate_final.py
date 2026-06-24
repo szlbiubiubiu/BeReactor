@@ -905,7 +905,7 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
     # print(croped_image_tensor.shape)
     # imageio.mimwrite(video_save_path, croped_image_tensor, fps=8, quality=9)
     # print('save path {}'.format(args.save_video_path))
-    # pdb.set_trace()
+    pdb.set_trace()
     if return_image4emotion:
         interval_listener = len(res_frame_list) // num_frame_sp
         out_images = res_frame_list if interval_listener == 0 else res_frame_list[::interval_listener]
@@ -1527,363 +1527,363 @@ def main(args):
     # pdb.set_trace()
     # Labels to condition the model with (feel free to change):
     double_count=0
-    # for step, video_data in enumerate(loader):
-    #     # if step<500:
-    #     #     print('step jump', step)
-    #     #     continue
-    #     _t_step_start = time.time()
-    #     print('current step is:{}, batch_size is :{}'.format(step,batch_size))
+    for step, video_data in enumerate(loader):
+        # if step<500:
+        #     print('step jump', step)
+        #     continue
+        _t_step_start = time.time()
+        print('current step is:{}, batch_size is :{}'.format(step,batch_size))
 
-    #     # ── Resume: if this step's checkpoint exists, reload state and skip ──
-    #     _step_ckpt = os.path.join(args.save_video_path, f'ckpt_step_{step:06d}.pt')
-    #     if os.path.exists(_step_ckpt):
-    #         _c = torch.load(_step_ckpt, map_location='cpu')
-    #         listener_emotion_pred_list.append(_c['listener_emotion_pred'])
-    #         listener_emotion_gt_list.append(_c['listener_emotion_gt'])
-    #         speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
-    #         print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
-    #         continue
-    #     torch.manual_seed(0)
-    #     out_samples=None
-    #     # pdb.set_trace()
-    #     if args.use_fp16:
-    #         z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-    #     else:
-    #         z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
-    #     # if args.use_fp16:
-    #     #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
-    #     # else:
-    #     #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+        # ── Resume: if this step's checkpoint exists, reload state and skip ──
+        _step_ckpt = os.path.join(args.save_video_path, f'ckpt_step_{step:06d}.pt')
+        # if os.path.exists(_step_ckpt):
+        #     _c = torch.load(_step_ckpt, map_location='cpu')
+        #     listener_emotion_pred_list.append(_c['listener_emotion_pred'])
+        #     listener_emotion_gt_list.append(_c['listener_emotion_gt'])
+        #     speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
+        #     print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
+        #     continue
+        torch.manual_seed(0)
+        out_samples=None
+        # pdb.set_trace()
+        if args.use_fp16:
+            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+        else:
+            z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
+        # if args.use_fp16:
+        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
+        # else:
+        #     z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, device=device)
 
-    #     # Setup classifier-free guidance:
-    #     # z = torch.cat([z, z], 0)
-    #     if using_cfg:
-    #         # pdb.set_trace()
-    #         ###original classifier free guidance
-    #         # z = torch.cat([z, z], 0)
-    #         # y = torch.randint(0, args.num_classes, (1,), device=device)
-    #         # y_null = torch.tensor([101] * 1, device=device)
-    #         # y = torch.cat([y, y_null], dim=0)
-    #         # model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-    #         # sample_fn = model.forward_with_cfg
-    #         #-----------------end original guidance
+        # Setup classifier-free guidance:
+        # z = torch.cat([z, z], 0)
+        if using_cfg:
+            # pdb.set_trace()
+            ###original classifier free guidance
+            # z = torch.cat([z, z], 0)
+            # y = torch.randint(0, args.num_classes, (1,), device=device)
+            # y_null = torch.tensor([101] * 1, device=device)
+            # y = torch.cat([y, y_null], dim=0)
+            # model_kwargs = dict(y=y, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            # sample_fn = model.forward_with_cfg
+            #-----------------end original guidance
             
-    #         #-----------------begin reaction guidance
-    #         z = torch.cat([z, z], 0)
-    #         # y = torch.randint(0, args.num_classes, (1,), device=device)
-    #         # y_null = torch.tensor([101] * 1, device=device)
-    #         # y = torch.cat([y, y_null], dim=0)
-    #         model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
-    #         sample_fn = model.forward_with_cfg_reaction
-    #     else:
-    #         sample_fn = model.forward
-    #         model_kwargs = dict(y=None, use_fp16=args.use_fp16)
+            #-----------------begin reaction guidance
+            z = torch.cat([z, z], 0)
+            # y = torch.randint(0, args.num_classes, (1,), device=device)
+            # y_null = torch.tensor([101] * 1, device=device)
+            # y = torch.cat([y, y_null], dim=0)
+            model_kwargs = dict(y=None, cfg_scale=args.cfg_scale, use_fp16=args.use_fp16)
+            sample_fn = model.forward_with_cfg_reaction
+        else:
+            sample_fn = model.forward
+            model_kwargs = dict(y=None, use_fp16=args.use_fp16)
 
 
-    #     # ── Whisper-based segment selection (adapted from demo_ct_v4.py) ──────
-    #     # Transcribe speaker audio to get timed segments, then use the LLM to
-    #     # select which segments need a listener verbal response.
-    #     _sp_audio_path_0 = video_data['speaker_audio_path'][0]
-    #     _t_whisper = time.time()
-    #     _whisper_result = whisper_model.transcribe(_sp_audio_path_0)
-    #     _all_segments = _whisper_result.get("segments", [])
-    #     print(f"[Time] Step {step} | Whisper transcription: {time.time()-_t_whisper:.2f}s")
-    #     if len(_all_segments) == 0:
-    #         _all_segments = [{"start": 0.0, "end": clip_size / 25.0, "text": ""}]
+        # ── Whisper-based segment selection (adapted from demo_ct_v4.py) ──────
+        # Transcribe speaker audio to get timed segments, then use the LLM to
+        # select which segments need a listener verbal response.
+        _sp_audio_path_0 = video_data['speaker_audio_path'][0]
+        _t_whisper = time.time()
+        _whisper_result = whisper_model.transcribe(_sp_audio_path_0)
+        _all_segments = _whisper_result.get("segments", [])
+        print(f"[Time] Step {step} | Whisper transcription: {time.time()-_t_whisper:.2f}s")
+        if len(_all_segments) == 0:
+            _all_segments = [{"start": 0.0, "end": clip_size / 25.0, "text": ""}]
 
-    #     _full_transcript = " ".join([s.get("text", "") for s in _all_segments])
-    #     _t_llm_seg = time.time()
-    #     _selected_segs = llm_select_response_segments(pipe, _full_transcript, _all_segments)
-    #     print(f"[Time] Step {step} | LLM segment selection: {time.time()-_t_llm_seg:.2f}s")
+        _full_transcript = " ".join([s.get("text", "") for s in _all_segments])
+        _t_llm_seg = time.time()
+        _selected_segs = llm_select_response_segments(pipe, _full_transcript, _all_segments)
+        print(f"[Time] Step {step} | LLM segment selection: {time.time()-_t_llm_seg:.2f}s")
 
-    #     # Build cumulative text per selected segment so each LLM reply covers
-    #     # ALL speaker content since the previous response (mirrors demo_ct_v4.py).
-    #     _selected_with_cumulative = []
-    #     _prev_orig_idx = -1
-    #     _last_orig_idx = -1
-    #     for _sel_seg in _selected_segs:
-    #         _cur_orig_idx = next((i for i, s in enumerate(_all_segments) if s is _sel_seg), None)
-    #         if _cur_orig_idx is None:
-    #             _selected_with_cumulative.append(_sel_seg)
-    #             continue
-    #         _span_text = " ".join(
-    #             s.get("text", "").strip()
-    #             for s in _all_segments[_prev_orig_idx + 1 : _cur_orig_idx + 1]
-    #         )
-    #         _new_seg = dict(_sel_seg)
-    #         _new_seg["text"] = _span_text
-    #         _selected_with_cumulative.append(_new_seg)
-    #         _prev_orig_idx = _cur_orig_idx
-    #         _last_orig_idx = _cur_orig_idx
-    #     if _last_orig_idx + 1 < len(_all_segments):
-    #         _tail_text = " ".join(
-    #             s.get("text", "").strip() for s in _all_segments[_last_orig_idx + 1 :]
-    #         )
-    #         _tail_seg = dict(_all_segments[-1])
-    #         _tail_seg["text"] = _tail_text
-    #         _selected_with_cumulative.append(_tail_seg)
-    #     segments = _selected_with_cumulative
-    #     print(f"[Step {step}] Processing {len(segments)} listener-response segments")
+        # Build cumulative text per selected segment so each LLM reply covers
+        # ALL speaker content since the previous response (mirrors demo_ct_v4.py).
+        _selected_with_cumulative = []
+        _prev_orig_idx = -1
+        _last_orig_idx = -1
+        for _sel_seg in _selected_segs:
+            _cur_orig_idx = next((i for i, s in enumerate(_all_segments) if s is _sel_seg), None)
+            if _cur_orig_idx is None:
+                _selected_with_cumulative.append(_sel_seg)
+                continue
+            _span_text = " ".join(
+                s.get("text", "").strip()
+                for s in _all_segments[_prev_orig_idx + 1 : _cur_orig_idx + 1]
+            )
+            _new_seg = dict(_sel_seg)
+            _new_seg["text"] = _span_text
+            _selected_with_cumulative.append(_new_seg)
+            _prev_orig_idx = _cur_orig_idx
+            _last_orig_idx = _cur_orig_idx
+        if _last_orig_idx + 1 < len(_all_segments):
+            _tail_text = " ".join(
+                s.get("text", "").strip() for s in _all_segments[_last_orig_idx + 1 :]
+            )
+            _tail_seg = dict(_all_segments[-1])
+            _tail_seg["text"] = _tail_text
+            _selected_with_cumulative.append(_tail_seg)
+        segments = _selected_with_cumulative
+        print(f"[Step {step}] Processing {len(segments)} listener-response segments")
 
-    #     # ── Per-segment diffusion generation ────────────────────────────────
-    #     # For each selected segment we run the diffusion model on the
-    #     # corresponding video slice, then concatenate all clips.
-    #     _t_diffusion = time.time()
-    #     seg_samples_list = []
-    #     emo_label_list = []
-    #     listener_ref_list = []
-    #     speaker_emo_list = []
+        # ── Per-segment diffusion generation ────────────────────────────────
+        # For each selected segment we run the diffusion model on the
+        # corresponding video slice, then concatenate all clips.
+        _t_diffusion = time.time()
+        seg_samples_list = []
+        emo_label_list = []
+        listener_ref_list = []
+        speaker_emo_list = []
 
-    #     total_data_frames = video_data['img'].shape[1]
+        total_data_frames = video_data['img'].shape[1]
 
-    #     for seg_idx, segment in enumerate(segments):
-    #         end_time = segment["end"]
-    #         end_frame = int(end_time * 25)
-    #         start_frame = max(0, end_frame - clip_size)
-    #         # Clamp to available data
-    #         start_frame = min(start_frame, max(0, total_data_frames - clip_size))
+        for seg_idx, segment in enumerate(segments):
+            end_time = segment["end"]
+            end_frame = int(end_time * 25)
+            start_frame = max(0, end_frame - clip_size)
+            # Clamp to available data
+            start_frame = min(start_frame, max(0, total_data_frames - clip_size))
 
-    #         x = video_data['img'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
-    #         listener_ref = video_data['listener_video_clip'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
-    #         speaker_Audio = video_data['speaker_audio_clip'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
-    #         listener_video_clip_last = video_data['listener_video_clip_last'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
-    #         emo_label = video_data['listener_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
-    #         speaker_emo = video_data['speaker_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            x = video_data['img'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            listener_ref = video_data['listener_video_clip'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            speaker_Audio = video_data['speaker_audio_clip'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            listener_video_clip_last = video_data['listener_video_clip_last'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            emo_label = video_data['listener_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            speaker_emo = video_data['speaker_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
 
-    #         # Pad clips that are shorter than clip_size
-    #         act_len = x.shape[1]
-    #         if act_len < clip_size:
-    #             pad_len = clip_size - act_len
-    #             if act_len > 0:
-    #                 x = torch.cat([x, x[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
-    #                 listener_ref = torch.cat([listener_ref, listener_ref[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
-    #                 listener_video_clip_last = torch.cat([listener_video_clip_last, listener_video_clip_last[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
-    #                 speaker_Audio = torch.cat([speaker_Audio, speaker_Audio[:, -1:].repeat(1, pad_len, 1)], dim=1)
-    #                 emo_label = torch.cat([emo_label, emo_label[:, -1:].repeat(1, pad_len, 1)], dim=1)
-    #                 speaker_emo = torch.cat([speaker_emo, speaker_emo[:, -1:].repeat(1, pad_len, 1)], dim=1)
-    #             else:
-    #                 print(f"Warning: Segment {seg_idx} has 0 frames, skipping.")
-    #                 continue
+            # Pad clips that are shorter than clip_size
+            act_len = x.shape[1]
+            if act_len < clip_size:
+                pad_len = clip_size - act_len
+                if act_len > 0:
+                    x = torch.cat([x, x[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                    listener_ref = torch.cat([listener_ref, listener_ref[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                    listener_video_clip_last = torch.cat([listener_video_clip_last, listener_video_clip_last[:, -1:].repeat(1, pad_len, 1, 1, 1)], dim=1)
+                    speaker_Audio = torch.cat([speaker_Audio, speaker_Audio[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                    emo_label = torch.cat([emo_label, emo_label[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                    speaker_emo = torch.cat([speaker_emo, speaker_emo[:, -1:].repeat(1, pad_len, 1)], dim=1)
+                else:
+                    print(f"Warning: Segment {seg_idx} has 0 frames, skipping.")
+                    continue
 
-    #         x = torch.flip(x, dims=(0,))
-    #         if using_cfg:
-    #             x_uncon = torch.zeros_like(x)
-    #             listener_ref_uncon = torch.zeros_like(listener_ref)
-    #             x = torch.cat([x, x_uncon], dim=0)
-    #             listener_ref = torch.cat([listener_ref, listener_ref_uncon], dim=0)
+            x = torch.flip(x, dims=(0,))
+            if using_cfg:
+                x_uncon = torch.zeros_like(x)
+                listener_ref_uncon = torch.zeros_like(listener_ref)
+                x = torch.cat([x, x_uncon], dim=0)
+                listener_ref = torch.cat([listener_ref, listener_ref_uncon], dim=0)
 
-    #         if args.sample_method == 'ddim':
-    #             samples = diffusion.ddim_sample_loop(
-    #                 sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-    #                 original_x=x, listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,
-    #                 sp_audio_clip=speaker_Audio
-    #             )
-    #         elif args.sample_method == 'ddpm':
-    #             samples = diffusion.p_sample_loop(
-    #                 sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
-    #                 original_x=x, listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,
-    #                 sp_audio_clip=speaker_Audio
-    #             )
+            if args.sample_method == 'ddim':
+                samples = diffusion.ddim_sample_loop(
+                    sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                    original_x=x, listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,
+                    sp_audio_clip=speaker_Audio
+                )
+            elif args.sample_method == 'ddpm':
+                samples = diffusion.p_sample_loop(
+                    sample_fn, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device,
+                    original_x=x, listener_ref=listener_ref, listener_video_clip_last=listener_video_clip_last,
+                    sp_audio_clip=speaker_Audio
+                )
 
-    #         print(samples.shape)
-    #         if args.use_fp16:
-    #             samples = samples.to(dtype=torch.float16)
-    #         if using_cfg:
-    #             samples = samples[:len(x) // 2]
-    #         b, f, c, h, w = samples.shape
+            print(samples.shape)
+            if args.use_fp16:
+                samples = samples.to(dtype=torch.float16)
+            if using_cfg:
+                samples = samples[:len(x) // 2]
+            b, f, c, h, w = samples.shape
 
-    #         decoded_batch = []
-    #         for batch_idx in range(b):
-    #             sample_instance = samples[batch_idx]
-    #             decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
-    #             decoded_batch.append(decoded_instance)
-    #         samples = torch.stack(decoded_batch, dim=0)  # [b, clip_size, C, H, W]
+            decoded_batch = []
+            for batch_idx in range(b):
+                sample_instance = samples[batch_idx]
+                decoded_instance = reaction_vae.decode(sample_instance / 0.18215).sample
+                decoded_batch.append(decoded_instance)
+            samples = torch.stack(decoded_batch, dim=0)  # [b, clip_size, C, H, W]
 
-    #         seg_samples_list.append(samples)
-    #         emo_label_list.append(emo_label)
-    #         # Undo CFG doubling so we store [b, clip_size, C, H, W]
-    #         _lr = video_data['listener_video_clip'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
-    #         listener_ref_list.append(_lr)
-    #         speaker_emo_list.append(speaker_emo)
+            seg_samples_list.append(samples)
+            emo_label_list.append(emo_label)
+            # Undo CFG doubling so we store [b, clip_size, C, H, W]
+            _lr = video_data['listener_video_clip'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
+            listener_ref_list.append(_lr)
+            speaker_emo_list.append(speaker_emo)
 
-    #     if len(seg_samples_list) == 0:
-    #         print(f"No valid segments at step {step}, skipping.")
-    #         continue
+        if len(seg_samples_list) == 0:
+            print(f"No valid segments at step {step}, skipping.")
+            continue
 
-    #     print(f"[Time] Step {step} | Diffusion sampling ({len(seg_samples_list)} segs): {time.time()-_t_diffusion:.2f}s")
-    #     # Concatenate all segment clips along the time dimension
-    #     out_samples = torch.cat(seg_samples_list, dim=1)  # [b, N_segs*clip_size, C, H, W]
-    #     emo_label = emo_label_list[-1]
-    #     listener_ref = listener_ref_list[-1]
-    #     speaker_emo = speaker_emo_list[-1]
-    #     b = out_samples.shape[0]
-    #     valid_segments = segments[:len(seg_samples_list)]
-    #     # Concatenate listener_ref across all segments so emo evaluation covers
-    #     # the same total frame count as the generated all_face_images.
-    #     # pdb.set_trace()
-    #     listener_ref_all = torch.cat(listener_ref_list, dim=1)  # [b, N_segs*clip_size, C, H, W]
+        print(f"[Time] Step {step} | Diffusion sampling ({len(seg_samples_list)} segs): {time.time()-_t_diffusion:.2f}s")
+        # Concatenate all segment clips along the time dimension
+        out_samples = torch.cat(seg_samples_list, dim=1)  # [b, N_segs*clip_size, C, H, W]
+        emo_label = emo_label_list[-1]
+        listener_ref = listener_ref_list[-1]
+        speaker_emo = speaker_emo_list[-1]
+        b = out_samples.shape[0]
+        valid_segments = segments[:len(seg_samples_list)]
+        # Concatenate listener_ref across all segments so emo evaluation covers
+        # the same total frame count as the generated all_face_images.
+        # pdb.set_trace()
+        listener_ref_all = torch.cat(listener_ref_list, dim=1)  # [b, N_segs*clip_size, C, H, W]
 
-    #     # Save preview of last generated clip
-    #     video_ = ((seg_samples_list[-1][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     video_save_path = os.path.join(args.save_video_path, 'sample_' + str(step) + '.mp4')
-    #     print(video_save_path)
-    #     imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     print('save path {}'.format(args.save_video_path))
+        # Save preview of last generated clip
+        video_ = ((seg_samples_list[-1][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        video_save_path = os.path.join(args.save_video_path, 'sample_' + str(step) + '.mp4')
+        print(video_save_path)
+        imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        print('save path {}'.format(args.save_video_path))
 
-    #     # ── Call talkinghead ONCE with all segments stacked + segment metadata ──
-    #     # The function uses segment_list to:
-    #     #   1. Run LLM reply per segment (rolling dialogue)
-    #     #   2. Build timeline-aware audio (silence during speaker, TTS in gaps)
-    #     #   3. Fuse the talking-head video over the full stacked clip
-    #     all_face_images = []
-    #     dim_out = out_samples.shape
-    #     _t_talkinghead = time.time()
-    #     _step_scores = {'realism': [], 'bleu': [], 'bert': [], 'mos': [], 'sentiment_emb': []}
-    #     for batch_index in range(len(out_samples)):
-    #         batched_faces, scores, _listener_audio_path = openai_deepseek_talkinghead_genall(
-    #             audio_file, listener_audio_file,
-    #             whisper_model, audio_processor,
-    #             video_data['speaker_audio_path'][batch_index],
-    #             video_data['listener_audio_path'][batch_index],
-    #             emo_label, out_samples[batch_index], pipe, vae, unet, pe,
-    #             batch_index=len(out_samples) * step + batch_index,
-    #             num_frame_sp=dim_out[1],
-    #             segment_list=valid_segments
-    #         )
-    #         all_face_images += batched_faces
-    #         all_score['all_realism_score'] += scores['realism_score']
-    #         all_score['all_sentiment_emb'][batch_size * step + batch_index] = scores['sentiment_emb']
-    #         all_score['all_bleu_scores'] += scores['bleu_scores']
-    #         all_score['all_bert_scores'] += scores['bert_scores']
-    #         mos_value = scores.get('mos_score')
-    #         if mos_value is not None:
-    #             all_score['all_mos_scores'] += mos_value
-    #         _step_scores['realism'].append(scores['realism_score'])
-    #         _step_scores['bleu'].append(scores['bleu_scores'])
-    #         _step_scores['bert'].append(scores['bert_scores'])
-    #         _step_scores['mos'].append(mos_value)
-    #         _step_scores['sentiment_emb'].append(scores['sentiment_emb'])
-    #         video_ = np.asarray(batched_faces)[:, :, :, ::-1]
-    #         video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
-    #         print(video_save_path)
-    #         imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # pdb.set_trace()
-    #     print(f"[Time] Step {step} | Talking head generation ({len(out_samples)} batch): {time.time()-_t_talkinghead:.2f}s")
-    #     _emo_device = next(encoder_emo.parameters()).device
-    #     all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
-    #     # listener_ref_all: [b, N_segs*clip_size, C, H, W]
-    #     # all_face_images:  [b*T_pred, C, H, W]
-    #     # Pad all_face_images to b*N_segs*clip_size so the reshape at listener_ref_4emo succeeds.
-    #     _target_n = listener_ref_all.shape[0] * listener_ref_all.shape[1]
-    #     if all_face_images.shape[0] < _target_n:
-    #         _pad = _target_n - all_face_images.shape[0]
-    #         all_face_images = torch.cat(
-    #             [all_face_images, all_face_images[-1:].repeat(_pad, 1, 1, 1)], dim=0
-    #         )
-    #         print(f"[Pad] all_face_images {all_face_images.shape[0]-_pad} → {_target_n} frames")
-    #     # #generate talking head
-    #     # result = whisper_model.transcribe(audio_file)
-    #     # print(result["text"])
+        # ── Call talkinghead ONCE with all segments stacked + segment metadata ──
+        # The function uses segment_list to:
+        #   1. Run LLM reply per segment (rolling dialogue)
+        #   2. Build timeline-aware audio (silence during speaker, TTS in gaps)
+        #   3. Fuse the talking-head video over the full stacked clip
+        all_face_images = []
+        dim_out = out_samples.shape
+        _t_talkinghead = time.time()
+        _step_scores = {'realism': [], 'bleu': [], 'bert': [], 'mos': [], 'sentiment_emb': []}
+        for batch_index in range(len(out_samples)):
+            batched_faces, scores, _listener_audio_path = openai_deepseek_talkinghead_genall(
+                audio_file, listener_audio_file,
+                whisper_model, audio_processor,
+                video_data['speaker_audio_path'][batch_index],
+                video_data['listener_audio_path'][batch_index],
+                emo_label, out_samples[batch_index], pipe, vae, unet, pe,
+                batch_index=len(out_samples) * step + batch_index,
+                num_frame_sp=dim_out[1],
+                segment_list=valid_segments
+            )
+            all_face_images += batched_faces
+            all_score['all_realism_score'] += scores['realism_score']
+            all_score['all_sentiment_emb'][batch_size * step + batch_index] = scores['sentiment_emb']
+            all_score['all_bleu_scores'] += scores['bleu_scores']
+            all_score['all_bert_scores'] += scores['bert_scores']
+            mos_value = scores.get('mos_score')
+            if mos_value is not None:
+                all_score['all_mos_scores'] += mos_value
+            _step_scores['realism'].append(scores['realism_score'])
+            _step_scores['bleu'].append(scores['bleu_scores'])
+            _step_scores['bert'].append(scores['bert_scores'])
+            _step_scores['mos'].append(mos_value)
+            _step_scores['sentiment_emb'].append(scores['sentiment_emb'])
+            video_ = np.asarray(batched_faces)[:, :, :, ::-1]
+            video_save_path = os.path.join(args.save_video_path, 'generated_' + str(len(out_samples) * step + batch_index) + '.mp4')
+            print(video_save_path)
+            imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # pdb.set_trace()
+        print(f"[Time] Step {step} | Talking head generation ({len(out_samples)} batch): {time.time()-_t_talkinghead:.2f}s")
+        _emo_device = next(encoder_emo.parameters()).device
+        all_face_images=torch.tensor(np.transpose(np.asarray(all_face_images)[:,:,:,::-1],(0,3,1,2))/127.5-1,device=_emo_device).float()
+        # listener_ref_all: [b, N_segs*clip_size, C, H, W]
+        # all_face_images:  [b*T_pred, C, H, W]
+        # Pad all_face_images to b*N_segs*clip_size so the reshape at listener_ref_4emo succeeds.
+        _target_n = listener_ref_all.shape[0] * listener_ref_all.shape[1]
+        if all_face_images.shape[0] < _target_n:
+            _pad = _target_n - all_face_images.shape[0]
+            all_face_images = torch.cat(
+                [all_face_images, all_face_images[-1:].repeat(_pad, 1, 1, 1)], dim=0
+            )
+            print(f"[Pad] all_face_images {all_face_images.shape[0]-_pad} → {_target_n} frames")
+        # #generate talking head
+        # result = whisper_model.transcribe(audio_file)
+        # print(result["text"])
 
-    #     # sentences=result["text"].split('.')
+        # sentences=result["text"].split('.')
 
-    #     #visualize 
+        #visualize 
         
 
-    #     # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-    #     # print(video_save_path)
-    #     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # print('save path {}'.format(args.save_video_path))
-    #     # pdb.set_trace()
+        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
+        # pdb.set_trace()
 
 
-    #     # #visualize 
-    #     # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
-    #     # print(video_save_path)
-    #     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # print('save path {}'.format(args.save_video_path))
+        # #visualize 
+        # video_ = ((video_data['img'][0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'original' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
 
-    #     # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
-    #     # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
-    #     # print(video_save_path)
-    #     # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
-    #     # print('save path {}'.format(args.save_video_path))
-    #     # pdb.set_trace()
+        # video_ = ((out_samples[0] * 0.5 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().permute(0, 2, 3, 1).contiguous()
+        # video_save_path = os.path.join(args.save_video_path, 'sample_test_ddpm' + str(step)+'.mp4')
+        # print(video_save_path)
+        # imageio.mimwrite(video_save_path, video_, fps=8, quality=9)
+        # print('save path {}'.format(args.save_video_path))
+        # pdb.set_trace()
 
-    #     # pdb.set_trace()
-    #     #get emo feature
-    #     _t_emo_pred = time.time()
-    #     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(_emo_device))
-    #     # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
-    #     # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
-    #     # id=id.reshape(b*v,c,w,h)
-    #     # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
+        # pdb.set_trace()
+        #get emo feature
+        _t_emo_pred = time.time()
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(_emo_device))
+        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
+        # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
+        # id=id.reshape(b*v,c,w,h)
+        # lnd=lnd.reshape(b*v,c_l,w_l,h_l)
         
-    #     # # pdb.set_trace()
-    #     # self.idnet.eval()
-    #     # id_feats = self.idnet(id)  # [B, 512]
+        # # pdb.set_trace()
+        # self.idnet.eval()
+        # id_feats = self.idnet(id)  # [B, 512]
 
-    #     #emo_feature
-    #     # pdb.set_trace()
-    #     au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
-    #     au=torch.reshape(au,[b,-1,15])
+        #emo_feature
+        # pdb.set_trace()
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
 
-    #     #
-    #     expression=emo_fea['expression']
-    #     expression_soft=Func.softmax(expression,dim=1)
-    #     valence=emo_fea['valence']
-    #     arousal=emo_fea['arousal']
-    #     emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
-    #     emo=torch.reshape(emo,[b,-1,10])
-    #     current_emo=emo#torch.cat([emo,au],dim=-1)
-    #     # current_emo=torch.cat([emo,au],dim=-1)
+        #
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        current_emo=emo#torch.cat([emo,au],dim=-1)
+        # current_emo=torch.cat([emo,au],dim=-1)
 
-    #     # pdb.set_trace()
-    #     # #get emo label from listener image
-    #     # if all_face_images.shape[0]!=listener_ref.shape[0]:
-    #     #     listener_emotion_pred_list.append(current_emo.cpu())
-    #     #     listener_emotion_gt_list.append(emo_label.cpu())
-    #     #     speaker_emotion_gt_list.append(speaker_emo)
-    #     #     continue
-    #     print(f"[Time] Step {step} | Emotion extraction (generated): {time.time()-_t_emo_pred:.2f}s")
-    #     listener_ref_4emo=listener_ref_all.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
-    #     _t_emo_gt = time.time()
-    #     id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(_emo_device))
+        # pdb.set_trace()
+        # #get emo label from listener image
+        # if all_face_images.shape[0]!=listener_ref.shape[0]:
+        #     listener_emotion_pred_list.append(current_emo.cpu())
+        #     listener_emotion_gt_list.append(emo_label.cpu())
+        #     speaker_emotion_gt_list.append(speaker_emo)
+        #     continue
+        print(f"[Time] Step {step} | Emotion extraction (generated): {time.time()-_t_emo_pred:.2f}s")
+        listener_ref_4emo=listener_ref_all.reshape(all_face_images.shape[0],all_face_images.shape[1],all_face_images.shape[2],all_face_images.shape[3])
+        _t_emo_gt = time.time()
+        id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(listener_ref_4emo.to(_emo_device))
         
-    #     au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
-    #     au=torch.reshape(au,[b,-1,15])
+        au=torch.cat([au_bp4d, au_disfa[:, 4:5], au_disfa[:,-2:]],dim=-1)  #[8*b,15]->[b,8,15]
+        au=torch.reshape(au,[b,-1,15])
 
-    #     #
-    #     expression=emo_fea['expression']
-    #     expression_soft=Func.softmax(expression,dim=1)
-    #     valence=emo_fea['valence']
-    #     arousal=emo_fea['arousal']
-    #     emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
-    #     emo=torch.reshape(emo,[b,-1,10])
-    #     listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
-    #     # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+        #
+        expression=emo_fea['expression']
+        expression_soft=Func.softmax(expression,dim=1)
+        valence=emo_fea['valence']
+        arousal=emo_fea['arousal']
+        emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
+        emo=torch.reshape(emo,[b,-1,10])
+        listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
+        # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
-    #     #
-    #     # pdb.set_trace()
-    #     print(f"[Time] Step {step} | Emotion extraction (GT listener): {time.time()-_t_emo_gt:.2f}s")
-    #     listener_emotion_pred_list.append(current_emo.cpu())
-    #     listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
-    #     # listener_emotion_gt_list.append(emo_label.cpu())
-    #     speaker_emotion_gt_list.append(speaker_emo)
-    #     print(f"[Time] Step {step} | Total step time: {time.time()-_t_step_start:.2f}s")
+        #
+        # pdb.set_trace()
+        print(f"[Time] Step {step} | Emotion extraction (GT listener): {time.time()-_t_emo_gt:.2f}s")
+        listener_emotion_pred_list.append(current_emo.cpu())
+        listener_emotion_gt_list.append(listener_gt_frommodel_emo.cpu())
+        # listener_emotion_gt_list.append(emo_label.cpu())
+        speaker_emotion_gt_list.append(speaker_emo)
+        print(f"[Time] Step {step} | Total step time: {time.time()-_t_step_start:.2f}s")
 
-    #     # ── Save per-step checkpoint so a later crash doesn't lose this step ──
-    #     torch.save({
-    #         'step': step,
-    #         'listener_emotion_pred': current_emo.cpu(),
-    #         'listener_emotion_gt':   listener_gt_frommodel_emo.cpu(),
-    #         'speaker_emotion_gt':    speaker_emo.cpu(),
-    #         'scores': _step_scores,
-    #     }, _step_ckpt)
-    #     print(f"[Checkpoint] Step {step} saved → {_step_ckpt}")
-    # # ── After loop: load all per-step checkpoints sorted by step, then cat ──
+        # ── Save per-step checkpoint so a later crash doesn't lose this step ──
+        torch.save({
+            'step': step,
+            'listener_emotion_pred': current_emo.cpu(),
+            'listener_emotion_gt':   listener_gt_frommodel_emo.cpu(),
+            'speaker_emotion_gt':    speaker_emo.cpu(),
+            'scores': _step_scores,
+        }, _step_ckpt)
+        print(f"[Checkpoint] Step {step} saved → {_step_ckpt}")
+    # ── After loop: load all per-step checkpoints sorted by step, then cat ──
     _ckpt_files = sorted(glob.glob(os.path.join(args.save_video_path, 'ckpt_step_*.pt')))
     print(f"[Checkpoint] Loading {len(_ckpt_files)} step files for final merge...")
     _pred_parts, _gt_parts, _sp_parts = [], [], []
