@@ -1528,7 +1528,7 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     double_count=0
     for step, video_data in enumerate(loader):
-        if step<600:
+        if step<500:
             print('step jump', step)
             continue
         _t_step_start = time.time()
