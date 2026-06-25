@@ -706,12 +706,12 @@ def openai_deepseek_talkinghead_genall(audio_file, listener_audio_file, whisper_
 
     bleu_scores = calculate_bleu_batch([listener_result["text"]], [all_text])
     rouge_scores = calculate_rouge_batch([listener_result["text"]], [all_text])
-    bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
+    # bert_scores = calculate_bertscore_batch([listener_result["text"]], [all_text])
     evaluation_score = dict()
     evaluation_score['realism_score'] = realism_score
     evaluation_score['sentiment_emb'] = sentiment_emb
     evaluation_score['bleu_scores'] = bleu_scores[0]
-    evaluation_score['bert_scores'] = bert_scores[0]
+    evaluation_score['bert_scores'] = 0#bert_scores[0]
 
     # ---- TTS: timeline-aware audio (silence during speaker, TTS in gaps) ----
     OUTPUT_audio_FILE = result_img_save_path + '/output_audio' + str(batch_index) + '.wav'
