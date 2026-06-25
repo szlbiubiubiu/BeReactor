@@ -128,7 +128,7 @@ def compute_FRC(preds, targets, p=1):
 
 def compute_FRC_nomp(preds, targets, p=1):
     FRC_list = []
-    # pdb.set_trace()
+    pdb.set_trace()
     for tar, pred in zip(targets, preds):
         # if len(tar.shape)==2:
         #     tar=torch.unsqueeze(tar,dim=0)
