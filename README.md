@@ -87,26 +87,11 @@ MuseTalk is required for the full evaluation pipeline with talking head synthesi
 
 **Download link:** https://drive.google.com/file/d/13_Of4eWEgwkm3vMJAuzKIZsdMe7IMehM/view?usp=sharing
 
-```bash
-# Install gdown if not already installed
-pip install gdown
-
-# Download and extract into talkinghead/muse/
-gdown https://drive.google.com/uc?id=13_Of4eWEgwkm3vMJAuzKIZsdMe7IMehM -O talkinghead/muse.zip
-unzip talkinghead/muse.zip -d talkinghead/
-rm talkinghead/muse.zip
-```
-
-After extraction, the directory should look like:
-
-```
-talkinghead/muse/
-├── models/          # pretrained weights (MuseTalk, VAE, Whisper, DWPose, etc.)
-├── musetalk/
-├── configs/
-└── ...
-```
-
+### 5. Download Reaction Pretrained models
+5.1 external/
+unzip and place into ./external
+5.2 pretrained models
+unzip and place into ./pretrained_models
 ### 5. Download BeReactor pretrained checkpoint
 
 Download the BeReactor model checkpoint and pass its path via `--ckpt` when running evaluation.
