@@ -1932,7 +1932,7 @@ def main(args):
                 t = t.repeat(reps).narrow(dim, 0, max_len)
             padded.append(t)
         return padded
-
+    pdb.set_trace()
     _pred_parts = _pad_to_len(_pred_parts)
     _gt_parts   = _pad_to_len(_gt_parts)
     _sp_parts   = _pad_to_len(_sp_parts)
