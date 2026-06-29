@@ -66,8 +66,8 @@ def concordance_correlation_coefficient(y_true, y_pred,
     if len(y_true.shape) > 1:
         ccc_list = []
         for i in range(y_true.shape[1]):  # dim==25
-            if i==8:
-                pdb.set_trace()
+            # if i==8:
+            #     pdb.set_trace()
             cor = corrcoef(y_true[:, i], y_pred[:, i])[0][1]
             mean_true = np.mean(y_true[:, i])
 
