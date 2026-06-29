@@ -1529,21 +1529,21 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     double_count=0
     for step, video_data in enumerate(loader):
-        if step<550:
-            print('step jump', step)
-            continue
+        # if step<550:
+        #     print('step jump', step)
+        #     continue
         _t_step_start = time.time()
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
 
         # ── Resume: if this step's checkpoint exists, reload state and skip ──
         _step_ckpt = os.path.join(args.save_video_path, f'ckpt_step_{step:06d}.pt')
-        if os.path.exists(_step_ckpt):
-            _c = torch.load(_step_ckpt, map_location='cpu')
-            listener_emotion_pred_list.append(_c['listener_emotion_pred'])
-            listener_emotion_gt_list.append(_c['listener_emotion_gt'])
-            speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
-            print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
-            continue
+        # if os.path.exists(_step_ckpt):
+        #     _c = torch.load(_step_ckpt, map_location='cpu')
+        #     listener_emotion_pred_list.append(_c['listener_emotion_pred'])
+        #     listener_emotion_gt_list.append(_c['listener_emotion_gt'])
+        #     speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
+        #     print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
+        #     continue
         torch.manual_seed(0)
         out_samples=None
         # pdb.set_trace()
