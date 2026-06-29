@@ -107,7 +107,7 @@ def _func(target, pred):
     # target: (10, l, dim)
     # pred: (10, l, dim)
     # num_preds = pred.shape[0]
-    pdb.set_trace()
+    # pdb.set_trace()
     max_ccc_sum = 0
     for i in range(pred.shape[0]):
         ccc_list = []
@@ -128,7 +128,7 @@ def compute_FRC(preds, targets, p=1):
 
 def compute_FRC_nomp(preds, targets, p=1):
     FRC_list = []
-    pdb.set_trace()
+    # pdb.set_trace()
     for tar, pred in zip(targets, preds):
         # if len(tar.shape)==2:
         #     tar=torch.unsqueeze(tar,dim=0)
