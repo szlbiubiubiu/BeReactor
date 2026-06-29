@@ -107,7 +107,7 @@ def _func(target, pred):
     # target: (10, l, dim)
     # pred: (10, l, dim)
     # num_preds = pred.shape[0]
-    # pdb.set_trace()
+    pdb.set_trace()
     max_ccc_sum = 0
     for i in range(pred.shape[0]):
         ccc_list = []
