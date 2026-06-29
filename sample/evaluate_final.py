@@ -261,7 +261,7 @@ class DiffusionVideoAutoencoder(nn.Module):
                                     nn.Dropout(p=0.5)
                                     )
         self.emo_cond_linear=nn.Linear(512*2,512)
-        pdb.set_trace()
+        # pdb.set_trace()
         if au_file_path_disfa is not None:
             # pdb.set_trace()
             self.au_net_DISFA=MEFL.MEFARG(num_classes=8).requires_grad_(False)# resnet
