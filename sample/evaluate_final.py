@@ -292,7 +292,7 @@ class DiffusionVideoAutoencoder(nn.Module):
         # id=id.view(b*v,c,w,h)
         # lnd=lnd.view(b*v,c_l,w_l,h_l)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         id_feats = self.idnet(id)  # [B, 512]
         # lnd_feats = self.lndnet(id) # [B, 102]
         # fea
@@ -1529,21 +1529,21 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     double_count=0
     for step, video_data in enumerate(loader):
-        # if step<550:
-        #     print('step jump', step)
-        #     continue
+        if step<550:
+            print('step jump', step)
+            continue
         _t_step_start = time.time()
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
 
         # ── Resume: if this step's checkpoint exists, reload state and skip ──
         _step_ckpt = os.path.join(args.save_video_path, f'ckpt_step_{step:06d}.pt')
-        # if os.path.exists(_step_ckpt):
-        #     _c = torch.load(_step_ckpt, map_location='cpu')
-        #     listener_emotion_pred_list.append(_c['listener_emotion_pred'])
-        #     listener_emotion_gt_list.append(_c['listener_emotion_gt'])
-        #     speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
-        #     print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
-        #     continue
+        if os.path.exists(_step_ckpt):
+            _c = torch.load(_step_ckpt, map_location='cpu')
+            listener_emotion_pred_list.append(_c['listener_emotion_pred'])
+            listener_emotion_gt_list.append(_c['listener_emotion_gt'])
+            speaker_emotion_gt_list.append(_c['speaker_emotion_gt'])
+            print(f"[Resume] Step {step} already done — loaded {_step_ckpt}, skipping.")
+            continue
         torch.manual_seed(0)
         out_samples=None
         # pdb.set_trace()
@@ -1822,7 +1822,6 @@ def main(args):
         # pdb.set_trace()
         #get emo feature
         _t_emo_pred = time.time()
-        pdb.set_trace()
         id_feats,emo_fea,au_disfa,au_bp4d=encoder_emo.forward_listener(all_face_images.to(_emo_device))
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(all_face_images,detect_face=True)
         # id_feats,emo_fea,au_disfa,au_bp4d=model.facial_condition.forward_listener(samples)
@@ -1845,8 +1844,8 @@ def main(args):
         arousal=emo_fea['arousal']
         emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
         emo=torch.reshape(emo,[b,-1,10])
-        current_emo=emo#torch.cat([emo,au],dim=-1)
-        # current_emo=torch.cat([emo,au],dim=-1)
+        # current_emo=emo#torch.cat([emo,au],dim=-1)
+        current_emo=torch.cat([emo,au],dim=-1)
 
         # pdb.set_trace()
         # #get emo label from listener image
@@ -1870,8 +1869,8 @@ def main(args):
         arousal=emo_fea['arousal']
         emo=torch.cat([expression_soft,torch.unsqueeze(valence,dim=-1),torch.unsqueeze(arousal,dim=-1)],dim=-1)
         emo=torch.reshape(emo,[b,-1,10])
-        listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
-        # listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
+        # listener_gt_frommodel_emo=emo#torch.cat([emo,au],dim=-1)
+        listener_gt_frommodel_emo=torch.cat([emo,au],dim=-1)
 
         #
         # pdb.set_trace()
