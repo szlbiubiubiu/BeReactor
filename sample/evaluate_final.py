@@ -1651,7 +1651,7 @@ def main(args):
             emo_label = video_data['listener_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
             speaker_emo = video_data['speaker_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
 
-            # Pad clips that are shorter than clip_size
+            # Pad clips that are shorter thaifn clip_size
             act_len = x.shape[1]
             if act_len < clip_size:
                 pad_len = clip_size - act_len
