@@ -1529,9 +1529,9 @@ def main(args):
     # Labels to condition the model with (feel free to change):
     double_count=0
     for step, video_data in enumerate(loader):
-        if step<550:
-            print('step jump', step)
-            continue
+        # if step<550:
+        #     print('step jump', step)
+        #     continue
         _t_step_start = time.time()
         print('current step is:{}, batch_size is :{}'.format(step,batch_size))
 
@@ -1651,7 +1651,7 @@ def main(args):
             emo_label = video_data['listener_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
             speaker_emo = video_data['speaker_emotion'].to(device, non_blocking=True)[:, start_frame:start_frame + clip_size]
 
-            # Pad clips that are shorter thaifn clip_size
+            # Pad clips that are shorter thaif n clip_size
             act_len = x.shape[1]
             if act_len < clip_size:
                 pad_len = clip_size - act_len
