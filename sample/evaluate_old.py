@@ -71,11 +71,11 @@ def main(args):
 
     # rank = int(os.environ["RANK"])
     # local_rank = int(os.environ["LOCAL_RANK"])
-    device = torch.device("cuda", local_rank)
+    # device = torch.device("cuda", local_rank)
 
-    seed = args.global_seed + rank
-    torch.manual_seed(seed)
-    torch.cuda.set_device(device)
+    # seed = args.global_seed + rank
+    # torch.manual_seed(seed)
+    # torch.cuda.set_device(device)
     # print(f"Starting rank={rank}, local rank={local_rank}, seed={seed}, world_size={dist.get_world_size()}.")
 
 
