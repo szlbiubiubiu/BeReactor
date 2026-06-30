@@ -42,10 +42,10 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torch.nn as nn
 import torch.distributed as dist
-from utils import (clip_grad_norm_, create_logger, update_ema, 
-                   requires_grad, cleanup, create_tensorboard, 
-                   write_tensorboard, setup_distributed,
-                   get_experiment_dir, text_preprocessing)
+# from utils import (clip_grad_norm_, create_logger, update_ema, 
+#                    requires_grad, cleanup, create_tensorboard, 
+#                    write_tensorboard, setup_distributed,
+#                    get_experiment_dir, text_preprocessing)
 
 import torch.nn.functional as Func
 from metric import *   #import evaluation metric
@@ -62,7 +62,7 @@ torch.backends.cudnn.allow_tf32 = True
 def main(args):
     # Setup PyTorch:
     # torch.manual_seed(args.seed)
-    setup_distributed()
+    # setup_distributed()
     # dist.init_process_group("nccl")
     # assert args.global_batch_size % dist.get_world_size() == 0, f"Batch size must be divisible by world size."
     # rank = dist.get_rank()
