@@ -306,12 +306,13 @@ def main(args):
     FRD = compute_FRD_nomp(emo_pred_reshape, listener_emo_gt_reshape)
     FRDvs = compute_FRDvs_2025(emo_pred_reshape)
     FRVar = compute_FRVar_2025(emo_pred_reshape)
-    pdb.set_trace()
+    
     print("FRC: ", FRC)
     print("FRD: ", FRD)
     print("FRDvs: ", FRDvs)
     print("FRVar: ", FRVar) 
     #below is 2024
+    pdb.set_trace()
     p = args.threads
     
     # If you have problems running function compute_TLCC_mp, please replace this function with function compute_TLCC
