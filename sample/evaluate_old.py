@@ -147,7 +147,7 @@ def main(args):
         # Skip steps until we reach the resumed step
         # if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
         #     continue
-        pdb.set_trace()
+        # pdb.set_trace()
         x = video_data['img'].to(device, non_blocking=True)#.half()
         listener_ref=video_data['listener_video_clip'].to(device, non_blocking=True)#.half()
         speaker_Audio = video_data['speaker_audio_clip'].to(device, non_blocking=True)#[:, start_frame:start_frame + clip_size]
