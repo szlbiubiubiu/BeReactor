@@ -302,6 +302,7 @@ def main(args):
     listener_emo_gt_reshape = listener_emotion_gt.unsqueeze(1).cpu()
     listener_emotion_frommodel_reshape = listener_emotion_frommodel.unsqueeze(1).cpu()
     FRC = compute_FRC_nomp(emo_pred_reshape, listener_emo_gt_reshape)
+    #FRC = compute_FRC_nomp(emo_pred_reshape, listener_emotion_frommodel_reshape)
     FRD = compute_FRD_nomp(emo_pred_reshape, listener_emo_gt_reshape)
     FRDvs = compute_FRDvs_2025(emo_pred_reshape)
     FRVar = compute_FRVar_2025(emo_pred_reshape)
@@ -332,8 +333,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/reaction/reaction_test.yaml")
     # parser.add_argument("--ckpt", type=str, default="/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/sep11/0120000.pt")
-    parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/037-Latte-B-4-F64S3-reaction-Amp/checkpoints/0180000.pt")#2025
-    
+    # parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/037-Latte-B-4-F64S3-reaction-Amp/checkpoints/0180000.pt")#2025
+    parser.add_argument("--ckpt", type=str, default="/data/szl/code/latte_reaction_new/latte_reaction_check/023-Latte-B-4-F64S3-reaction-Amp/checkpoints/0260000.pt")#2024
     #original /import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/results/092-Latte-S-2-F32S3-reaction-Amp/checkpoints/0240000.pt
     #sep 7  /import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/checkpoint_fromhpc/spe7/0170000.pt
     parser.add_argument("--save_video_path", type=str, default="./sample_videos_ddim/")
