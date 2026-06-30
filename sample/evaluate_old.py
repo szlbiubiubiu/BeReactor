@@ -161,7 +161,7 @@ def main(args):
         original_x=x
         # listener_ref=listener_ref
         # Create sampling noise:
-        torch.manual_seed(0)
+        # torch.manual_seed(0)
         if args.use_fp16:
             z = torch.randn(batch_size, args.num_frames, 4, latent_size, latent_size, dtype=torch.float16, device=device) # b c f h w
         else:
