@@ -1,20 +1,12 @@
-timm
+timm==0.9.16
 diffusers[torch]==0.24.0
-accelerate
+accelerate==0.22.0
 tensorboard
 einops
-transformers
-av
-scikit-image
+huggingface_hub<0.23.0
 decord
-pandas
-imageio-ffmpeg
+numpy==1.26.4
 omegaconf
 soundfile
-opencv-python
-tslearn
-openai-whisper
-piper-tts
-llama 3.1
-musetalk
-timm
+Pillow
+face_alignment

@@ -1,63 +1,30 @@
-# dataset
-dataset: "reaction"
+# Dataset root: train/{audio,video-face-crop,ZL_crop_test,facial-attributes}/
+dataset: reaction
+data_path: /path/to/dataset
+fps: 30
 
-data_path: "/path/to/datasets/preprocess_ffs/train/videos/" # s
-# pretrained_model_path: "/import/nobackup_mmv_ioannisp/zs003/code/face_reaction/latte_reaction/pretrained_models/"
-# pretrained_model_path: '/data/szl/code/latte_reaction_new/latte_reaction/pretrained_models'
-pretrained_model_path: "./pretrained_models"
+# The VAE is loaded from pretrained_model_path/vae/.
+pretrained_model_path: ./pretrained_models
+results_dir: ./results
+pretrained: null
 
-# save and load
-# results_dir: "./results"
-# results_dir: '/data/szl/code/latte_reaction_new/latte_reaction_check' #l40
-results_dir: '/gpfs/scratch/acw569/checkpoint/latte_check_new' #'/data/scratch/acw569/checkpoint/latte_check' #"./results"
-
-pretrained:
-
-# model config: 
-# model: Latte-XL/2
-# model: Latte-S/2
-model: Latte-B/4 #emo_Latte-S/4 #Latte-B/4, Latte-S/2
-num_frames: 64 #32 #16
-image_size: 256 # choices=[256, 512]
-# num_sampling_steps: 250
+model: Latte-B/4
+num_frames: 64
+image_size: 256
 frame_interval: 3
-fixed_spatial: False
-attention_bias: True
-learn_sigma: True # important
-extras: 3 # [1, 2] 1 unconditional generation, 2 class-conditional generation, 3 facial reaction condition
+learn_sigma: true
+extras: 3
+num_classes: null
 
-# train config:
-save_ceph: True # important
-learning_rate: 1e-4
-ckpt_every: 10000
-clip_max_norm: 0.1
-start_clip_iter: 20000
-local_batch_size: 8 #2 #previous 2 # important 5
+learning_rate: 1.0e-4
+local_batch_size: 8
 max_train_steps: 1000000
 global_seed: 3407
 num_workers: 12
 log_every: 100
-lr_warmup_steps: 0
-resume_from_checkpoint: False
-resume_ckpt_path: '/gpfs/scratch/acw569/checkpoint/latte_check_new/008-Latte-B-4-F64S3-reaction-Amp/checkpoints/0120000.pt' #"/data/szl/code/latte_reaction_new/latte_reaction_check/latte_B_4_64_256_3_True_True_True/ckpt-1000000.pt"
-gradient_accumulation_steps: 1 # TODO
-num_classes:
+ckpt_every: 10000
+clip_max_norm: 0.1
+start_clip_iter: 20000
 
-# low VRAM and speed up training
-use_compile: False
-mixed_precision: True
-enable_xformers_memory_efficient_attention: False
-gradient_checkpointing: False
-
-use_fp16: True
-
-# sample config:
-# seed:
-sample_method: 'ddim'
-num_sampling_steps: 250
-cfg_scale: 1.0
-negative_name:
-
-# ddp sample config
-per_proc_batch_size: 2
-num_fvd_samples: 2048
+resume_from_checkpoint: false
+resume_ckpt_path: null

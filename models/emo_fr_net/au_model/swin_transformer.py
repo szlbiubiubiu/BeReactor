@@ -636,11 +636,3 @@ def swin_transformer_base(pretrained=True, **kwargs):
     if pretrained:
         model.load_state_dict(torch.load(os.path.join(models_dir, model_name['swin_transformer_base']))['model'])
     return model
-
-
-if __name__=="__main__":
-    model = swin_transformer_base()
-    input = torch.randn(1,3,224,224)
-    print(model)
-    output = model(input)
-    print("output_shape:",output.shape)

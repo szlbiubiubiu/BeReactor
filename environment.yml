@@ -2,26 +2,13 @@ name: latte_new
 channels:
   - pytorch
   - nvidia
+  - defaults
 dependencies:
-  #- python == 3.10
-  - pytorch == 2.2.0
-  - torchvision
+  - python=3.10
+  - pytorch=2.0.1
+  - torchvision=0.15.2
+  - torchaudio=2.0.2
   - pytorch-cuda=11.8
+  - pip
   - pip:
-    - timm
-    - diffusers[torch]==0.24.0
-    - accelerate
-    - tensorboard
-    - einops
-    - transformers
-    - av
-    - scikit-image
-    - decord
-    - pandas
-    - imageio-ffmpeg
-    - omegaconf
-    - soundfile
-    - opencv-python
-    - tslearn
-    - openai-whisper
-    - TTS
+      - -r requirement.txt

@@ -1,43 +1,23 @@
 #!/bin/bash
+#SBATCH --job-name=bereactor-train
+#SBATCH --account=pilot_gpu
+#SBATCH --partition=gpu
+#SBATCH --constraint=ampere
+#SBATCH --time=120:00:00
+#SBATCH --mem-per-cpu=11G
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=12
+#SBATCH --gres=gpu:1
 
+set -eo pipefail
 
-##SBATCH -A pilot_sae_gpu
-##SBATCH -p sae  ##Andrena 80g
-##SBATCH --constraint="ampere"
+# Submit from the repository root so model and data paths resolve consistently.
+cd "${SLURM_SUBMIT_DIR:-$(dirname "${BASH_SOURCE[0]}")}"
+if [ -f "${HOME}/.bashrc" ]; then
+    source "${HOME}/.bashrc"
+fi
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate "${CONDA_ENV:-latte_new}"
 
-##SBATCH --constraint=ampere #ampere. hopper
-#SBATCH -A pilot_gpu
-#SBATCH -p gpu  #Apocrita
-#SBATCH --constraint="ampere"
-###SBATCH -p gpushort
-
-##SBATCH -A pilot_andrena
-##SBATCH -p andrena  #Andrena 40g
-
-
-
-#SBATCH -t 120:0:0 # 10 hour runtime
-#SBATCH --mem-per-cpu=11G # 11 * 8 = 88G total RAM
-##SBATCH -n 12 # 8 cores (8 cores per GPU)
-#SBATCH -n 1          # 1 Task (Because you are running 1 torchrun command)
-#SBATCH -c 12
-#SBATCH --gres=gpu:1 # request 2 GPUs
-
-##SBATCH -J environment_name
-##SBATCH --constraint="ampere"
-##SBATCH --mail-type=ALL
-
-# module load miniforge
-#set -e
-export MASTER_ADDR=localhost
-export NCCL_DEBUG=INFO
-export TORCH_DISTRIBUTED_DEBUG=DETAIL
-
-source ~/.bashrc
-
-# Replace the following line with a program or command
-conda activate latte_new
-
-CUDA_VISIBLE_DEVICES=0 torchrun --nnodes=1 --nproc_per_node=1 --master-port=25531 train.py
-
-# For assistance, please email its-research-support@qmul.ac.uk
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-1}"
+torchrun --standalone --nnodes=1 --nproc_per_node="${NPROC_PER_NODE:-1}" train.py "$@"

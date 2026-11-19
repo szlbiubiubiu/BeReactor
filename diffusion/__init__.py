@@ -6,10 +6,9 @@
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
 
-import pdb
 def create_diffusion(
     timestep_respacing,
-    noise_schedule="linear", 
+    noise_schedule="linear",
     use_kl=False,
     sigma_small=False,
     predict_xstart=False,
@@ -18,7 +17,6 @@ def create_diffusion(
     rescale_learned_sigmas=False,
     diffusion_steps=1000
 ):
-    # pdb.set_trace()
     betas = gd.get_named_beta_schedule(noise_schedule, diffusion_steps)
     if use_kl:
         loss_type = gd.LossType.RESCALED_KL

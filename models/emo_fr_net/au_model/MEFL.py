@@ -8,9 +8,8 @@ from .swin_transformer import swin_transformer_tiny, swin_transformer_small, swi
 from .resnet import resnet18, resnet50, resnet101
 from .graph import create_e_matrix
 from .graph_edge_model import GEM
-from .basic_block import *
+from .basic_block import LinearBlock, bn_init
 
-import pdb
 # Gated GCN Used to Learn Multi-dimensional Edge Features and Node Features
 class GNN(nn.Module):
     def __init__(self, in_channels, num_classes):
@@ -210,7 +209,6 @@ class MEFARG(nn.Module):
         if x.shape[-1]!=224:
             x=self.resolution(x)
         #-1,1 normalize to imagenet
-        # pdb.set_trace()
         x=0.5*(x+1)
         x[:,0,:,:]=(x[:,0,:,:]-self.norm_imagenet_mean[0])/self.norm_imagenet_std[0]
         x[:,1,:,:]=(x[:,1,:,:]-self.norm_imagenet_mean[1])/self.norm_imagenet_std[1]

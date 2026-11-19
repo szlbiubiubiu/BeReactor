@@ -1,1 +1,0 @@
-OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=2,0 torchrun --nnodes=1 --nproc_per_node=1  sample/reaction_eva_all_withtalkinghead.py --save_video_path ./test
