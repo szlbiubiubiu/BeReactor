@@ -1,9 +1,8 @@
 # BeReactor
 
-This repository contains the **training code** for the paper:
+This repository contains the code for the paper:
 
-> [**BeReactor: Audio-visual Appropriate Human-like Expressive Behavioural Response Generation**](https://github.com/szlbiubiubiu/latte_reaction/)
-> [Zhonglin Sun](https://szlbiubiubiu.github.io/), [Xun Gong](https://scholar.google.com/citations?user=7PqgUw4AAAAJ&hl=en), [Feng Chen](https://scholar.google.com/citations?user=4VZhTYgAAAAJ&hl=zh-CN), [Siyang Song*](https://scholar.google.com/citations?user=ZKSL1IcAAAAJ&hl=en) (*Corresponding Author)
+> **BeReactor: Audio-visual Appropriate Human-like Expressive Behavioural Response Generation**
 
 BeReactor generates listener facial reactions from speaker video and audio using a Latent Diffusion Transformer (Latte).
 
